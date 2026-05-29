@@ -568,6 +568,31 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 </div>
 
+<!-- Screen Edit Modal -->
+<div class="modal-overlay" id="modal-screen">
+  <div class="modal">
+    <div class="modal-header"><span>사이니지 수정</span><button class="modal-close" onclick="closeModal('modal-screen')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="screen-edit-id"/>
+      <div class="form-group"><label>사이니지 이름 <span class="required">*</span></label><input type="text" id="screen-edit-name" class="form-input" placeholder="예: 입구"/></div>
+      <div class="form-group"><label>위치</label><input type="text" id="screen-edit-location" class="form-input" placeholder="예: 1층 입구"/></div>
+      <div class="form-group">
+        <label>화면 방향</label>
+        <select id="screen-edit-orientation" class="form-input">
+          <option value="landscape">가로 (기본)</option>
+          <option value="portrait-left">세로 (왼쪽 90°)</option>
+          <option value="portrait-right">세로 (오른쪽 270°)</option>
+          <option value="flip">뒤집기 (180°)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-screen')">취소</button>
+      <button class="btn btn-primary" onclick="saveScreen()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- Preview Modal -->
 <div class="modal-overlay" id="modal-preview">
   <div class="preview-modal">
@@ -750,6 +775,7 @@ function renderStores(filter=''){
                 </div>
                 ${statusBadge(scStatus)}
                 <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
+                <button class="btn btn-outline btn-xs" onclick="openScreenModal('${sc.id}')">수정</button>
                 <button class="btn btn-danger btn-xs" onclick="deleteScreen('${sc.id}','${sc.name}')">삭제</button>
               </div>`;
             }).join(''):'<div style="color:var(--text-muted);font-size:12px;padding:8px 0">등록된 사이니지 없음</div>'}
@@ -785,6 +811,37 @@ function renderStores(filter=''){
 function toggleStore(id){
   expandedStoreId = expandedStoreId===id ? null : id;
   renderStores(document.getElementById('store-search').value);
+}
+
+// 사이니지 수정 모달
+function openScreenModal(id) {
+  const sc = screens.find(x=>x.id===id);
+  if(!sc) return;
+  document.getElementById('screen-edit-id').value = sc.id;
+  document.getElementById('screen-edit-name').value = sc.name || '';
+  document.getElementById('screen-edit-location').value = sc.location || '';
+  document.getElementById('screen-edit-orientation').value = sc.orientation || 'landscape';
+  openModal('modal-screen');
+}
+
+async function saveScreen() {
+  const id = document.getElementById('screen-edit-id').value;
+  const name = document.getElementById('screen-edit-name').value.trim();
+  if(!name) { showToast('사이니지 이름을 입력하세요','error'); return; }
+  const data = {
+    name,
+    location: document.getElementById('screen-edit-location').value.trim(),
+    orientation: document.getElementById('screen-edit-orientation').value,
+  };
+  await db.collection('screens').doc(id).set(data, {merge:true});
+  // 화면 방향 명령 전송 (태블릿에 즉시 반영)
+  await db.collection('commands').doc(id).set({
+    type:'orientation', orientation:data.orientation,
+    ts:new Date().toISOString(), executed:false
+  });
+  showToast(`[${name}] 사이니지 수정됨`, 'success');
+  closeModal('modal-screen');
+  await fetchAll();
 }
 
 // 사이니지 추가
