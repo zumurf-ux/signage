@@ -568,6 +568,24 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 </div>
 
+<!-- Playlist Edit Modal -->
+<div class="modal-overlay" id="modal-playlist-edit">
+  <div class="modal modal-wide">
+    <div class="modal-header"><span>플레이리스트 수정</span><button class="modal-close" onclick="closeModal('modal-playlist-edit')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="playlist-edit-id"/>
+      <div class="form-group"><label>플레이리스트명 <span class="required">*</span></label><input type="text" id="playlist-edit-name" class="form-input" placeholder="예: 입구 메뉴 리스트"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>매장</label><select id="playlist-edit-store" class="form-input" onchange="onPlaylistEditStoreChange()"></select></div>
+        <div class="form-group"><label>사이니지</label><select id="playlist-edit-screen" class="form-input"></select></div>
+      </div>
+      <div class="form-group"><label>운영 시간대</label><select id="playlist-edit-time" class="form-input"><option value="all">상시</option><option value="morning">오전</option><option value="lunch">점심</option><option value="afternoon">오후</option><option value="dinner">저녁</option></select></div>
+      <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist-edit"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist-edit')">취소</button><button class="btn btn-primary" onclick="updatePlaylist()">저장</button></div>
+  </div>
+</div>
+
 <!-- Screen Edit Modal -->
 <div class="modal-overlay" id="modal-screen">
   <div class="modal">
@@ -792,7 +810,7 @@ function renderStores(filter=''){
             </div>
           </div>
         </td></tr>`:'';
-      return`<tr style="cursor:pointer" onclick="toggleStore('${s.id}')">
+      return`<tr style="cursor:pointer" onclick="if(event.target.tagName==='INPUT'||event.target.tagName==='SELECT'||event.target.tagName==='BUTTON'||event.target.tagName==='OPTION')return;toggleStore('${s.id}')">
         <td style="font-weight:500">${isExpanded?'▼ ':''} ${s.name}</td>
         <td class="td-mono">${s.region}</td>
         <td>${s.manager||'-'}</td>
@@ -1093,7 +1111,10 @@ function renderPlaylist(){
           <div class="playlist-item-name">${p.name}</div>
           <div class="playlist-item-meta">${s?s.name:'미지정'} · ${sc?sc.name:'전체'}</div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePlaylist('${p.id}')">✕</button>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-outline btn-xs" onclick="event.stopPropagation();openPlaylistEdit('${p.id}')">수정</button>
+          <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deletePlaylist('${p.id}')">✕</button>
+        </div>
       </div>`;
     }).join('')
     :'<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">플레이리스트 없음</div>';
@@ -1137,6 +1158,57 @@ function onPlaylistStoreChange(){
     ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="chk-${c.id}" value="${c.id}"/><label for="chk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
     :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
 }
+function onPlaylistEditStoreChange(){
+  const storeId=document.getElementById('playlist-edit-store').value;
+  const storeScreens=screens.filter(sc=>sc.storeId===storeId);
+  const screenEl=document.getElementById('playlist-edit-screen');
+  screenEl.innerHTML=storeScreens.length
+    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name} (${sc.location||'위치미지정'})</option>`).join('')
+    :'<option value="">사이니지 없음</option>';
+  const storeContents=contents.filter(c=>c.storeId===storeId);
+  const checklistEl=document.getElementById('content-checklist-edit');
+  checklistEl.innerHTML=storeContents.length
+    ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
+    :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+}
+
+function openPlaylistEdit(id){
+  const p=playlists.find(x=>x.id===id); if(!p)return;
+  document.getElementById('playlist-edit-id').value=p.id;
+  document.getElementById('playlist-edit-name').value=p.name||'';
+  document.getElementById('playlist-edit-time').value=p.timeSlot||'all';
+  // 매장 셀렉트
+  const storeEl=document.getElementById('playlist-edit-store');
+  storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  storeEl.value=p.storeId||'';
+  // 사이니지 셀렉트
+  onPlaylistEditStoreChange();
+  const screenEl=document.getElementById('playlist-edit-screen');
+  screenEl.value=p.screenId||'';
+  // 콘텐츠 체크
+  setTimeout(()=>{
+    (p.contentIds||[]).forEach(cid=>{
+      const chk=document.getElementById('echk-'+cid);
+      if(chk) chk.checked=true;
+    });
+  },50);
+  openModal('modal-playlist-edit');
+}
+
+async function updatePlaylist(){
+  const id=document.getElementById('playlist-edit-id').value;
+  const name=document.getElementById('playlist-edit-name').value.trim();
+  if(!name){showToast('플레이리스트명을 입력하세요','error');return;}
+  const screenId=document.getElementById('playlist-edit-screen').value;
+  const contentIds=Array.from(document.querySelectorAll('#content-checklist-edit input:checked')).map(el=>el.value);
+  if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
+  const data={name,storeId:document.getElementById('playlist-edit-store').value,screenId,timeSlot:document.getElementById('playlist-edit-time').value,contentIds};
+  await db.collection('playlists').doc(id).set(data,{merge:true});
+  showToast(`[${name}] 수정됨`,'success');
+  closeModal('modal-playlist-edit');
+  await fetchAll();
+}
+
 async function savePlaylist(){
   const name=document.getElementById('playlist-name').value.trim();
   if(!name){showToast('플레이리스트명을 입력하세요','error');return;}
@@ -1274,7 +1346,17 @@ async function clearAllData(target){
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(el=>el.classList.remove('open'));document.getElementById('preview-body').innerHTML='';}});
-document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o){o.classList.remove('open');if(o.id==='modal-preview')document.getElementById('preview-body').innerHTML='';}});});
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  o.addEventListener('click',function(e){
+    if(e.target===o){
+      o.classList.remove('open');
+      if(o.id==='modal-preview')document.getElementById('preview-body').innerHTML='';
+    }
+  });
+  // 모달 내부 클릭이 테이블 행 클릭으로 전파되지 않게
+  const modal=o.querySelector('.modal,.preview-modal');
+  if(modal) modal.addEventListener('click',function(e){e.stopPropagation();});
+});
 
 // ── TOAST ──
 function showToast(msg,type='info'){
