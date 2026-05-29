@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIGNAGE OS — 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg-base:#070b12;--bg-panel:#0d1520;--bg-card:#111c2e;--bg-hover:#16243a;--bg-input:#0a1220;
+  --border:#1e2f48;--border-bright:#2a4060;
+  --text-primary:#d4e6ff;--text-secondary:#7a9bbf;--text-muted:#3d5a7a;
+  --accent-blue:#00aaff;--accent-green:#00e8a0;--accent-yellow:#ffc840;
+  --accent-red:#ff3d5a;--accent-cyan:#00d4e8;--accent-purple:#a855f7;
+  --glow-blue:0 0 12px rgba(0,170,255,.35);--glow-green:0 0 12px rgba(0,232,160,.35);--glow-red:0 0 12px rgba(255,61,90,.35);
+  --sidebar-w:240px;--radius:8px;--radius-lg:12px;
+  --font-display:'Orbitron',sans-serif;--font-body:'Noto Sans KR',sans-serif;--font-mono:'Share Tech Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg-base);color:var(--text-primary);font-family:var(--font-body);font-size:14px;line-height:1.6;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:9999}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent-blue),var(--accent-cyan),var(--accent-green))}
+.sidebar-logo{display:flex;align-items:center;gap:12px;padding:20px 18px;border-bottom:1px solid var(--border)}
+.logo-icon{font-size:24px;color:var(--accent-blue);text-shadow:var(--glow-blue);animation:icon-pulse 3s ease-in-out infinite}
+@keyframes icon-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.logo-title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--accent-blue)}
+.logo-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:2px}
+.sidebar-nav{flex:1;padding:16px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 18px;background:none;border:none;color:var(--text-secondary);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s;text-align:left;position:relative;width:100%}
+.nav-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:0;background:var(--accent-blue);transition:height .2s}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{background:rgba(0,170,255,.08);color:var(--accent-blue);font-weight:500}
+.nav-item.active::before{height:70%;box-shadow:var(--glow-blue)}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--accent-red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.sys-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary)}
+.pulse-green{width:7px;height:7px;border-radius:50%;background:var(--accent-green);flex-shrink:0;animation:dot-pulse 2s infinite}
+@keyframes dot-pulse{0%{box-shadow:0 0 0 0 rgba(0,232,160,.5)}70%{box-shadow:0 0 0 6px rgba(0,232,160,0)}100%{box-shadow:0 0 0 0 rgba(0,232,160,0)}}
+.sys-time{font-family:var(--font-mono);font-size:18px;color:var(--accent-cyan);letter-spacing:2px}
+.fb-status{font-family:var(--font-mono);font-size:10px;margin-top:2px}
+.fb-status.connected{color:var(--accent-green)}
+.fb-status.disconnected{color:var(--accent-red)}
+
+/* MAIN */
+.main-content{margin-left:var(--sidebar-w);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:60px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.page-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px}
+.breadcrumb{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-stat{display:flex;flex-direction:column;align-items:center;padding:4px 12px;border-radius:var(--radius);background:var(--bg-card);border:1px solid var(--border)}
+.topbar-stat.online{border-color:rgba(0,232,160,.3)}
+.topbar-stat.error{border-color:rgba(255,61,90,.3)}
+.stat-label{font-size:10px;color:var(--text-muted);font-family:var(--font-mono)}
+.stat-value{font-family:var(--font-mono);font-size:18px;font-weight:700}
+.topbar-stat.online .stat-value{color:var(--accent-green)}
+.topbar-stat.error .stat-value{color:var(--accent-red)}
+.btn-refresh{background:none;border:1px solid var(--border);color:var(--text-secondary);width:34px;height:34px;border-radius:var(--radius);cursor:pointer;font-size:18px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.btn-refresh:hover{border-color:var(--accent-blue);color:var(--accent-blue)}
+.spinning{animation:spin .6s linear}
+@keyframes spin{to{transform:rotate(360deg)}}
+.admin-avatar{background:linear-gradient(135deg,var(--accent-blue),var(--accent-cyan));color:#000;font-size:11px;font-weight:700;padding:6px 10px;border-radius:var(--radius)}
+.page{display:none;flex:1;overflow-y:auto;padding:24px}
+.page.active{display:block}
+.page::-webkit-scrollbar{width:4px}
+.page::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:12px;transition:all .25s}
+.kpi-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+.kpi-icon{width:40px;height:40px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.kpi-icon.blue{background:rgba(0,170,255,.12);color:var(--accent-blue)}
+.kpi-icon.green{background:rgba(0,232,160,.12);color:var(--accent-green)}
+.kpi-icon.yellow{background:rgba(255,200,64,.12);color:var(--accent-yellow)}
+.kpi-icon.red{background:rgba(255,61,90,.12);color:var(--accent-red)}
+.kpi-icon.cyan{background:rgba(0,212,232,.12);color:var(--accent-cyan)}
+.kpi-icon.purple{background:rgba(168,85,247,.12);color:var(--accent-purple)}
+.kpi-label{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase}
+.kpi-value{font-family:var(--font-mono);font-size:26px;font-weight:700;line-height:1.1}
+.kpi-value.green{color:var(--accent-green)}
+.kpi-value.yellow{color:var(--accent-yellow)}
+.kpi-value.red{color:var(--accent-red)}
+
+/* DASH */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--text-secondary);text-transform:uppercase}
+.panel-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono)}
+.panel-tag:not(.red){background:rgba(0,232,160,.15);color:var(--accent-green)}
+.panel-tag.red{background:rgba(255,61,90,.15);color:var(--accent-red)}
+.store-status-list,.alert-list{padding:8px 0;max-height:340px;overflow-y:auto}
+.store-status-item{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(30,47,72,.5);transition:background .15s}
+.store-status-item:hover{background:var(--bg-hover)}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(30,47,72,.5)}
+.store-status-name{font-size:13px;font-weight:500}
+.store-status-info{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.alert-dot-red{width:8px;height:8px;border-radius:50%;background:var(--accent-red);flex-shrink:0;margin-top:4px;box-shadow:var(--glow-red)}
+.alert-dot-yellow{width:8px;height:8px;border-radius:50%;background:var(--accent-yellow);flex-shrink:0;margin-top:4px}
+.alert-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.alert-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-family:var(--font-mono);font-weight:600}
+.badge::before{content:'●';font-size:8px}
+.badge-online{background:rgba(0,232,160,.15);color:var(--accent-green)}
+.badge-offline{background:rgba(61,90,122,.3);color:var(--text-muted)}
+.badge-warning{background:rgba(255,200,64,.15);color:var(--accent-yellow)}
+.badge-error{background:rgba(255,61,90,.15);color:var(--accent-red)}
+
+/* PAGE ACTIONS */
+.page-actions{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:0 14px;flex:1;max-width:400px}
+.search-box:focus-within{border-color:var(--accent-blue)}
+.search-icon{color:var(--text-muted);font-size:16px}
+.search-box input{background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:13px;width:100%;padding:10px 0}
+.search-box input::placeholder{color:var(--text-muted)}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary{background:var(--accent-blue);color:#000;font-weight:700}
+.btn-primary:hover{background:#33bbff;box-shadow:var(--glow-blue)}
+.btn-outline{background:none;border:1px solid var(--border-bright);color:var(--text-secondary)}
+.btn-outline:hover{border-color:var(--accent-blue);color:var(--accent-blue)}
+.btn-danger{background:rgba(255,61,90,.15);border:1px solid rgba(255,61,90,.4);color:var(--accent-red)}
+.btn-danger:hover{background:rgba(255,61,90,.25)}
+.btn-green{background:var(--accent-green);color:#000;font-weight:700}
+.btn-yellow{background:rgba(255,200,64,.15);border:1px solid rgba(255,200,64,.3);color:var(--accent-yellow)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+
+/* TABLE */
+.table-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{background:var(--bg-panel);padding:12px 16px;text-align:left;font-family:var(--font-display);font-size:10px;font-weight:400;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.data-table td{padding:13px 16px;border-bottom:1px solid rgba(30,47,72,.4);font-size:13px}
+.data-table tbody tr:hover{background:var(--bg-hover)}
+.data-table tbody tr:last-child td{border-bottom:none}
+.td-mono{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)}
+.action-btns{display:flex;gap:6px;flex-wrap:wrap}
+
+/* 매장 상세 (사이니지 포함) */
+.store-expand{background:var(--bg-hover);border-top:1px solid var(--border)}
+.screen-list{padding:12px 16px}
+.screen-item{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.screen-item:last-child{margin-bottom:0}
+.screen-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.screen-name{font-size:13px;font-weight:500;flex:1}
+.screen-location{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.screen-url-btn{font-size:11px;padding:3px 10px;border-radius:4px;background:rgba(0,232,160,.1);border:1px solid rgba(0,232,160,.3);color:var(--accent-green);cursor:pointer;white-space:nowrap}
+.screen-url-btn:hover{background:rgba(0,232,160,.2)}
+.add-screen-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border);margin-top:8px}
+
+/* CONTENT GRID */
+.store-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.store-tab{padding:6px 14px;border-radius:20px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--font-body);white-space:nowrap}
+.store-tab:hover{border-color:var(--border-bright);color:var(--text-primary)}
+.store-tab.active{background:rgba(0,170,255,.12);border-color:var(--accent-blue);color:var(--accent-blue);font-weight:600}
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.content-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:all .2s}
+.content-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+.content-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;background:linear-gradient(135deg,var(--bg-panel),var(--bg-hover));cursor:pointer;overflow:hidden}
+.content-type-badge{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono);background:rgba(0,0,0,.7);color:var(--accent-cyan);border:1px solid var(--border)}
+.content-info{padding:12px 14px}
+.content-info-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.content-info-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.content-info-url{font-size:11px;color:var(--accent-cyan);font-family:var(--font-mono);word-break:break-all;margin-top:4px;opacity:.8}
+.content-actions{padding:8px 14px 12px;display:flex;gap:6px}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,170,255,.1);color:var(--accent-blue);border:1px solid rgba(0,170,255,.2)}
+.content-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+
+/* PLAYLIST */
+.playlist-layout{display:grid;grid-template-columns:300px 1fr;gap:20px;height:calc(100vh - 160px)}
+.playlist-list-panel,.playlist-detail-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.playlist-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.playlist-item:hover{background:var(--bg-hover)}
+.playlist-item.active{background:rgba(0,170,255,.08);border-left:2px solid var(--accent-blue)}
+.playlist-item-name{font-size:13px;font-weight:500}
+.playlist-item-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.playlist-detail-panel{padding:20px;overflow-y:auto}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-muted);font-size:13px}
+.empty-icon{font-size:48px;opacity:.3}
+.detail-title{font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:16px;letter-spacing:1px}
+.detail-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text-muted);font-family:var(--font-mono);font-size:11px;width:100px;flex-shrink:0;padding-top:2px}
+.playlist-content-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.pci-icon{font-size:18px;width:28px;text-align:center}
+.pci-name{font-size:13px;font-weight:500;flex:1}
+.pci-dur{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+/* MONITOR */
+.monitor-store-section{margin-bottom:28px}
+.monitor-store-header{font-family:var(--font-display);font-size:12px;letter-spacing:2px;color:var(--text-secondary);text-transform:uppercase;padding:8px 0;margin-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.monitor-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all .2s}
+.monitor-card.status-online{border-color:rgba(0,232,160,.3)}
+.monitor-card.status-warning{border-color:rgba(255,200,64,.3)}
+.monitor-card.status-error{border-color:rgba(255,61,90,.3)}
+.monitor-card.status-offline{opacity:.6}
+.mc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.mc-name{font-size:14px;font-weight:600}
+.mc-sub{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:2px}
+.mc-screen{background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:10px;position:relative;overflow:hidden;gap:3px}
+.mc-screen.playing::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,170,255,.06),transparent);animation:screen-scan 3s linear infinite}
+@keyframes screen-scan{to{left:200%}}
+.mc-screen-label{color:var(--accent-cyan);font-size:12px}
+.mc-screen-content{color:var(--text-secondary);font-size:10px}
+.mc-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.mc-info-item{background:var(--bg-panel);border-radius:var(--radius);padding:6px 8px}
+.mc-info-label{font-size:9px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px}
+.mc-info-value{font-size:12px;font-family:var(--font-mono)}
+.mc-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+
+/* LOG */
+.log-filters{display:flex;gap:6px}
+.filter-btn{padding:7px 14px;border-radius:var(--radius);background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);font-family:var(--font-body);font-size:12px;cursor:pointer;transition:all .15s}
+.filter-btn:hover{border-color:var(--border-bright);color:var(--text-primary)}
+.filter-btn.active{background:rgba(0,170,255,.12);border-color:var(--accent-blue);color:var(--accent-blue)}
+.log-level{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--font-mono);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.log-level.error{background:rgba(255,61,90,.15);color:var(--accent-red)}
+.log-level.warning{background:rgba(255,200,64,.15);color:var(--accent-yellow)}
+.log-level.info{background:rgba(0,170,255,.15);color:var(--accent-blue)}
+.log-resolved{font-size:11px;color:var(--accent-green);font-family:var(--font-mono)}
+.log-pending{font-size:11px;color:var(--accent-yellow);font-family:var(--font-mono)}
+
+/* FORM */
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.form-group label{font-size:11px;color:var(--text-secondary);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.form-input{background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:10px 14px;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;outline:none;transition:all .2s;width:100%;resize:vertical}
+.form-input:focus{border-color:var(--accent-blue);box-shadow:0 0 0 2px rgba(0,170,255,.1)}
+.form-input::placeholder{color:var(--text-muted)}
+.form-input option{background:var(--bg-card)}
+.required{color:var(--accent-red)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border-bright);border-radius:var(--radius-lg);width:100%;max-width:540px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.6);animation:modal-in .2s ease-out}
+.modal-wide{max-width:700px}
+@keyframes modal-in{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:13px;letter-spacing:1px}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px;transition:color .15s}
+.modal-close:hover{color:var(--accent-red)}
+.modal-body{padding:20px;overflow-y:auto}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.content-checklist{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);max-height:180px;overflow-y:auto;padding:4px 0}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .15s}
+.checklist-item:hover{background:var(--bg-hover)}
+.checklist-item input[type="checkbox"]{accent-color:var(--accent-blue);width:14px;height:14px}
+.checklist-item label{font-size:13px;cursor:pointer;flex:1}
+
+/* PREVIEW MODAL */
+.preview-modal{background:var(--bg-base);border:1px solid var(--border-bright);border-radius:var(--radius-lg);width:100%;max-width:900px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.8);animation:modal-in .2s ease-out}
+.preview-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.preview-title{font-family:var(--font-display);font-size:13px;letter-spacing:1px;display:flex;align-items:center;gap:10px}
+.preview-type-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono);background:rgba(0,170,255,.15);color:var(--accent-blue);border:1px solid rgba(0,170,255,.2)}
+.preview-body{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;position:relative;min-height:400px}
+.preview-body img{max-width:100%;max-height:70vh;object-fit:contain}
+.preview-body video{max-width:100%;max-height:70vh}
+.preview-body iframe{width:100%;height:70vh;border:none}
+.preview-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.preview-url{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
+.preview-error{color:var(--accent-yellow);font-size:13px;text-align:center;padding:40px;font-family:var(--font-mono)}
+.preview-loading{color:var(--text-muted);font-size:13px;font-family:var(--font-mono);display:flex;flex-direction:column;align-items:center;gap:12px}
+.preview-spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent-blue);border-radius:50%;animation:spin .8s linear infinite}
+
+/* SETTINGS */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.settings-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
+.settings-card-header{font-family:var(--font-display);font-size:12px;letter-spacing:1.5px;color:var(--accent-blue);text-transform:uppercase;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--bg-panel);border:1px solid var(--border-bright);border-radius:12px;cursor:pointer;transition:all .25s}
+.slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:var(--text-muted);border-radius:50%;transition:all .25s}
+.toggle input:checked + .slider{background:rgba(0,232,160,.2);border-color:var(--accent-green)}
+.toggle input:checked + .slider::before{background:var(--accent-green);transform:translateX(20px)}
+
+/* GUIDE */
+.guide-steps{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.guide-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.6;padding:4px 0}
+.guide-num{background:var(--accent-blue);color:#000;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.guide-player-url{background:var(--bg-input);border:1px solid var(--accent-blue);border-radius:var(--radius);padding:10px 14px;font-family:var(--font-mono);font-size:11px;color:var(--accent-cyan);word-break:break-all;margin:4px 0}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:9000}
+.toast{display:flex;align-items:center;gap:12px;background:var(--bg-panel);border:1px solid var(--border-bright);border-left:3px solid var(--accent-blue);border-radius:var(--radius);padding:12px 16px;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .25s ease-out;font-size:13px}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-left-color:var(--accent-green)}
+.toast.error{border-left-color:var(--accent-red)}
+.toast.warning{border-left-color:var(--accent-yellow)}
+.toast-out{animation:toast-out .25s ease-in forwards}
+@keyframes toast-out{to{opacity:0;transform:translateX(20px)}}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:20px;transition:opacity .4s}
+.loading-logo{font-family:var(--font-display);font-size:28px;color:var(--accent-blue);letter-spacing:4px;text-shadow:var(--glow-blue)}
+.loading-bar{width:300px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.loading-progress{height:100%;background:linear-gradient(90deg,var(--accent-blue),var(--accent-cyan));animation:loading-anim 1.5s ease-in-out infinite}
+@keyframes loading-anim{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
+.loading-text{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-logo">◈ SIGNAGE OS</div>
+  <div class="loading-bar"><div class="loading-progress"></div></div>
+  <div class="loading-text" id="loading-text">Firebase 연결 중...</div>
+</div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">◈</span>
+    <div><div class="logo-title">SIGNAGE OS</div><div class="logo-sub">관리자 콘솔 v4.0</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-page="dashboard"><span class="nav-icon">⬡</span>실시간 대시보드</button>
+    <button class="nav-item" data-page="stores"><span class="nav-icon">⊞</span>매장 관리</button>
+    <button class="nav-item" data-page="content"><span class="nav-icon">▣</span>콘텐츠 관리</button>
+    <button class="nav-item" data-page="playlist"><span class="nav-icon">⊕</span>플레이리스트</button>
+    <button class="nav-item" data-page="monitor"><span class="nav-icon">◉</span>실시간 관제<span class="nav-badge" id="alert-badge" style="display:none">0</span></button>
+    <button class="nav-item" data-page="logs"><span class="nav-icon">≡</span>장애 로그</button>
+    <button class="nav-item" data-page="guide"><span class="nav-icon">?</span>사용법 안내</button>
+    <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span>설정</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sys-status"><span class="pulse-green"></span>시스템 운영중</div>
+    <div class="sys-time" id="sys-time">00:00:00</div>
+    <div class="fb-status disconnected" id="fb-status">● Firebase 연결중...</div>
+  </div>
+</aside>
+
+<main class="main-content">
+  <header class="topbar">
+    <div>
+      <h1 class="page-title" id="page-title">실시간 대시보드</h1>
+      <div class="breadcrumb" id="breadcrumb">홈 / 대시보드</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-stat"><span class="stat-label">총매장</span><span class="stat-value" id="top-total">0</span></div>
+      <div class="topbar-stat online"><span class="stat-label">온라인</span><span class="stat-value" id="top-online">0</span></div>
+      <div class="topbar-stat error"><span class="stat-label">장애</span><span class="stat-value" id="top-error">0</span></div>
+      <button class="btn-refresh" id="btn-refresh">⟳</button>
+      <div class="admin-avatar">관리자</div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-icon blue">⬡</div><div><div class="kpi-label">전체 매장</div><div class="kpi-value" id="kpi-total">0</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon green">◉</div><div><div class="kpi-label">온라인</div><div class="kpi-value green" id="kpi-online">0</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon yellow">⚠</div><div><div class="kpi-label">주의</div><div class="kpi-value yellow" id="kpi-warn">0</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon red">✕</div><div><div class="kpi-label">장애</div><div class="kpi-value red" id="kpi-error">0</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon purple">▣</div><div><div class="kpi-label">사이니지</div><div class="kpi-value" id="kpi-screens">0</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon cyan">⊕</div><div><div class="kpi-label">콘텐츠</div><div class="kpi-value" id="kpi-content">0</div></div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="panel"><div class="panel-header"><span>매장 상태 현황</span><span class="panel-tag">LIVE</span></div><div class="store-status-list" id="dash-store-list"></div></div>
+      <div class="panel"><div class="panel-header"><span>최근 장애 알림</span><span class="panel-tag red">ALERT</span></div><div class="alert-list" id="dash-alert-list"></div></div>
+    </div>
+  </section>
+
+  <!-- STORES -->
+  <section class="page" id="page-stores">
+    <div class="page-actions">
+      <div class="search-box"><span class="search-icon">⌕</span><input type="text" id="store-search" placeholder="매장명, 지역으로 검색..."/></div>
+      <button class="btn btn-primary" onclick="openStoreModal()">+ 매장 추가</button>
+    </div>
+    <div class="table-panel">
+      <table class="data-table">
+        <thead><tr><th>매장명</th><th>지역</th><th>담당자</th><th>사이니지</th><th>상태</th><th>마지막 접속</th><th>작업</th></tr></thead>
+        <tbody id="store-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CONTENT -->
+  <section class="page" id="page-content">
+    <div class="page-actions">
+      <div class="search-box"><span class="search-icon">⌕</span><input type="text" id="content-search" placeholder="콘텐츠명 검색..."/></div>
+      <button class="btn btn-primary" id="btn-add-content" onclick="openContentModal()">+ 콘텐츠 등록</button>
+    </div>
+    <div class="store-tabs" id="store-tabs"></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-family:var(--font-mono)" id="content-store-label">전체 콘텐츠</div>
+    <div class="content-grid" id="content-grid"></div>
+  </section>
+
+  <!-- PLAYLIST -->
+  <section class="page" id="page-playlist">
+    <div class="page-actions"><button class="btn btn-primary" onclick="openPlaylistModal()">+ 플레이리스트 생성</button></div>
+    <div class="playlist-layout">
+      <div class="playlist-list-panel"><div class="panel-header"><span>플레이리스트 목록</span></div><div id="playlist-list"></div></div>
+      <div class="playlist-detail-panel" id="playlist-detail"><div class="empty-state"><div class="empty-icon">⊕</div><div>플레이리스트를 선택하세요</div></div></div>
+    </div>
+  </section>
+
+  <!-- MONITOR -->
+  <section class="page" id="page-monitor">
+    <div id="monitor-container"></div>
+  </section>
+
+  <!-- LOGS -->
+  <section class="page" id="page-logs">
+    <div class="page-actions">
+      <div class="log-filters">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="error">장애</button>
+        <button class="filter-btn" data-filter="warning">주의</button>
+        <button class="filter-btn" data-filter="info">정보</button>
+      </div>
+      <button class="btn btn-outline" onclick="clearLogs()">로그 초기화</button>
+    </div>
+    <div class="table-panel">
+      <table class="data-table"><thead><tr><th>시각</th><th>레벨</th><th>매장</th><th>사이니지</th><th>내용</th><th>처리상태</th></tr></thead><tbody id="log-tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section class="page" id="page-guide">
+    <div class="settings-grid" style="max-width:960px">
+      <div class="settings-card" style="grid-column:1/-1">
+        <div class="settings-card-header">? SIGNAGE OS 사용법 안내 v4.0</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:2">현재 관리자 URL: <span id="guide-admin-url" style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:11px"></span></div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header" style="color:var(--accent-green)">① 매장 + 사이니지 등록</div>
+        <div class="guide-steps">
+          <div class="guide-step"><span class="guide-num">1</span>매장 관리 → <b>+ 매장 추가</b></div>
+          <div class="guide-step"><span class="guide-num">2</span>매장 저장 후 행 클릭하면 사이니지 목록 펼쳐짐</div>
+          <div class="guide-step"><span class="guide-num">3</span><b>+ 사이니지 추가</b> → 이름/위치 입력 → 추가</div>
+          <div class="guide-step"><span class="guide-num">4</span>사이니지별 <b>[📋 URL복사]</b> → 태블릿에 붙여넣기</div>
+          <div class="guide-step" style="color:var(--accent-cyan)">💡 사이니지마다 다른 URL = 개별 콘텐츠 재생!</div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header" style="color:var(--accent-blue)">② 콘텐츠 등록</div>
+        <div class="guide-steps">
+          <div class="guide-step"><span class="guide-num">1</span>콘텐츠 관리 → 매장 탭 선택 → <b>+ 콘텐츠 등록</b></div>
+          <div class="guide-step"><span class="guide-num">2</span>유형 선택 (이미지/영상/유튜브/웹)</div>
+          <div class="guide-step"><span class="guide-num">3</span>URL 입력 (구글드라이브 링크 자동 변환)</div>
+          <div class="guide-step" style="color:var(--accent-cyan)">💡 이미지: imgur.com 업로드 후 URL</div>
+          <div class="guide-step" style="color:var(--accent-cyan)">💡 영상: 유튜브 업로드 후 URL</div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header" style="color:var(--accent-cyan)">③ 플레이리스트 설정</div>
+        <div class="guide-steps">
+          <div class="guide-step"><span class="guide-num">1</span>플레이리스트 → <b>+ 플레이리스트 생성</b></div>
+          <div class="guide-step"><span class="guide-num">2</span>매장 선택 → <b>사이니지 선택</b> (개별 지정!)</div>
+          <div class="guide-step"><span class="guide-num">3</span>재생할 콘텐츠 체크 → 생성</div>
+          <div class="guide-step" style="color:var(--accent-cyan)">💡 사이니지마다 다른 플레이리스트 가능!</div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header" style="color:var(--accent-yellow)">④ 원격 제어</div>
+        <div class="guide-steps">
+          <div class="guide-step"><span class="guide-num">1</span>실시간 관제 → 매장별 사이니지 카드</div>
+          <div class="guide-step"><span class="guide-num">2</span>각 카드에서 직접 제어</div>
+          <div class="guide-step" style="color:var(--text-muted)">⟳ 새로고침 · ▶ 재시작</div>
+          <div class="guide-step" style="color:var(--text-muted)">⏸ 대기화면 · ↺ 재생재개</div>
+          <div class="guide-step" style="color:var(--text-muted)">※ 명령은 5초 내 적용</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="page" id="page-settings">
+    <div class="settings-grid">
+      <div class="settings-card">
+        <div class="settings-card-header">⚙ 시스템 설정</div>
+        <div class="form-group"><label>시스템 이름</label><input type="text" id="setting-sysname" class="form-input" value="SIGNAGE OS 관제센터"/></div>
+        <div class="form-group"><label>관리자 이메일</label><input type="email" id="setting-email" class="form-input" value="admin@signageos.io"/></div>
+        <button class="btn btn-primary" onclick="showToast('설정이 저장되었습니다','success')">설정 저장</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header">◈ Firebase 연결 정보</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);line-height:2.2">
+          <div>프로젝트: <span style="color:var(--accent-cyan)">signage-all-in-one</span></div>
+          <div>저장소: <span style="color:var(--accent-cyan)">Firestore</span></div>
+          <div id="fb-detail-status" style="color:var(--accent-green)">● 연결됨</div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-header" style="color:var(--accent-red)">⚠ 데이터 초기화</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">Firebase 데이터를 초기화합니다. 삭제된 데이터는 복구 불가합니다.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-outline" onclick="resetSampleData()">↺ 샘플 데이터로 초기화</button>
+          <button class="btn btn-yellow" onclick="clearAllData('contents')">콘텐츠 전체 삭제</button>
+          <button class="btn btn-yellow" onclick="clearAllData('playlists')">플레이리스트 전체 삭제</button>
+          <button class="btn btn-danger" onclick="clearAllData('all')">🗑 전체 데이터 삭제</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MODALS -->
+<!-- Store Modal -->
+<div class="modal-overlay" id="modal-store">
+  <div class="modal">
+    <div class="modal-header"><span id="store-modal-title">매장 추가</span><button class="modal-close" onclick="closeModal('modal-store')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="store-edit-id"/>
+      <div class="form-group"><label>매장명 <span class="required">*</span></label><input type="text" id="store-name" class="form-input" placeholder="예: 강남점"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>지역</label><select id="store-region" class="form-input"><option>서울</option><option>경기</option><option>부산</option><option>대구</option><option>인천</option><option>광주</option><option>대전</option><option>제주</option></select></div>
+        <div class="form-group"><label>상태</label><select id="store-status" class="form-input"><option value="online">온라인</option><option value="offline">오프라인</option><option value="warning">주의</option><option value="error">장애</option></select></div>
+      </div>
+      <div class="form-group"><label>주소</label><input type="text" id="store-address" class="form-input" placeholder="주소 입력"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>담당자</label><input type="text" id="store-manager" class="form-input"/></div>
+        <div class="form-group"><label>연락처</label><input type="text" id="store-phone" class="form-input" placeholder="010-0000-0000"/></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-store')">취소</button><button class="btn btn-primary" onclick="saveStore()">저장</button></div>
+  </div>
+</div>
+
+<!-- Content Modal -->
+<div class="modal-overlay" id="modal-content">
+  <div class="modal">
+    <div class="modal-header"><span id="content-modal-title">콘텐츠 등록</span><button class="modal-close" onclick="closeModal('modal-content')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="content-edit-id"/>
+      <div class="form-group"><label>콘텐츠명 <span class="required">*</span></label><input type="text" id="content-name" class="form-input" placeholder="예: 점심 특선 메뉴"/></div>
+      <div class="form-group"><label>적용 매장 <span class="required">*</span></label><select id="content-store-id" class="form-input"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>유형</label><select id="content-type" class="form-input"><option value="image">이미지</option><option value="video">영상</option><option value="youtube">유튜브</option><option value="url">웹페이지</option></select></div>
+        <div class="form-group"><label>재생시간 (초)</label><input type="number" id="content-duration" class="form-input" value="15" min="1"/></div>
+      </div>
+      <div class="form-group">
+        <label>콘텐츠 URL <span class="required">*</span></label>
+        <input type="text" id="content-url" class="form-input" placeholder="https://..." oninput="onUrlInput()"/>
+        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">구글드라이브 공유링크를 그대로 붙여넣으면 자동 변환됩니다</small>
+        <div id="url-preview" style="display:none;font-size:11px;color:var(--accent-green);font-family:var(--font-mono);margin-top:4px;word-break:break-all;padding:6px 10px;background:rgba(0,232,160,.08);border-radius:4px;border:1px solid rgba(0,232,160,.2)"></div>
+      </div>
+      <div class="form-group"><label>태그 (쉼표로 구분)</label><input type="text" id="content-tags" class="form-input" placeholder="예: 메뉴, 점심, 할인"/></div>
+      <div class="form-group"><label>메모</label><textarea id="content-memo" class="form-input" rows="2" placeholder="설명 메모"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-content')">취소</button><button class="btn btn-primary" onclick="saveContent()">등록</button></div>
+  </div>
+</div>
+
+<!-- Playlist Modal -->
+<div class="modal-overlay" id="modal-playlist">
+  <div class="modal modal-wide">
+    <div class="modal-header"><span id="playlist-modal-title">플레이리스트 생성</span><button class="modal-close" onclick="closeModal('modal-playlist')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>플레이리스트명 <span class="required">*</span></label><input type="text" id="playlist-name" class="form-input" placeholder="예: 입구 메뉴 리스트"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>매장 선택 <span class="required">*</span></label><select id="playlist-store" class="form-input" onchange="onPlaylistStoreChange()"></select></div>
+        <div class="form-group"><label>사이니지 선택 <span class="required">*</span></label><select id="playlist-screen" class="form-input"></select></div>
+      </div>
+      <div class="form-group"><label>운영 시간대</label><select id="playlist-time" class="form-input"><option value="all">상시</option><option value="morning">오전</option><option value="lunch">점심</option><option value="afternoon">오후</option><option value="dinner">저녁</option></select></div>
+      <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist')">취소</button><button class="btn btn-primary" onclick="savePlaylist()">생성</button></div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="modal-preview">
+  <div class="preview-modal">
+    <div class="preview-header">
+      <div class="preview-title"><span id="preview-icon">🖼</span><span id="preview-name">미리보기</span><span class="preview-type-tag" id="preview-type-tag">IMAGE</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)" id="preview-duration"></span><button class="modal-close" onclick="closePreview()">✕</button></div>
+    </div>
+    <div class="preview-body" id="preview-body"><div class="preview-loading"><div class="preview-spinner"></div><span>로딩 중...</span></div></div>
+    <div class="preview-footer"><div class="preview-url" id="preview-url-label"></div><a id="preview-open-link" href="#" target="_blank" class="btn btn-outline btn-sm">↗ 새 탭에서 열기</a></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCB-Bw35hyiuIn__wjUQVqZ8hRdSVo9mKg",
+  authDomain: "signage-all-in-one.firebaseapp.com",
+  projectId: "signage-all-in-one",
+  storageBucket: "signage-all-in-one.firebasestorage.app",
+  messagingSenderId: "119443711079",
+  appId: "1:119443711079:web:186401454f9c7e50f320c2"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── 상태 ──
+let stores=[], screens=[], contents=[], playlists=[], logs=[];
+let selectedPlaylistId=null, currentPage='dashboard', logFilter='all', selectedContentStore='all';
+
+// ── 헬퍼 ──
+function nowStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function typeIcon(t){return{image:'🖼',video:'▶',youtube:'▶️',url:'🌐'}[t]||'📄';}
+function timeSlotLabel(t){return{all:'상시',morning:'오전',lunch:'점심',afternoon:'오후',dinner:'저녁'}[t]||t;}
+
+function calcStatus(lastSeen){
+  if(!lastSeen) return 'offline';
+  const diff=(Date.now()-new Date(lastSeen).getTime())/60000;
+  if(diff<=2) return 'online';
+  if(diff<=5) return 'warning';
+  return 'offline';
+}
+
+function statusBadge(s){
+  const m={online:'온라인',offline:'오프라인',warning:'주의',error:'장애'};
+  return `<span class="badge badge-${s}">${m[s]||s}</span>`;
+}
+
+function countScreenStatus(status){
+  return screens.filter(sc=>calcStatus(sc.lastSeen)===status).length;
+}
+
+// ── Firebase 상태 ──
+function setFbStatus(ok){
+  const el=document.getElementById('fb-status');
+  el.textContent=ok?'● Firebase 연결됨':'● Firebase 연결 끊김';
+  el.className='fb-status '+(ok?'connected':'disconnected');
+  const d=document.getElementById('fb-detail-status');
+  if(d){d.textContent=ok?'● 연결됨':'● 연결 끊김';d.style.color=ok?'var(--accent-green)':'var(--accent-red)';}
+}
+
+// ── 로딩 ──
+function hideLoading(){
+  const el=document.getElementById('loading-overlay');
+  el.style.opacity='0';
+  setTimeout(()=>el.style.display='none',400);
+}
+
+// ── 데이터 로드 ──
+async function fetchAll(){
+  try{
+    const [s,sc,c,p,l]=await Promise.all([
+      db.collection('stores').get(),
+      db.collection('screens').get(),
+      db.collection('contents').get(),
+      db.collection('playlists').get(),
+      db.collection('logs').orderBy('ts','desc').limit(50).get(),
+    ]);
+    stores    = s.docs.map(d=>({id:d.id,...d.data()}));
+    screens   = sc.docs.map(d=>({id:d.id,...d.data()}));
+    contents  = c.docs.map(d=>({id:d.id,...d.data()}));
+    playlists = p.docs.map(d=>({id:d.id,...d.data()}));
+    logs      = l.docs.map(d=>({id:d.id,...d.data()}));
+    setFbStatus(true);
+    updateTopStats();
+    updateAlertBadge();
+    renderPage(currentPage);
+  }catch(e){setFbStatus(false);console.error(e);}
+}
+
+// ── 상단 통계 ──
+function updateTopStats(){
+  const online = countScreenStatus('online');
+  const error  = countScreenStatus('error') + screens.filter(sc=>calcStatus(sc.lastSeen)==='offline').length;
+  document.getElementById('top-total').textContent  = stores.length;
+  document.getElementById('top-online').textContent = online;
+  document.getElementById('top-error').textContent  = countScreenStatus('offline');
+  document.getElementById('kpi-total').textContent   = stores.length;
+  document.getElementById('kpi-online').textContent  = countScreenStatus('online');
+  document.getElementById('kpi-warn').textContent    = countScreenStatus('warning');
+  document.getElementById('kpi-error').textContent   = countScreenStatus('offline');
+  document.getElementById('kpi-screens').textContent = screens.length;
+  document.getElementById('kpi-content').textContent = contents.length;
+}
+
+function updateAlertBadge(){
+  const n=logs.filter(l=>l.level!=='info'&&!l.resolved).length;
+  const b=document.getElementById('alert-badge');
+  b.textContent=n; b.style.display=n>0?'':'none';
+}
+
+// ── 라우터 ──
+const PAGE_META={
+  dashboard:{title:'실시간 대시보드',bc:'홈 / 대시보드'},
+  stores:{title:'매장 관리',bc:'홈 / 매장 관리'},
+  content:{title:'콘텐츠 관리',bc:'홈 / 콘텐츠 관리'},
+  playlist:{title:'플레이리스트 관리',bc:'홈 / 플레이리스트'},
+  monitor:{title:'실시간 관제',bc:'홈 / 실시간 관제'},
+  logs:{title:'장애 로그',bc:'홈 / 장애 로그'},
+  guide:{title:'사용법 안내',bc:'홈 / 사용법 안내'},
+  settings:{title:'설정',bc:'홈 / 설정'},
+};
+function navigate(page){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const m=PAGE_META[page]||{title:page,bc:'홈'};
+  document.getElementById('page-title').textContent=m.title;
+  document.getElementById('breadcrumb').textContent=m.bc;
+  currentPage=page;
+  renderPage(page);
+}
+function renderPage(p){
+  const map={dashboard:renderDashboard,stores:renderStores,content:()=>{renderStoreTabs();renderContent();},playlist:renderPlaylist,monitor:renderMonitor,logs:renderLogs,guide:renderGuide,settings:()=>{}};
+  if(map[p]) map[p]();
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  updateTopStats();
+  // 매장 목록 (사이니지 상태 기반)
+  document.getElementById('dash-store-list').innerHTML=stores.length
+    ?stores.map(s=>{
+      const storeScreens=screens.filter(sc=>sc.storeId===s.id);
+      const onlineCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+      const worstStatus=storeScreens.some(sc=>calcStatus(sc.lastSeen)==='offline')?'offline':storeScreens.some(sc=>calcStatus(sc.lastSeen)==='warning')?'warning':'online';
+      return`<div class="store-status-item"><div><div class="store-status-name">${s.name}</div><div class="store-status-info">${s.region} · 사이니지 ${storeScreens.length}대 · 온라인 ${onlineCount}대</div></div>${statusBadge(storeScreens.length?worstStatus:'offline')}</div>`;
+    }).join('')
+    :'<div style="padding:20px;text-align:center;color:var(--text-muted)">매장 없음</div>';
+
+  const recent=logs.filter(l=>l.level!=='info').slice(0,5);
+  document.getElementById('dash-alert-list').innerHTML=recent.length
+    ?recent.map(l=>`<div class="alert-item"><div class="${l.level==='error'?'alert-dot-red':'alert-dot-yellow'}"></div><div><div class="alert-title">${l.message}</div><div class="alert-meta">${l.storeName||''} ${l.screenName?'· '+l.screenName:''} · ${l.ts}</div></div></div>`).join('')
+    :'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">알림 없음</div>';
+}
+
+// ── STORES ──
+let expandedStoreId = null;
+
+function renderStores(filter=''){
+  let list=filter?stores.filter(s=>s.name.includes(filter)||s.region.includes(filter)):stores;
+  const tbody=document.getElementById('store-tbody');
+  tbody.innerHTML=list.length
+    ?list.map(s=>{
+      const storeScreens=screens.filter(sc=>sc.storeId===s.id);
+      const onlineCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+      const isExpanded=expandedStoreId===s.id;
+      const screenRows=isExpanded?`
+        <tr class="store-expand"><td colspan="7">
+          <div class="screen-list">
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">◈ 사이니지 목록</div>
+            ${storeScreens.length?storeScreens.map(sc=>{
+              const scStatus=calcStatus(sc.lastSeen);
+              return`<div class="screen-item">
+                <span class="screen-icon">📺</span>
+                <div style="flex:1">
+                  <div class="screen-name">${sc.name}</div>
+                  <div class="screen-location">${sc.location||'위치 미지정'} · 마지막접속: ${sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-'}</div>
+                </div>
+                ${statusBadge(scStatus)}
+                <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
+                <button class="btn btn-danger btn-xs" onclick="deleteScreen('${sc.id}','${sc.name}')">삭제</button>
+              </div>`;
+            }).join(''):'<div style="color:var(--text-muted);font-size:12px;padding:8px 0">등록된 사이니지 없음</div>'}
+            <div class="add-screen-row">
+              <input type="text" placeholder="사이니지 이름 (예: 입구)" class="form-input" id="new-screen-name-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
+              <input type="text" placeholder="위치 (예: 1층 입구)" class="form-input" id="new-screen-loc-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
+              <select class="form-input" id="new-screen-orient-${s.id}" style="padding:7px 12px;font-size:12px;width:auto">
+                <option value="landscape">가로</option>
+                <option value="portrait-left">세로(좌)</option>
+                <option value="portrait-right">세로(우)</option>
+                <option value="flip">180°</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="addScreen('${s.id}')">+ 추가</button>
+            </div>
+          </div>
+        </td></tr>`:'';
+      return`<tr style="cursor:pointer" onclick="toggleStore('${s.id}')">
+        <td style="font-weight:500">${isExpanded?'▼ ':''} ${s.name}</td>
+        <td class="td-mono">${s.region}</td>
+        <td>${s.manager||'-'}</td>
+        <td><span style="color:var(--accent-cyan);font-family:var(--font-mono)">${storeScreens.length}대</span> <span style="color:var(--text-muted);font-size:11px">(온라인 ${onlineCount})</span></td>
+        <td onclick="event.stopPropagation()">${statusBadge(storeScreens.length?calcStatus(storeScreens[0]?.lastSeen):'offline')}</td>
+        <td class="td-mono" onclick="event.stopPropagation()">${s.lastSeen||'-'}</td>
+        <td onclick="event.stopPropagation()"><div class="action-btns">
+          <button class="btn btn-outline btn-sm" onclick="editStore('${s.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStore('${s.id}')">삭제</button>
+        </div></td>
+      </tr>${screenRows}`;
+    }).join('')
+    :'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">매장 없음</td></tr>';
+}
+
+function toggleStore(id){
+  expandedStoreId = expandedStoreId===id ? null : id;
+  renderStores(document.getElementById('store-search').value);
+}
+
+// 사이니지 추가
+async function addScreen(storeId){
+  const name=document.getElementById('new-screen-name-'+storeId).value.trim();
+  const loc=document.getElementById('new-screen-loc-'+storeId).value.trim();
+  const orient=document.getElementById('new-screen-orient-'+storeId).value;
+  if(!name){showToast('사이니지 이름을 입력하세요','error');return;}
+  await db.collection('screens').add({
+    storeId, name, location:loc, orientation:orient,
+    lastSeen:null, status:'offline', currentContent:'-',
+    createdAt:new Date().toISOString()
+  });
+  showToast(`[${name}] 사이니지 추가됨`,'success');
+  await fetchAll();
+}
+
+// 사이니지 삭제
+async function deleteScreen(id, name){
+  if(!confirm(`[${name}] 사이니지를 삭제하시겠습니까?`))return;
+  await db.collection('screens').doc(id).delete();
+  showToast(`[${name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+
+// 사이니지 URL 복사
+function copyScreenUrl(screenId, screenName){
+  const base=window.location.href.replace('admin.html','');
+  const url=base+'player.html?screen='+screenId;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast(`[${screenName}] URL 복사됨!`,'success');
+  }).catch(()=>{
+    prompt(`[${screenName}] 플레이어 URL:`,url);
+  });
+}
+
+// 매장 모달
+function openStoreModal(id=null){
+  ['store-name','store-address','store-manager','store-phone'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('store-status').value='online';
+  document.getElementById('store-region').value='서울';
+  document.getElementById('store-edit-id').value='';
+  document.getElementById('store-modal-title').textContent='매장 추가';
+  if(id){
+    const s=stores.find(x=>x.id===id);if(!s)return;
+    document.getElementById('store-edit-id').value=s.id;
+    document.getElementById('store-name').value=s.name;
+    document.getElementById('store-region').value=s.region||'서울';
+    document.getElementById('store-address').value=s.address||'';
+    document.getElementById('store-manager').value=s.manager||'';
+    document.getElementById('store-phone').value=s.phone||'';
+    document.getElementById('store-status').value=s.status||'online';
+    document.getElementById('store-modal-title').textContent='매장 수정';
+  }
+  openModal('modal-store');
+}
+function editStore(id){openStoreModal(id);}
+async function deleteStore(id){
+  const s=stores.find(x=>x.id===id);if(!s)return;
+  if(!confirm(`[${s.name}] 매장과 모든 사이니지를 삭제하시겠습니까?`))return;
+  // 관련 사이니지도 삭제
+  const storeScreens=screens.filter(sc=>sc.storeId===id);
+  for(const sc of storeScreens) await db.collection('screens').doc(sc.id).delete();
+  await db.collection('stores').doc(id).delete();
+  showToast(`[${s.name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+async function saveStore(){
+  const name=document.getElementById('store-name').value.trim();
+  if(!name){showToast('매장명을 입력하세요','error');return;}
+  const id=document.getElementById('store-edit-id').value;
+  const data={name,region:document.getElementById('store-region').value,address:document.getElementById('store-address').value.trim(),manager:document.getElementById('store-manager').value.trim(),phone:document.getElementById('store-phone').value.trim(),status:document.getElementById('store-status').value,lastSeen:nowStr()};
+  if(id) await db.collection('stores').doc(id).set(data,{merge:true});
+  else await db.collection('stores').add(data);
+  showToast(`[${name}] ${id?'수정':'추가'}됨`,'success');
+  closeModal('modal-store');
+  await fetchAll();
+}
+
+// ── CONTENT ──
+function renderStoreTabs(){
+  const tabEl=document.getElementById('store-tabs');
+  if(!tabEl)return;
+  const allActive=selectedContentStore==='all'?'active':'';
+  let html=`<button class="store-tab ${allActive}" onclick="selectContentStore('all')">전체</button>`;
+  stores.forEach(s=>{
+    const act=selectedContentStore===s.id?'active':'';
+    html+=`<button class="store-tab ${act}" onclick="selectContentStore('${s.id}')">${s.name}</button>`;
+  });
+  tabEl.innerHTML=html;
+}
+function selectContentStore(storeId){
+  selectedContentStore=storeId;
+  renderStoreTabs();
+  renderContent();
+  const store=stores.find(s=>s.id===storeId);
+  const btn=document.getElementById('btn-add-content');
+  if(btn) btn.textContent=store?`+ ${store.name} 콘텐츠 등록`:'+ 콘텐츠 등록';
+  const label=document.getElementById('content-store-label');
+  if(label){
+    const list=selectedContentStore==='all'?contents:contents.filter(c=>c.storeId===selectedContentStore);
+    label.textContent=(store?store.name+' 콘텐츠':'전체 콘텐츠')+' ('+list.length+'개)';
+  }
+}
+function renderContent(filter=''){
+  let list=selectedContentStore==='all'?contents:contents.filter(c=>c.storeId===selectedContentStore);
+  if(filter) list=list.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+  const label=document.getElementById('content-store-label');
+  if(label){const store=stores.find(s=>s.id===selectedContentStore);label.textContent=(store?store.name+' 콘텐츠':'전체 콘텐츠')+' ('+list.length+'개)';}
+  document.getElementById('content-grid').innerHTML=list.length
+    ?list.map(c=>{
+      const cStore=stores.find(s=>s.id===c.storeId);
+      let thumbHtml='';
+      if(c.type==='image'){
+        thumbHtml=`<img src="${c.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'" /><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:36px">🖼</div>`;
+      }else if(c.type==='video'){
+        thumbHtml=`<video src="${c.url}" style="width:100%;height:100%;object-fit:cover" preload="metadata" muted></video>`;
+      }else if(c.type==='youtube'){
+        let vid='';const m1=(c.url||'').match(/watch\?v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?]+)/);
+        if(m1)vid=m1[1];else if(m2)vid=m2[1];
+        thumbHtml=vid?`<img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover"/>`:' <div style="font-size:36px">▶️</div>';
+      }else{thumbHtml=`<div style="font-size:36px">${typeIcon(c.type)}</div>`;}
+      return`<div class="content-card">
+        <div class="content-thumb" onclick="previewContent('${c.id}')" style="overflow:hidden">${thumbHtml}<span class="content-type-badge">${c.type.toUpperCase()}</span></div>
+        <div class="content-info">
+          <div class="content-info-name">${c.name}</div>
+          <div class="content-info-meta">${c.duration}초 · ${cStore?'<span style="color:var(--accent-cyan)">'+cStore.name+'</span>':''}</div>
+          <div class="content-info-url">${c.url?c.url.slice(0,45)+'...':''}</div>
+          <div class="content-tags">${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="content-actions">
+          <button class="btn btn-primary btn-sm" style="flex:1" onclick="previewContent('${c.id}')">▶ 미리보기</button>
+          <button class="btn btn-outline btn-sm" onclick="editContent('${c.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteContent('${c.id}')">삭제</button>
+        </div>
+      </div>`;
+    }).join('')
+    :'<div style="color:var(--text-muted);font-size:13px;padding:20px">콘텐츠 없음</div>';
+}
+function openContentModal(id=null){
+  ['content-name','content-url','content-tags','content-memo'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('content-duration').value=15;
+  document.getElementById('content-type').value='image';
+  document.getElementById('content-edit-id').value='';
+  document.getElementById('content-modal-title').textContent='콘텐츠 등록';
+  document.getElementById('url-preview').style.display='none';
+  const sel=document.getElementById('content-store-id');
+  sel.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(selectedContentStore!=='all') sel.value=selectedContentStore;
+  if(id){
+    const c=contents.find(x=>x.id===id);if(!c)return;
+    document.getElementById('content-edit-id').value=c.id;
+    document.getElementById('content-name').value=c.name;
+    document.getElementById('content-type').value=c.type;
+    document.getElementById('content-duration').value=c.duration;
+    document.getElementById('content-url').value=c.url||'';
+    document.getElementById('content-tags').value=(c.tags||[]).join(', ');
+    document.getElementById('content-memo').value=c.memo||'';
+    sel.value=c.storeId||'';
+    document.getElementById('content-modal-title').textContent='콘텐츠 수정';
+  }
+  openModal('modal-content');
+}
+function editContent(id){openContentModal(id);}
+async function deleteContent(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`[${c.name}] 삭제?`))return;
+  await db.collection('contents').doc(id).delete();
+  showToast(`[${c.name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+async function saveContent(){
+  const name=document.getElementById('content-name').value.trim();
+  const url=convertUrl(document.getElementById('content-url').value.trim());
+  if(!name){showToast('콘텐츠명을 입력하세요','error');return;}
+  if(!url){showToast('URL을 입력하세요','error');return;}
+  const id=document.getElementById('content-edit-id').value;
+  const data={name,type:document.getElementById('content-type').value,duration:parseInt(document.getElementById('content-duration').value)||15,url,storeId:document.getElementById('content-store-id').value,tags:document.getElementById('content-tags').value.split(',').map(t=>t.trim()).filter(Boolean),memo:document.getElementById('content-memo').value.trim(),createdAt:new Date().toISOString()};
+  if(id) await db.collection('contents').doc(id).set(data,{merge:true});
+  else await db.collection('contents').add(data);
+  showToast(`[${name}] ${id?'수정':'등록'}됨`,'success');
+  closeModal('modal-content');
+  await fetchAll();
+}
+
+// URL 변환
+function convertUrl(url){
+  if(!url)return url;
+  const g1=url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+  if(g1)return'https://drive.google.com/uc?export=view&id='+g1[1];
+  const g2=url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if(g2)return'https://drive.google.com/uc?export=view&id='+g2[1];
+  if(url.includes('dropbox.com')&&url.includes('dl=0'))return url.replace('dl=0','raw=1');
+  return url;
+}
+function onUrlInput(){
+  const raw=document.getElementById('content-url').value.trim();
+  const preview=document.getElementById('url-preview');
+  if(!raw||!preview)return;
+  const converted=convertUrl(raw);
+  if(converted!==raw){preview.textContent='자동 변환됨 → '+converted;preview.style.display='block';}
+  else preview.style.display='none';
+}
+
+// 미리보기
+function previewContent(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  const icons={image:'🖼',video:'▶',youtube:'▶️',url:'🌐'};
+  document.getElementById('preview-name').textContent=c.name;
+  document.getElementById('preview-icon').textContent=icons[c.type]||'📄';
+  document.getElementById('preview-type-tag').textContent=c.type.toUpperCase();
+  document.getElementById('preview-duration').textContent='재생시간: '+c.duration+'초';
+  document.getElementById('preview-url-label').textContent=c.url||'';
+  document.getElementById('preview-open-link').href=c.url||'#';
+  const body=document.getElementById('preview-body');
+  body.innerHTML='<div class="preview-loading"><div class="preview-spinner"></div><span>로딩 중...</span></div>';
+  openModal('modal-preview');
+  setTimeout(()=>{
+    if(c.type==='image'){
+      const img=document.createElement('img');
+      img.src=c.url;img.style.cssText='max-width:100%;max-height:70vh;object-fit:contain';
+      img.onload=()=>{body.innerHTML='';body.appendChild(img);};
+      img.onerror=()=>{body.innerHTML=`<div class="preview-error">⚠ 이미지를 불러올 수 없습니다<br/><small style="color:var(--text-muted)">${c.url}</small></div>`;};
+    }else if(c.type==='video'){
+      body.innerHTML=`<video controls autoplay muted style="max-width:100%;max-height:70vh" src="${c.url}"></video>`;
+    }else if(c.type==='youtube'){
+      let vid='';const m1=(c.url||'').match(/watch\?v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?]+)/);
+      if(m1)vid=m1[1];else if(m2)vid=m2[1];
+      if(vid)body.innerHTML=`<iframe style="width:100%;height:70vh;border:none" src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      else body.innerHTML='<div class="preview-error">⚠ 유튜브 URL 인식 불가</div>';
+    }else if(c.type==='url'){
+      body.innerHTML=`<iframe style="width:100%;height:70vh;border:none" src="${c.url}"></iframe>`;
+    }else{
+      body.innerHTML=`<div class="preview-error">⚠ 미리보기 불가<br/><a href="${c.url}" target="_blank" style="color:var(--accent-blue);margin-top:12px;display:block">↗ 새 탭에서 열기</a></div>`;
+    }
+  },100);
+}
+function closePreview(){document.getElementById('preview-body').innerHTML='';closeModal('modal-preview');}
+
+// ── PLAYLIST ──
+function renderPlaylist(){
+  const listEl=document.getElementById('playlist-list');
+  listEl.innerHTML=playlists.length
+    ?playlists.map(p=>{
+      const s=stores.find(x=>x.id===p.storeId);
+      const sc=screens.find(x=>x.id===p.screenId);
+      return`<div class="playlist-item ${p.id===selectedPlaylistId?'active':''}" onclick="selectPlaylist('${p.id}')">
+        <div>
+          <div class="playlist-item-name">${p.name}</div>
+          <div class="playlist-item-meta">${s?s.name:'미지정'} · ${sc?sc.name:'전체'}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePlaylist('${p.id}')">✕</button>
+      </div>`;
+    }).join('')
+    :'<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">플레이리스트 없음</div>';
+  if(selectedPlaylistId) showPlaylistDetail(selectedPlaylistId);
+}
+function selectPlaylist(id){selectedPlaylistId=id;renderPlaylist();showPlaylistDetail(id);}
+function showPlaylistDetail(id){
+  const p=playlists.find(x=>x.id===id);if(!p)return;
+  const s=stores.find(x=>x.id===p.storeId);
+  const sc=screens.find(x=>x.id===p.screenId);
+  const items=(p.contentIds||[]).map(cid=>{const c=contents.find(x=>x.id===cid);return c?`<div class="playlist-content-item"><span class="pci-icon">${typeIcon(c.type)}</span><span class="pci-name">${c.name}</span><span class="pci-dur">${c.duration}초</span></div>`:''}).join('');
+  const total=(p.contentIds||[]).reduce((sum,cid)=>{const c=contents.find(x=>x.id===cid);return sum+(c?c.duration:0);},0);
+  document.getElementById('playlist-detail').innerHTML=`
+    <div class="detail-title">◈ ${p.name}</div>
+    <div class="detail-row"><span class="detail-label">매장</span><span>${s?s.name:'미지정'}</span></div>
+    <div class="detail-row"><span class="detail-label">사이니지</span><span style="color:var(--accent-cyan)">${sc?sc.name+' ('+sc.location+')':'미지정'}</span></div>
+    <div class="detail-row"><span class="detail-label">시간대</span><span>${timeSlotLabel(p.timeSlot||'all')}</span></div>
+    <div class="detail-row"><span class="detail-label">콘텐츠</span><span>${(p.contentIds||[]).length}개</span></div>
+    <div class="detail-row"><span class="detail-label">총 재생시간</span><span>${total}초 (${Math.floor(total/60)}분 ${total%60}초)</span></div>
+    <div style="margin-top:16px;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">콘텐츠 목록</div>
+    ${items||'<div style="color:var(--text-muted);font-size:12px">콘텐츠 없음</div>'}`;
+}
+function openPlaylistModal(){
+  document.getElementById('playlist-name').value='';
+  document.getElementById('playlist-time').value='all';
+  const storeEl=document.getElementById('playlist-store');
+  storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  onPlaylistStoreChange();
+  openModal('modal-playlist');
+}
+function onPlaylistStoreChange(){
+  const storeId=document.getElementById('playlist-store').value;
+  const storeScreens=screens.filter(sc=>sc.storeId===storeId);
+  const screenEl=document.getElementById('playlist-screen');
+  screenEl.innerHTML=storeScreens.length
+    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name} (${sc.location||'위치미지정'})</option>`).join('')
+    :'<option value="">사이니지 없음</option>';
+  // 해당 매장 콘텐츠만 체크리스트에 표시
+  const storeContents=contents.filter(c=>c.storeId===storeId);
+  document.getElementById('content-checklist').innerHTML=storeContents.length
+    ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="chk-${c.id}" value="${c.id}"/><label for="chk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
+    :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+}
+async function savePlaylist(){
+  const name=document.getElementById('playlist-name').value.trim();
+  if(!name){showToast('플레이리스트명을 입력하세요','error');return;}
+  const screenId=document.getElementById('playlist-screen').value;
+  if(!screenId){showToast('사이니지를 선택하세요','error');return;}
+  const contentIds=Array.from(document.querySelectorAll('#content-checklist input:checked')).map(el=>el.value);
+  if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
+  const data={name,storeId:document.getElementById('playlist-store').value,screenId,timeSlot:document.getElementById('playlist-time').value,contentIds,createdAt:new Date().toISOString()};
+  const ref=await db.collection('playlists').add(data);
+  selectedPlaylistId=ref.id;
+  showToast(`[${name}] 생성됨`,'success');
+  closeModal('modal-playlist');
+  await fetchAll();
+}
+async function deletePlaylist(id){
+  const p=playlists.find(x=>x.id===id);if(!p)return;
+  if(!confirm(`[${p.name}] 삭제?`))return;
+  await db.collection('playlists').doc(id).delete();
+  if(selectedPlaylistId===id){selectedPlaylistId=null;document.getElementById('playlist-detail').innerHTML='<div class="empty-state"><div class="empty-icon">⊕</div><div>플레이리스트를 선택하세요</div></div>';}
+  showToast('삭제됨','warning');
+  await fetchAll();
+}
+
+// ── MONITOR ──
+function renderMonitor(){
+  const container=document.getElementById('monitor-container');
+  if(!stores.length){container.innerHTML='<div style="color:var(--text-muted);padding:40px;text-align:center">등록된 매장 없음</div>';return;}
+  container.innerHTML=stores.map(s=>{
+    const storeScreens=screens.filter(sc=>sc.storeId===s.id);
+    if(!storeScreens.length)return`<div class="monitor-store-section"><div class="monitor-store-header">⊞ ${s.name} <span style="color:var(--text-muted);font-size:10px">사이니지 없음</span></div></div>`;
+    const cards=storeScreens.map(sc=>{
+      const status=calcStatus(sc.lastSeen);
+      const pl=playlists.find(p=>p.screenId===sc.id);
+      const isOnline=status==='online';
+      const net=sc.network||0;
+      const netC=net>300?'var(--accent-red)':net>100?'var(--accent-yellow)':'var(--accent-green)';
+      const lastSeen=sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-';
+      return`<div class="monitor-card status-${status}">
+        <div class="mc-header">
+          <div>
+            <div class="mc-name">📺 ${sc.name}</div>
+            <div class="mc-sub">${sc.location||'위치미지정'}</div>
+          </div>
+          ${statusBadge(status)}
+        </div>
+        <div class="mc-screen ${isOnline?'playing':''}">
+          <span class="mc-screen-label">${isOnline?'▶ 재생중':'신호 없음'}</span>
+          <span class="mc-screen-content">${isOnline?(sc.currentContent||pl?.name||'-'):'-'}</span>
+        </div>
+        <div class="mc-info">
+          <div class="mc-info-item">
+            <div class="mc-info-label">네트워크</div>
+            <div class="mc-info-value" style="color:${netC}">${net>0?net+'ms':'-'}</div>
+          </div>
+          <div class="mc-info-item">
+            <div class="mc-info-label">마지막 접속</div>
+            <div class="mc-info-value" style="font-size:10px;color:var(--text-secondary)">${lastSeen}</div>
+          </div>
+        </div>
+        <div class="mc-actions">
+          <button class="btn btn-outline btn-sm" onclick="sendCmd('${sc.id}','reload')">⟳ 새로고침</button>
+          <button class="btn btn-outline btn-sm" onclick="sendCmd('${sc.id}','restart')">▶ 재시작</button>
+          <button class="btn btn-yellow btn-sm" onclick="sendCmd('${sc.id}','standby')">⏸ 대기화면</button>
+          <button class="btn btn-sm" style="background:rgba(0,232,160,.1);border:1px solid rgba(0,232,160,.3);color:var(--accent-green)" onclick="sendCmd('${sc.id}','playlist_update')">↺ 재생재개</button>
+        </div>
+      </div>`;
+    }).join('');
+    const storeOnline=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+    return`<div class="monitor-store-section">
+      <div class="monitor-store-header">⊞ ${s.name} <span style="color:var(--accent-green);font-size:11px">${storeOnline}/${storeScreens.length} 온라인</span></div>
+      <div class="monitor-grid">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+async function sendCmd(screenId, type){
+  await db.collection('commands').doc(screenId).set({type,ts:new Date().toISOString(),executed:false});
+  const sc=screens.find(x=>x.id===screenId);
+  showToast(`[${sc?sc.name:screenId}] ${type} 명령 전송됨`,'success');
+  await fetchAll();
+}
+
+// ── LOGS ──
+function renderLogs(filter=logFilter){
+  logFilter=filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter));
+  let list=filter==='all'?logs:logs.filter(l=>l.level===filter);
+  document.getElementById('log-tbody').innerHTML=list.length
+    ?list.map(l=>`<tr><td class="td-mono">${l.ts}</td><td><span class="log-level ${l.level}">${l.level.toUpperCase()}</span></td><td>${l.storeName||'-'}</td><td>${l.screenName||'-'}</td><td>${l.message}</td><td>${l.resolved?'<span class="log-resolved">✓ 완료</span>':'<span class="log-pending">⏳ 처리중</span>'}</td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">로그 없음</td></tr>';
+}
+async function clearLogs(){
+  if(!confirm('로그를 모두 삭제하시겠습니까?'))return;
+  const snap=await db.collection('logs').get();
+  for(const d of snap.docs) await d.ref.delete();
+  showToast('로그 초기화됨','info');
+  await fetchAll();
+}
+
+// ── GUIDE ──
+function renderGuide(){
+  const el=document.getElementById('guide-admin-url');
+  if(el) el.textContent=window.location.href;
+}
+
+// ── 데이터 초기화 ──
+async function resetSampleData(){
+  if(!confirm('샘플 데이터로 초기화하시겠습니까?'))return;
+  showToast('초기화 중...','info');
+  const cols=['stores','screens','contents','playlists','logs'];
+  for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
+  const s1=await db.collection('stores').add({name:'강남본점',region:'서울',address:'서울 강남구 테헤란로 123',manager:'김민준',phone:'010-1234-5678',lastSeen:nowStr()});
+  const s2=await db.collection('stores').add({name:'홍대점',region:'서울',address:'서울 마포구 홍대입구로 45',manager:'이서연',phone:'010-2345-6789',lastSeen:nowStr()});
+  const sc1=await db.collection('screens').add({storeId:s1.id,name:'입구',location:'1층 입구',orientation:'landscape',lastSeen:null,currentContent:'-'});
+  const sc2=await db.collection('screens').add({storeId:s1.id,name:'메인홀',location:'1층 홀',orientation:'landscape',lastSeen:null,currentContent:'-'});
+  const sc3=await db.collection('screens').add({storeId:s2.id,name:'카운터',location:'계산대',orientation:'portrait-left',lastSeen:null,currentContent:'-'});
+  const c1=await db.collection('contents').add({name:'점심 특선 메뉴',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=1',storeId:s1.id,tags:['메뉴','점심'],createdAt:new Date().toISOString()});
+  const c2=await db.collection('contents').add({name:'저녁 코스 안내',type:'image',duration:20,url:'https://picsum.photos/1920/1080?random=2',storeId:s1.id,tags:['메뉴','저녁'],createdAt:new Date().toISOString()});
+  const c3=await db.collection('contents').add({name:'홍대 이벤트',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=3',storeId:s2.id,tags:['이벤트'],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'강남 입구 리스트',storeId:s1.id,screenId:sc1.id,timeSlot:'all',contentIds:[c1.id,c2.id],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'홍대 카운터 리스트',storeId:s2.id,screenId:sc3.id,timeSlot:'all',contentIds:[c3.id],createdAt:new Date().toISOString()});
+  await fetchAll();
+  showToast('샘플 데이터 초기화 완료!','success');
+}
+async function clearAllData(target){
+  const labels={contents:'콘텐츠',playlists:'플레이리스트',all:'전체 데이터'};
+  if(!confirm(`[${labels[target]||target}] 삭제?`))return;
+  const cols=target==='all'?['stores','screens','contents','playlists','logs']:[target];
+  for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
+  await fetchAll();
+  showToast(`${labels[target]||target} 삭제 완료`,'warning');
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(el=>el.classList.remove('open'));document.getElementById('preview-body').innerHTML='';}});
+document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o){o.classList.remove('open');if(o.id==='modal-preview')document.getElementById('preview-body').innerHTML='';}});});
+
+// ── TOAST ──
+function showToast(msg,type='info'){
+  const icons={success:'✓',error:'✕',warning:'⚠',info:'◉'};
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]||'◉'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.classList.add('toast-out');setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ── 시계 ──
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('sys-time').textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+},1000);
+
+// ── 새로고침 버튼 ──
+document.getElementById('btn-refresh').addEventListener('click',async function(){
+  this.classList.add('spinning');
+  setTimeout(()=>this.classList.remove('spinning'),600);
+  await fetchAll();
+  showToast('새로고침됨','info');
+});
+
+// ── 이벤트 ──
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',function(){navigate(this.dataset.page);}));
+document.getElementById('store-search').addEventListener('input',function(){renderStores(this.value);});
+document.getElementById('content-search').addEventListener('input',function(){renderContent(this.value);});
+document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',function(){renderLogs(this.dataset.filter);}));
+
+// ── 자동 갱신 ──
+setInterval(fetchAll, 10000);
+
+// ── 초기화 ──
+async function init(){
+  try{
+    const snap=await db.collection('stores').get();
+    if(snap.empty) await resetSampleData();
+    else await fetchAll();
+    hideLoading();
+    navigate('dashboard');
+  }catch(e){
+    console.error(e);
+    document.getElementById('loading-text').textContent='연결 실패: '+e.message;
+    setTimeout(()=>hideLoading(),3000);
+  }
+}
+init();
+</script>
+</body>
+</html>
