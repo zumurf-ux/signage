@@ -195,13 +195,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .pci-dur{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
 
 /* MONITOR */
-.monitor-store-section{margin-bottom:28px}
-.monitor-store-header{font-family:var(--font-display);font-size:12px;letter-spacing:2px;color:var(--text-secondary);text-transform:uppercase;padding:8px 0;margin-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.monitor-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all .2s}
-.monitor-card.status-online{border-color:rgba(0,232,160,.3)}
-.monitor-card.status-warning{border-color:rgba(255,200,64,.3)}
-.monitor-card.status-error{border-color:rgba(255,61,90,.3)}
+.monitor-store-section{margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-lg);overflow:hidden}
+.monitor-store-header{font-family:var(--font-display);font-size:15px;letter-spacing:1px;color:var(--text-primary);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-panel)}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:16px}
+.monitor-card{background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all .2s}
+.monitor-card.status-online{border-color:rgba(0,232,160,.4)}
+.monitor-card.status-warning{border-color:rgba(255,200,64,.4)}
+.monitor-card.status-error{border-color:rgba(255,61,90,.4)}
 .monitor-card.status-offline{opacity:.6}
 .mc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
 .mc-name{font-size:14px;font-weight:600}
@@ -327,7 +327,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <button class="nav-item" data-page="content"><span class="nav-icon">▣</span>콘텐츠 관리</button>
     <button class="nav-item" data-page="playlist"><span class="nav-icon">⊕</span>플레이리스트</button>
     <button class="nav-item" data-page="monitor"><span class="nav-icon">◉</span>실시간 관제<span class="nav-badge" id="alert-badge" style="display:none">0</span></button>
-    <button class="nav-item" data-page="logs"><span class="nav-icon">≡</span>장애 로그</button>
     <button class="nav-item" data-page="guide"><span class="nav-icon">?</span>사용법 안내</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span>설정</button>
   </nav>
@@ -490,7 +489,47 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div id="fb-detail-status" style="color:var(--accent-green)">● 연결됨</div>
         </div>
       </div>
-      <div class="settings-card">
+      <div class="settings-card" style="grid-column:1/-1">
+        <div class="settings-card-header">⏰ 운영 시간대 설정</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">시간대별 자동 플레이리스트 전환 기준 시간을 설정합니다.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px" id="timeslot-settings">
+          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
+            <div style="font-size:11px;color:var(--accent-blue);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">오전 (MORNING)</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="time" id="ts-morning-start" class="form-input" style="padding:6px 10px;font-size:13px" value="06:00"/>
+              <span style="color:var(--text-muted)">~</span>
+              <input type="time" id="ts-morning-end" class="form-input" style="padding:6px 10px;font-size:13px" value="12:00"/>
+            </div>
+          </div>
+          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
+            <div style="font-size:11px;color:var(--accent-yellow);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">점심 (LUNCH)</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="time" id="ts-lunch-start" class="form-input" style="padding:6px 10px;font-size:13px" value="12:00"/>
+              <span style="color:var(--text-muted)">~</span>
+              <input type="time" id="ts-lunch-end" class="form-input" style="padding:6px 10px;font-size:13px" value="14:00"/>
+            </div>
+          </div>
+          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
+            <div style="font-size:11px;color:var(--accent-cyan);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">오후 (AFTERNOON)</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="time" id="ts-afternoon-start" class="form-input" style="padding:6px 10px;font-size:13px" value="14:00"/>
+              <span style="color:var(--text-muted)">~</span>
+              <input type="time" id="ts-afternoon-end" class="form-input" style="padding:6px 10px;font-size:13px" value="18:00"/>
+            </div>
+          </div>
+          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
+            <div style="font-size:11px;color:var(--accent-red);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">저녁 (DINNER)</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="time" id="ts-dinner-start" class="form-input" style="padding:6px 10px;font-size:13px" value="18:00"/>
+              <span style="color:var(--text-muted)">~</span>
+              <input type="time" id="ts-dinner-end" class="form-input" style="padding:6px 10px;font-size:13px" value="22:00"/>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveTimeslots()">⏰ 시간 설정 저장</button>
+      </div>
+
+      <div class="settings-card" style="color:var(--accent-red)">
         <div class="settings-card-header" style="color:var(--accent-red)">⚠ 데이터 초기화</div>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">Firebase 데이터를 초기화합니다. 삭제된 데이터는 복구 불가합니다.</p>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -520,6 +559,15 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="form-row">
         <div class="form-group"><label>담당자</label><input type="text" id="store-manager" class="form-input"/></div>
         <div class="form-group"><label>연락처</label><input type="text" id="store-phone" class="form-input" placeholder="010-0000-0000"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>총 운영 시작</label><input type="time" id="store-open" class="form-input" value="09:00"/></div>
+        <div class="form-group"><label>총 운영 종료</label><input type="time" id="store-close" class="form-input" value="22:00"/></div>
+      </div>
+      <div class="form-group">
+        <label>시간대 설정 <span style="color:var(--text-muted);font-size:10px">(이름·시작·종료 직접 입력)</span></label>
+        <div id="store-timeslots" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <button type="button" class="btn btn-outline btn-sm" style="width:100%" onclick="addTimeslotRow()">+ 시간대 추가</button>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-store')">취소</button><button class="btn btn-primary" onclick="saveStore()">저장</button></div>
@@ -561,7 +609,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="form-group"><label>매장 선택 <span class="required">*</span></label><select id="playlist-store" class="form-input" onchange="onPlaylistStoreChange()"></select></div>
         <div class="form-group"><label>사이니지 선택 <span class="required">*</span></label><select id="playlist-screen" class="form-input"></select></div>
       </div>
-      <div class="form-group"><label>운영 시간대</label><select id="playlist-time" class="form-input"><option value="all">상시</option><option value="morning">오전</option><option value="lunch">점심</option><option value="afternoon">오후</option><option value="dinner">저녁</option></select></div>
+      <div class="form-group"><label>운영 시간대</label><select id="playlist-time" class="form-input"><option value="all">상시 (항상 재생)</option></select></div>
       <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist"></div></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist')">취소</button><button class="btn btn-primary" onclick="savePlaylist()">생성</button></div>
@@ -579,7 +627,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="form-group"><label>매장</label><select id="playlist-edit-store" class="form-input" onchange="onPlaylistEditStoreChange()"></select></div>
         <div class="form-group"><label>사이니지</label><select id="playlist-edit-screen" class="form-input"></select></div>
       </div>
-      <div class="form-group"><label>운영 시간대</label><select id="playlist-edit-time" class="form-input"><option value="all">상시</option><option value="morning">오전</option><option value="lunch">점심</option><option value="afternoon">오후</option><option value="dinner">저녁</option></select></div>
+      <div class="form-group"><label>운영 시간대</label><select id="playlist-edit-time" class="form-input"><option value="all">상시 (항상 재생)</option></select></div>
       <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist-edit"></div></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist-edit')">취소</button><button class="btn btn-primary" onclick="updatePlaylist()">저장</button></div>
@@ -638,8 +686,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ── 상태 ──
-let stores=[], screens=[], contents=[], playlists=[], logs=[];
-let selectedPlaylistId=null, currentPage='dashboard', logFilter='all', selectedContentStore='all';
+let stores=[], screens=[], contents=[], playlists=[];
+let selectedPlaylistId=null, currentPage='dashboard', selectedContentStore='all';
 
 // ── 헬퍼 ──
 function nowStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
@@ -683,18 +731,16 @@ function hideLoading(){
 // ── 데이터 로드 ──
 async function fetchAll(){
   try{
-    const [s,sc,c,p,l]=await Promise.all([
+    const [s,sc,c,p]=await Promise.all([
       db.collection('stores').get(),
       db.collection('screens').get(),
       db.collection('contents').get(),
       db.collection('playlists').get(),
-      db.collection('logs').orderBy('ts','desc').limit(50).get(),
     ]);
     stores    = s.docs.map(d=>({id:d.id,...d.data()}));
     screens   = sc.docs.map(d=>({id:d.id,...d.data()}));
     contents  = c.docs.map(d=>({id:d.id,...d.data()}));
     playlists = p.docs.map(d=>({id:d.id,...d.data()}));
-    logs      = l.docs.map(d=>({id:d.id,...d.data()}));
     setFbStatus(true);
     updateTopStats();
     updateAlertBadge();
@@ -717,11 +763,7 @@ function updateTopStats(){
   document.getElementById('kpi-content').textContent = contents.length;
 }
 
-function updateAlertBadge(){
-  const n=logs.filter(l=>l.level!=='info'&&!l.resolved).length;
-  const b=document.getElementById('alert-badge');
-  b.textContent=n; b.style.display=n>0?'':'none';
-}
+function updateAlertBadge(){}
 
 // ── 라우터 ──
 const PAGE_META={
@@ -730,7 +772,6 @@ const PAGE_META={
   content:{title:'콘텐츠 관리',bc:'홈 / 콘텐츠 관리'},
   playlist:{title:'플레이리스트 관리',bc:'홈 / 플레이리스트'},
   monitor:{title:'실시간 관제',bc:'홈 / 실시간 관제'},
-  logs:{title:'장애 로그',bc:'홈 / 장애 로그'},
   guide:{title:'사용법 안내',bc:'홈 / 사용법 안내'},
   settings:{title:'설정',bc:'홈 / 설정'},
 };
@@ -745,7 +786,7 @@ function navigate(page){
   renderPage(page);
 }
 function renderPage(p){
-  const map={dashboard:renderDashboard,stores:renderStores,content:()=>{renderStoreTabs();renderContent();},playlist:renderPlaylist,monitor:renderMonitor,logs:renderLogs,guide:renderGuide,settings:()=>{}};
+  const map={dashboard:renderDashboard,stores:renderStores,content:()=>{renderStoreTabs();renderContent();},playlist:renderPlaylist,monitor:renderMonitor,guide:renderGuide,settings:()=>{}};
   if(map[p]) map[p]();
 }
 
@@ -758,14 +799,28 @@ function renderDashboard(){
       const storeScreens=screens.filter(sc=>sc.storeId===s.id);
       const onlineCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
       const worstStatus=storeScreens.some(sc=>calcStatus(sc.lastSeen)==='offline')?'offline':storeScreens.some(sc=>calcStatus(sc.lastSeen)==='warning')?'warning':'online';
-      return`<div class="store-status-item"><div><div class="store-status-name">${s.name}</div><div class="store-status-info">${s.region} · 사이니지 ${storeScreens.length}대 · 온라인 ${onlineCount}대</div></div>${statusBadge(storeScreens.length?worstStatus:'offline')}</div>`;
+      return`<div class="store-status-item"><div><div class="store-status-name" style="font-size:14px;font-weight:600">${s.name}</div><div class="store-status-info">${s.region} · 사이니지 ${storeScreens.length}대 · 온라인 ${onlineCount}대</div></div>${statusBadge(storeScreens.length?worstStatus:'offline')}</div>`;
     }).join('')
     :'<div style="padding:20px;text-align:center;color:var(--text-muted)">매장 없음</div>';
 
-  const recent=logs.filter(l=>l.level!=='info').slice(0,5);
-  document.getElementById('dash-alert-list').innerHTML=recent.length
-    ?recent.map(l=>`<div class="alert-item"><div class="${l.level==='error'?'alert-dot-red':'alert-dot-yellow'}"></div><div><div class="alert-title">${l.message}</div><div class="alert-meta">${l.storeName||''} ${l.screenName?'· '+l.screenName:''} · ${l.ts}</div></div></div>`).join('')
-    :'<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">알림 없음</div>';
+  // 오프라인/주의 사이니지 표시
+  const offlineScreens = screens.filter(sc => {
+    const st = calcStatus(sc.lastSeen);
+    return st === 'offline' || st === 'warning';
+  });
+  document.getElementById('dash-alert-list').innerHTML = offlineScreens.length
+    ? offlineScreens.map(sc => {
+        const store = stores.find(s=>s.id===sc.storeId);
+        const st = calcStatus(sc.lastSeen);
+        return `<div class="alert-item">
+          <div class="${st==='offline'?'alert-dot-red':'alert-dot-yellow'}"></div>
+          <div>
+            <div class="alert-title">${store?store.name:'-'} · ${sc.name}</div>
+            <div class="alert-meta">${st==='offline'?'오프라인':'응답 지연'} · 마지막 접속: ${sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-'}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">✓ 모든 사이니지 정상</div>';
 }
 
 // ── STORES ──
@@ -811,7 +866,7 @@ function renderStores(filter=''){
           </div>
         </td></tr>`:'';
       return`<tr style="cursor:pointer" onclick="if(event.target.tagName==='INPUT'||event.target.tagName==='SELECT'||event.target.tagName==='BUTTON'||event.target.tagName==='OPTION')return;toggleStore('${s.id}')">
-        <td style="font-weight:500">${isExpanded?'▼ ':''} ${s.name}</td>
+        <td style="font-weight:700;font-size:14px;color:var(--text-primary)">${isExpanded?'▼ ':''} ${s.name}</td>
         <td class="td-mono">${s.region}</td>
         <td>${s.manager||'-'}</td>
         <td><span style="color:var(--accent-cyan);font-family:var(--font-mono)">${storeScreens.length}대</span> <span style="color:var(--text-muted);font-size:11px">(온라인 ${onlineCount})</span></td>
@@ -897,12 +952,55 @@ function copyScreenUrl(screenId, screenName){
 }
 
 // 매장 모달
+// ── 시간대 행 추가/삭제 ──
+function addTimeslotRow(name='', start='', end='') {
+  const container = document.getElementById('store-timeslots');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;align-items:center';
+  row.innerHTML = `
+    <input type="text" placeholder="이름 (예: 아침)" class="form-input" style="flex:1;padding:7px 10px;font-size:12px" value="${name}"/>
+    <input type="time" class="form-input" style="padding:7px 10px;font-size:12px" value="${start||'09:00'}"/>
+    <span style="color:var(--text-muted);flex-shrink:0">~</span>
+    <input type="time" class="form-input" style="padding:7px 10px;font-size:12px" value="${end||'12:00'}"/>
+    <button type="button" class="btn btn-danger btn-xs" onclick="this.parentElement.remove()" style="flex-shrink:0">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function getTimeslotsFromModal() {
+  const rows = document.getElementById('store-timeslots').querySelectorAll('div');
+  const slots = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if(inputs.length >= 3) {
+      const name  = inputs[0].value.trim();
+      const start = inputs[1].value;
+      const end   = inputs[2].value;
+      if(name) slots.push({name, start, end});
+    }
+  });
+  return slots;
+}
+
+function loadTimeslotsToModal(slots) {
+  document.getElementById('store-timeslots').innerHTML = '';
+  (slots||[]).forEach(s => addTimeslotRow(s.name, s.start, s.end));
+}
+
 function openStoreModal(id=null){
   ['store-name','store-address','store-manager','store-phone'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('store-status').value='online';
   document.getElementById('store-region').value='서울';
   document.getElementById('store-edit-id').value='';
   document.getElementById('store-modal-title').textContent='매장 추가';
+  document.getElementById('store-open').value='09:00';
+  document.getElementById('store-close').value='22:00';
+  document.getElementById('store-timeslots').innerHTML='';
+  // 기본 시간대
+  addTimeslotRow('아침','09:00','11:30');
+  addTimeslotRow('점심','11:30','14:00');
+  addTimeslotRow('브레이크','14:00','17:00');
+  addTimeslotRow('저녁','17:00','22:00');
   if(id){
     const s=stores.find(x=>x.id===id);if(!s)return;
     document.getElementById('store-edit-id').value=s.id;
@@ -912,6 +1010,9 @@ function openStoreModal(id=null){
     document.getElementById('store-manager').value=s.manager||'';
     document.getElementById('store-phone').value=s.phone||'';
     document.getElementById('store-status').value=s.status||'online';
+    document.getElementById('store-open').value=s.openTime||'09:00';
+    document.getElementById('store-close').value=s.closeTime||'22:00';
+    loadTimeslotsToModal(s.timeslots||[]);
     document.getElementById('store-modal-title').textContent='매장 수정';
   }
   openModal('modal-store');
@@ -931,7 +1032,7 @@ async function saveStore(){
   const name=document.getElementById('store-name').value.trim();
   if(!name){showToast('매장명을 입력하세요','error');return;}
   const id=document.getElementById('store-edit-id').value;
-  const data={name,region:document.getElementById('store-region').value,address:document.getElementById('store-address').value.trim(),manager:document.getElementById('store-manager').value.trim(),phone:document.getElementById('store-phone').value.trim(),status:document.getElementById('store-status').value,lastSeen:nowStr()};
+  const data={name,region:document.getElementById('store-region').value,address:document.getElementById('store-address').value.trim(),manager:document.getElementById('store-manager').value.trim(),phone:document.getElementById('store-phone').value.trim(),status:document.getElementById('store-status').value,openTime:document.getElementById('store-open').value,closeTime:document.getElementById('store-close').value,timeslots:getTimeslotsFromModal(),lastSeen:nowStr()};
   if(id) await db.collection('stores').doc(id).set(data,{merge:true});
   else await db.collection('stores').add(data);
   showToast(`[${name}] ${id?'수정':'추가'}됨`,'success');
@@ -1170,6 +1271,7 @@ function onPlaylistEditStoreChange(){
   checklistEl.innerHTML=storeContents.length
     ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
     :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+  updateTimeslotOptions(storeId, 'playlist-edit-time');
 }
 
 function openPlaylistEdit(id){
@@ -1238,7 +1340,19 @@ function renderMonitor(){
   if(!stores.length){container.innerHTML='<div style="color:var(--text-muted);padding:40px;text-align:center">등록된 매장 없음</div>';return;}
   container.innerHTML=stores.map(s=>{
     const storeScreens=screens.filter(sc=>sc.storeId===s.id);
-    if(!storeScreens.length)return`<div class="monitor-store-section"><div class="monitor-store-header">⊞ ${s.name} <span style="color:var(--text-muted);font-size:10px">사이니지 없음</span></div></div>`;
+    if(!storeScreens.length)return`<div class="monitor-store-section">
+      <div class="monitor-store-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px">⊞</span>
+          <div>
+            <div style="font-size:15px;font-weight:700">${s.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">${s.region}</div>
+          </div>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">사이니지 없음</span>
+      </div>
+      <div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">매장 관리에서 사이니지를 추가하세요</div>
+    </div>`;
     const cards=storeScreens.map(sc=>{
       const status=calcStatus(sc.lastSeen);
       const pl=playlists.find(p=>p.screenId===sc.id);
@@ -1277,8 +1391,25 @@ function renderMonitor(){
       </div>`;
     }).join('');
     const storeOnline=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+    const allOnline = storeOnline === storeScreens.length;
+    const headerColor = allOnline ? 'var(--accent-green)' : storeOnline > 0 ? 'var(--accent-yellow)' : 'var(--accent-red)';
     return`<div class="monitor-store-section">
-      <div class="monitor-store-header">⊞ ${s.name} <span style="color:var(--accent-green);font-size:11px">${storeOnline}/${storeScreens.length} 온라인</span></div>
+      <div class="monitor-store-header">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:.5px">${s.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:3px">${s.region} · 사이니지 ${storeScreens.length}대 · 담당: ${s.manager||'-'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:${headerColor}">${storeOnline}<span style="font-size:12px;color:var(--text-muted)">/${storeScreens.length}</span></div>
+            <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">온라인</div>
+          </div>
+          <span class="badge badge-${allOnline?'online':storeOnline>0?'warning':'offline'}">${allOnline?'전체 정상':storeOnline>0?'일부 오프라인':'전체 오프라인'}</span>
+        </div>
+      </div>
       <div class="monitor-grid">${cards}</div>
     </div>`;
   }).join('');
@@ -1292,21 +1423,7 @@ async function sendCmd(screenId, type){
 }
 
 // ── LOGS ──
-function renderLogs(filter=logFilter){
-  logFilter=filter;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter));
-  let list=filter==='all'?logs:logs.filter(l=>l.level===filter);
-  document.getElementById('log-tbody').innerHTML=list.length
-    ?list.map(l=>`<tr><td class="td-mono">${l.ts}</td><td><span class="log-level ${l.level}">${l.level.toUpperCase()}</span></td><td>${l.storeName||'-'}</td><td>${l.screenName||'-'}</td><td>${l.message}</td><td>${l.resolved?'<span class="log-resolved">✓ 완료</span>':'<span class="log-pending">⏳ 처리중</span>'}</td></tr>`).join('')
-    :'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">로그 없음</td></tr>';
-}
-async function clearLogs(){
-  if(!confirm('로그를 모두 삭제하시겠습니까?'))return;
-  const snap=await db.collection('logs').get();
-  for(const d of snap.docs) await d.ref.delete();
-  showToast('로그 초기화됨','info');
-  await fetchAll();
-}
+
 
 // ── GUIDE ──
 function renderGuide(){
@@ -1318,7 +1435,7 @@ function renderGuide(){
 async function resetSampleData(){
   if(!confirm('샘플 데이터로 초기화하시겠습니까?'))return;
   showToast('초기화 중...','info');
-  const cols=['stores','screens','contents','playlists','logs'];
+  const cols=['stores','screens','contents','playlists'];
   for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
   const s1=await db.collection('stores').add({name:'강남본점',region:'서울',address:'서울 강남구 테헤란로 123',manager:'김민준',phone:'010-1234-5678',lastSeen:nowStr()});
   const s2=await db.collection('stores').add({name:'홍대점',region:'서울',address:'서울 마포구 홍대입구로 45',manager:'이서연',phone:'010-2345-6789',lastSeen:nowStr()});
@@ -1336,7 +1453,7 @@ async function resetSampleData(){
 async function clearAllData(target){
   const labels={contents:'콘텐츠',playlists:'플레이리스트',all:'전체 데이터'};
   if(!confirm(`[${labels[target]||target}] 삭제?`))return;
-  const cols=target==='all'?['stores','screens','contents','playlists','logs']:[target];
+  const cols=target==='all'?['stores','screens','contents','playlists']:[target];
   for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
   await fetchAll();
   showToast(`${labels[target]||target} 삭제 완료`,'warning');
@@ -1389,8 +1506,62 @@ document.getElementById('store-search').addEventListener('input',function(){rend
 document.getElementById('content-search').addEventListener('input',function(){renderContent(this.value);});
 document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',function(){renderLogs(this.dataset.filter);}));
 
+// ── 설정 ──
+async function renderSettings() {
+  // 저장된 시간대 설정 불러오기
+  try {
+    const snap = await db.collection('settings').doc('timeslots').get();
+    if (snap.exists) {
+      const ts = snap.data();
+      document.getElementById('ts-morning-start').value   = ts.morning?.start   || '06:00';
+      document.getElementById('ts-morning-end').value     = ts.morning?.end     || '12:00';
+      document.getElementById('ts-lunch-start').value     = ts.lunch?.start     || '12:00';
+      document.getElementById('ts-lunch-end').value       = ts.lunch?.end       || '14:00';
+      document.getElementById('ts-afternoon-start').value = ts.afternoon?.start || '14:00';
+      document.getElementById('ts-afternoon-end').value   = ts.afternoon?.end   || '18:00';
+      document.getElementById('ts-dinner-start').value    = ts.dinner?.start    || '18:00';
+      document.getElementById('ts-dinner-end').value      = ts.dinner?.end      || '22:00';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function saveTimeslots() {
+  const data = {
+    morning:   { start: document.getElementById('ts-morning-start').value,   end: document.getElementById('ts-morning-end').value },
+    lunch:     { start: document.getElementById('ts-lunch-start').value,     end: document.getElementById('ts-lunch-end').value },
+    afternoon: { start: document.getElementById('ts-afternoon-start').value, end: document.getElementById('ts-afternoon-end').value },
+    dinner:    { start: document.getElementById('ts-dinner-start').value,    end: document.getElementById('ts-dinner-end').value },
+  };
+  await db.collection('settings').doc('timeslots').set(data);
+  showToast('운영 시간대가 저장되었습니다!', 'success');
+}
+
+// ── 자동 장애 감지 (토스트 알림만, 로그 기록 없음) ──
+const screenAlertState = {};
+
+function checkScreenAlerts() {
+  for (const sc of screens) {
+    const status = calcStatus(sc.lastSeen);
+    const prev = screenAlertState[sc.id];
+    const store = stores.find(s => s.id === sc.storeId);
+    const storeName = store ? store.name : '-';
+
+    if (prev !== undefined && prev !== status) {
+      if (status === 'offline' && prev === 'online') {
+        showToast(`⚠ ${storeName} · ${sc.name} 오프라인!`, 'error');
+      } else if (status === 'online' && (prev === 'offline' || prev === 'warning')) {
+        showToast(`✓ ${storeName} · ${sc.name} 복구됨`, 'success');
+      }
+    }
+    screenAlertState[sc.id] = status;
+  }
+}
+
 // ── 자동 갱신 ──
-setInterval(fetchAll, 10000);
+setInterval(async () => {
+  await fetchAll();
+  checkScreenAlerts();
+}, 10000);
 
 // ── 초기화 ──
 async function init(){
