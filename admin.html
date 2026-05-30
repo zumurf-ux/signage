@@ -4,14 +4,16 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SIGNAGE OS — 관리자</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=block" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 :root{
   --bg-base:#070b12;--bg-panel:#0d1520;--bg-card:#111c2e;--bg-hover:#16243a;--bg-input:#0a1220;
   --border:#1e2f48;--border-bright:#2a4060;
-  --text-primary:#d4e6ff;--text-secondary:#7a9bbf;--text-muted:#3d5a7a;
+  --text-primary:#e8f4ff;--text-secondary:#9ab8d8;--text-muted:#5a7a9a;
   --accent-blue:#00aaff;--accent-green:#00e8a0;--accent-yellow:#ffc840;
   --accent-red:#ff3d5a;--accent-cyan:#00d4e8;--accent-purple:#a855f7;
   --glow-blue:0 0 12px rgba(0,170,255,.35);--glow-green:0 0 12px rgba(0,232,160,.35);--glow-red:0 0 12px rgba(255,61,90,.35);
@@ -29,9 +31,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .logo-icon{font-size:24px;color:var(--accent-blue);text-shadow:var(--glow-blue);animation:icon-pulse 3s ease-in-out infinite}
 @keyframes icon-pulse{0%,100%{opacity:1}50%{opacity:.6}}
 .logo-title{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--accent-blue)}
-.logo-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:2px}
+.logo-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-top:2px}
 .sidebar-nav{flex:1;padding:16px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:12px;padding:11px 18px;background:none;border:none;color:var(--text-secondary);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s;text-align:left;position:relative;width:100%}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 18px;background:none;border:none;color:var(--text-primary);font-family:var(--font-body);font-size:14px;font-weight:400;cursor:pointer;transition:all .2s;text-align:left;position:relative;width:100%}
 .nav-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:0;background:var(--accent-blue);transition:height .2s}
 .nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
 .nav-item.active{background:rgba(0,170,255,.08);color:var(--accent-blue);font-weight:500}
@@ -39,24 +41,24 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
 .nav-badge{background:var(--accent-red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
 .sidebar-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
-.sys-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary)}
+.sys-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary)}
 .pulse-green{width:7px;height:7px;border-radius:50%;background:var(--accent-green);flex-shrink:0;animation:dot-pulse 2s infinite}
 @keyframes dot-pulse{0%{box-shadow:0 0 0 0 rgba(0,232,160,.5)}70%{box-shadow:0 0 0 6px rgba(0,232,160,0)}100%{box-shadow:0 0 0 0 rgba(0,232,160,0)}}
 .sys-time{font-family:var(--font-mono);font-size:18px;color:var(--accent-cyan);letter-spacing:2px}
 .fb-status{font-family:var(--font-mono);font-size:10px;margin-top:2px}
-.fb-status.connected{color:var(--accent-green)}
+.fb-status.connected{color:var(--accent-green);font-size:12px}
 .fb-status.disconnected{color:var(--accent-red)}
 
 /* MAIN */
 .main-content{margin-left:var(--sidebar-w);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{height:60px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
 .page-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px}
-.breadcrumb{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.breadcrumb{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
 .topbar-right{display:flex;align-items:center;gap:16px}
 .topbar-stat{display:flex;flex-direction:column;align-items:center;padding:4px 12px;border-radius:var(--radius);background:var(--bg-card);border:1px solid var(--border)}
 .topbar-stat.online{border-color:rgba(0,232,160,.3)}
 .topbar-stat.error{border-color:rgba(255,61,90,.3)}
-.stat-label{font-size:10px;color:var(--text-muted);font-family:var(--font-mono)}
+.stat-label{font-size:11px;color:var(--text-secondary);font-family:var(--font-body);font-weight:600}
 .stat-value{font-family:var(--font-mono);font-size:18px;font-weight:700}
 .topbar-stat.online .stat-value{color:var(--accent-green)}
 .topbar-stat.error .stat-value{color:var(--accent-red)}
@@ -81,8 +83,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .kpi-icon.red{background:rgba(255,61,90,.12);color:var(--accent-red)}
 .kpi-icon.cyan{background:rgba(0,212,232,.12);color:var(--accent-cyan)}
 .kpi-icon.purple{background:rgba(168,85,247,.12);color:var(--accent-purple)}
-.kpi-label{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase}
-.kpi-value{font-family:var(--font-mono);font-size:26px;font-weight:700;line-height:1.1}
+.kpi-label{font-size:12px;color:var(--text-secondary);font-family:var(--font-body);font-weight:600;text-transform:uppercase;margin-bottom:2px}
+.kpi-value{font-family:var(--font-mono);font-size:30px;font-weight:700;line-height:1.1;color:var(--text-primary)}
 .kpi-value.green{color:var(--accent-green)}
 .kpi-value.yellow{color:var(--accent-yellow)}
 .kpi-value.red{color:var(--accent-red)}
@@ -90,7 +92,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* DASH */
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--text-secondary);text-transform:uppercase}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:.3px}
 .panel-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono)}
 .panel-tag:not(.red){background:rgba(0,232,160,.15);color:var(--accent-green)}
 .panel-tag.red{background:rgba(255,61,90,.15);color:var(--accent-red)}
@@ -98,15 +100,15 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .store-status-item{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(30,47,72,.5);transition:background .15s}
 .store-status-item:hover{background:var(--bg-hover)}
 .alert-item{display:flex;align-items:flex-start;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(30,47,72,.5)}
-.store-status-name{font-size:13px;font-weight:500}
-.store-status-info{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.store-status-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.store-status-info{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
 .alert-dot-red{width:8px;height:8px;border-radius:50%;background:var(--accent-red);flex-shrink:0;margin-top:4px;box-shadow:var(--glow-red)}
 .alert-dot-yellow{width:8px;height:8px;border-radius:50%;background:var(--accent-yellow);flex-shrink:0;margin-top:4px}
-.alert-title{font-size:13px;font-weight:500;margin-bottom:2px}
-.alert-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.alert-title{font-size:14px;font-weight:600;margin-bottom:3px;color:var(--text-primary)}
+.alert-meta{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
 
 /* BADGE */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-family:var(--font-mono);font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-family:var(--font-body);font-weight:600}
 .badge::before{content:'●';font-size:8px}
 .badge-online{background:rgba(0,232,160,.15);color:var(--accent-green)}
 .badge-offline{background:rgba(61,90,122,.3);color:var(--text-muted)}
@@ -118,11 +120,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .search-box{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:0 14px;flex:1;max-width:400px}
 .search-box:focus-within{border-color:var(--accent-blue)}
 .search-icon{color:var(--text-muted);font-size:16px}
-.search-box input{background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:13px;width:100%;padding:10px 0}
+.search-box input{background:none;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);font-size:14px;width:100%;padding:10px 0}
 .search-box input::placeholder{color:var(--text-muted)}
 
 /* BUTTONS */
-.btn{padding:9px 18px;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn{padding:10px 20px;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn-primary{background:var(--accent-blue);color:#000;font-weight:700}
 .btn-primary:hover{background:#33bbff;box-shadow:var(--glow-blue)}
 .btn-outline{background:none;border:1px solid var(--border-bright);color:var(--text-secondary)}
@@ -137,11 +139,14 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* TABLE */
 .table-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .data-table{width:100%;border-collapse:collapse}
-.data-table th{background:var(--bg-panel);padding:12px 16px;text-align:left;font-family:var(--font-display);font-size:10px;font-weight:400;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
-.data-table td{padding:13px 16px;border-bottom:1px solid rgba(30,47,72,.4);font-size:13px}
-.data-table tbody tr:hover{background:var(--bg-hover)}
+.data-table th{background:rgba(0,170,255,.06);padding:13px 18px;text-align:left;font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--accent-blue);border-bottom:1px solid rgba(0,170,255,.2);white-space:nowrap;transition:background .15s}
+.data-table th:hover{background:rgba(0,170,255,.12)}
+.sort-icon{display:inline-flex;align-items:center;margin-left:4px;vertical-align:middle;opacity:.6}
+.sort-icon svg{display:block}
+.data-table td{padding:15px 18px;border-bottom:1px solid rgba(30,47,72,.4);font-size:14px;color:var(--text-primary);font-weight:400}
+.data-table tbody tr:hover{background:rgba(0,170,255,.05)}
 .data-table tbody tr:last-child td{border-bottom:none}
-.td-mono{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)}
+.td-mono{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);font-weight:400}
 .action-btns{display:flex;gap:6px;flex-wrap:wrap}
 
 /* 매장 상세 (사이니지 포함) */
@@ -150,8 +155,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .screen-item{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
 .screen-item:last-child{margin-bottom:0}
 .screen-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
-.screen-name{font-size:13px;font-weight:500;flex:1}
-.screen-location{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.screen-name{font-size:14px;font-weight:600;flex:1;color:var(--text-primary)}
+.screen-location{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
 .screen-url-btn{font-size:11px;padding:3px 10px;border-radius:4px;background:rgba(0,232,160,.1);border:1px solid rgba(0,232,160,.3);color:var(--accent-green);cursor:pointer;white-space:nowrap}
 .screen-url-btn:hover{background:rgba(0,232,160,.2)}
 .add-screen-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border);margin-top:8px}
@@ -167,11 +172,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .content-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;background:linear-gradient(135deg,var(--bg-panel),var(--bg-hover));cursor:pointer;overflow:hidden}
 .content-type-badge{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-mono);background:rgba(0,0,0,.7);color:var(--accent-cyan);border:1px solid var(--border)}
 .content-info{padding:12px 14px}
-.content-info-name{font-size:13px;font-weight:600;margin-bottom:4px}
-.content-info-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
-.content-info-url{font-size:11px;color:var(--accent-cyan);font-family:var(--font-mono);word-break:break-all;margin-top:4px;opacity:.8}
+.content-info-name{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.content-info-meta{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
+.content-info-url{font-size:11px;color:var(--accent-cyan);font-family:var(--font-mono);word-break:break-all;margin-top:4px}
 .content-actions{padding:8px 14px 12px;display:flex;gap:6px}
-.tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,170,255,.1);color:var(--accent-blue);border:1px solid rgba(0,170,255,.2)}
+.tag{font-size:11px;padding:3px 9px;border-radius:10px;background:rgba(0,170,255,.12);color:var(--accent-blue);border:1px solid rgba(0,170,255,.25)}
 .content-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 
 /* PLAYLIST */
@@ -180,15 +185,15 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .playlist-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
 .playlist-item:hover{background:var(--bg-hover)}
 .playlist-item.active{background:rgba(0,170,255,.08);border-left:2px solid var(--accent-blue)}
-.playlist-item-name{font-size:13px;font-weight:500}
-.playlist-item-meta{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.playlist-item-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.playlist-item-meta{font-size:12px;color:var(--text-secondary);font-family:var(--font-body)}
 .playlist-detail-panel{padding:20px;overflow-y:auto}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-muted);font-size:13px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-secondary);font-size:14px}
 .empty-icon{font-size:48px;opacity:.3}
 .detail-title{font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:16px;letter-spacing:1px}
-.detail-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
 .detail-row:last-child{border-bottom:none}
-.detail-label{color:var(--text-muted);font-family:var(--font-mono);font-size:11px;width:100px;flex-shrink:0;padding-top:2px}
+.detail-label{color:var(--text-secondary);font-family:var(--font-body);font-size:13px;font-weight:600;width:100px;flex-shrink:0;padding-top:2px}
 .playlist-content-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
 .pci-icon{font-size:18px;width:28px;text-align:center}
 .pci-name{font-size:13px;font-weight:500;flex:1}
@@ -203,19 +208,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .monitor-card.status-warning{border-color:rgba(255,200,64,.4)}
 .monitor-card.status-error{border-color:rgba(255,61,90,.4)}
 .monitor-card.status-offline{opacity:.6}
-.mc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
-.mc-name{font-size:14px;font-weight:600}
-.mc-sub{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:2px}
-.mc-screen{background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:10px;position:relative;overflow:hidden;gap:3px}
+.mc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-name{font-size:15px;font-weight:700;color:var(--text-primary)}
+.mc-sub{font-size:13px;color:var(--text-secondary);font-family:var(--font-body);margin-top:3px}
+.mc-screen{background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary);font-family:var(--font-body);margin-bottom:12px;position:relative;overflow:hidden;gap:5px}
 .mc-screen.playing::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,170,255,.06),transparent);animation:screen-scan 3s linear infinite}
 @keyframes screen-scan{to{left:200%}}
 .mc-screen-label{color:var(--accent-cyan);font-size:12px}
-.mc-screen-content{color:var(--text-secondary);font-size:10px}
-.mc-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
-.mc-info-item{background:var(--bg-panel);border-radius:var(--radius);padding:6px 8px}
-.mc-info-label{font-size:9px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px}
-.mc-info-value{font-size:12px;font-family:var(--font-mono)}
-.mc-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mc-screen-content{color:var(--text-primary);font-size:12px}
+.mc-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mc-info-item{background:var(--bg-panel);border-radius:var(--radius);padding:8px 12px;border:1px solid var(--border)}
+.mc-info-label{font-size:12px;color:var(--text-secondary);font-family:var(--font-body);font-weight:600;margin-bottom:3px}
+.mc-info-value{font-size:14px;font-family:var(--font-mono);color:var(--text-primary);font-weight:500}
+.mc-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 
 /* LOG */
 .log-filters{display:flex;gap:6px}
@@ -231,9 +236,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* FORM */
 .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-.form-group label{font-size:11px;color:var(--text-secondary);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase}
+.form-group label{font-size:13px;color:var(--text-secondary);font-family:var(--font-body);font-weight:600;letter-spacing:0;margin-bottom:2px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
-.form-input{background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:10px 14px;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;outline:none;transition:all .2s;width:100%;resize:vertical}
+.form-input{background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:11px 14px;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;outline:none;transition:all .2s;width:100%;resize:vertical}
 .form-input:focus{border-color:var(--accent-blue);box-shadow:0 0 0 2px rgba(0,170,255,.1)}
 .form-input::placeholder{color:var(--text-muted)}
 .form-input option{background:var(--bg-card)}
@@ -245,16 +250,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .modal{background:var(--bg-panel);border:1px solid var(--border-bright);border-radius:var(--radius-lg);width:100%;max-width:540px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.6);animation:modal-in .2s ease-out}
 .modal-wide{max-width:700px}
 @keyframes modal-in{from{opacity:0;transform:translateY(-12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:13px;letter-spacing:1px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);font-family:var(--font-body);font-size:16px;font-weight:700;color:var(--text-primary)}
 .modal-close{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px;transition:color .15s}
 .modal-close:hover{color:var(--accent-red)}
-.modal-body{padding:20px;overflow-y:auto}
+.modal-body{padding:22px;overflow-y:auto}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
 .content-checklist{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);max-height:180px;overflow-y:auto;padding:4px 0}
 .checklist-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .15s}
 .checklist-item:hover{background:var(--bg-hover)}
 .checklist-item input[type="checkbox"]{accent-color:var(--accent-blue);width:14px;height:14px}
-.checklist-item label{font-size:13px;cursor:pointer;flex:1}
+.checklist-item label{font-size:14px;cursor:pointer;flex:1;color:var(--text-primary)}
 
 /* PREVIEW MODAL */
 .preview-modal{background:var(--bg-base);border:1px solid var(--border-bright);border-radius:var(--radius-lg);width:100%;max-width:900px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.8);animation:modal-in .2s ease-out}
@@ -274,8 +279,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* SETTINGS */
 .settings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
 .settings-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
-.settings-card-header{font-family:var(--font-display);font-size:12px;letter-spacing:1.5px;color:var(--accent-blue);text-transform:uppercase;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+.settings-card-header{font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--accent-blue);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid rgba(0,170,255,.2)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-primary)}
 .toggle{position:relative;display:inline-block;width:44px;height:24px}
 .toggle input{opacity:0;width:0;height:0}
 .slider{position:absolute;inset:0;background:var(--bg-panel);border:1px solid var(--border-bright);border-radius:12px;cursor:pointer;transition:all .25s}
@@ -285,13 +290,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* GUIDE */
 .guide-steps{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.guide-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary);line-height:1.6;padding:4px 0}
+.guide-step{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-primary);line-height:1.7;padding:5px 0}
 .guide-num{background:var(--accent-blue);color:#000;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .guide-player-url{background:var(--bg-input);border:1px solid var(--accent-blue);border-radius:var(--radius);padding:10px 14px;font-family:var(--font-mono);font-size:11px;color:var(--accent-cyan);word-break:break-all;margin:4px 0}
 
 /* TOAST */
 .toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:9000}
-.toast{display:flex;align-items:center;gap:12px;background:var(--bg-panel);border:1px solid var(--border-bright);border-left:3px solid var(--accent-blue);border-radius:var(--radius);padding:12px 16px;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .25s ease-out;font-size:13px}
+.toast{display:flex;align-items:center;gap:12px;background:var(--bg-panel);border:1px solid var(--border-bright);border-left:3px solid var(--accent-blue);border-radius:var(--radius);padding:13px 18px;min-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .25s ease-out;font-size:14px}
 @keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .toast.success{border-left-color:var(--accent-green)}
 .toast.error{border-left-color:var(--accent-red)}
@@ -300,12 +305,33 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 @keyframes toast-out{to{opacity:0;transform:translateX(20px)}}
 
 /* LOADING */
+
+.slot-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.slot-card{display:grid;grid-template-columns:14px 1fr auto auto auto;align-items:center;gap:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;transition:border-color .15s}
+.slot-card:hover{border-color:var(--border-bright)}
+.slot-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.slot-name-sel{background:transparent;border:none;font-size:14px;font-weight:600;color:var(--text-primary);outline:none;cursor:pointer;font-family:var(--font-body);width:100%}
+.slot-name-sel option{background:var(--bg-card)}
+.slot-time-wrap{display:flex;align-items:center;gap:6px}
+.slot-time-box{display:flex;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;height:34px}
+.slot-time-box input[type=number]{background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-mono);font-size:14px;width:28px;text-align:center;padding:0;-moz-appearance:textfield}
+.slot-time-box input[type=number]::-webkit-outer-spin-button,
+.slot-time-box input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.slot-time-box .slot-colon{color:var(--text-secondary);font-size:14px;font-family:var(--font-mono);line-height:1;padding:0 1px}
+.slot-time-box .slot-time-divider{width:1px;height:100%;background:var(--border)}
+
+.slot-sep{color:var(--text-muted);font-size:13px;padding:0 2px}
+.slot-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:4px;border-radius:4px;transition:all .15s;line-height:1}
+.slot-del:hover{background:rgba(255,61,90,.1);color:var(--accent-red)}
+.slot-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:1px dashed var(--border-bright);border-radius:var(--radius);color:var(--text-muted);font-size:13px;cursor:pointer;background:none;transition:all .2s;font-family:var(--font-body)}
+.slot-add:hover{border-color:var(--accent-blue);color:var(--accent-blue);background:rgba(0,170,255,.04)}
+
 .loading-overlay{position:fixed;inset:0;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:20px;transition:opacity .4s}
-.loading-logo{font-family:var(--font-display);font-size:28px;color:var(--accent-blue);letter-spacing:4px;text-shadow:var(--glow-blue)}
+.loading-logo{font-family:"Orbitron",sans-serif;font-size:28px;color:var(--accent-blue);letter-spacing:4px;text-shadow:var(--glow-blue)}
 .loading-bar{width:300px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
 .loading-progress{height:100%;background:linear-gradient(90deg,var(--accent-blue),var(--accent-cyan));animation:loading-anim 1.5s ease-in-out infinite}
 @keyframes loading-anim{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
-.loading-text{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}
+.loading-text{font-family:"Share Tech Mono",monospace;font-size:12px;color:var(--text-muted)}
 </style>
 </head>
 <body>
@@ -376,7 +402,15 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     </div>
     <div class="table-panel">
       <table class="data-table">
-        <thead><tr><th>매장명</th><th>지역</th><th>담당자</th><th>사이니지</th><th>상태</th><th>마지막 접속</th><th>작업</th></tr></thead>
+        <thead><tr>
+          <th onclick="sortStores('name')" style="cursor:pointer;user-select:none">매장명 <span id="sort-name" class="sort-icon"></span></th>
+          <th onclick="sortStores('region')" style="cursor:pointer;user-select:none">지역 <span id="sort-region" class="sort-icon"></span></th>
+          <th onclick="sortStores('manager')" style="cursor:pointer;user-select:none">담당자 <span id="sort-manager" class="sort-icon"></span></th>
+          <th onclick="sortStores('screens')" style="cursor:pointer;user-select:none">사이니지 <span id="sort-screens" class="sort-icon"></span></th>
+          <th onclick="sortStores('status')" style="cursor:pointer;user-select:none">상태 <span id="sort-status" class="sort-icon"></span></th>
+          <th onclick="sortStores('lastSeen')" style="cursor:pointer;user-select:none">마지막 접속 <span id="sort-lastSeen" class="sort-icon"></span></th>
+          <th>작업</th>
+        </tr></thead>
         <tbody id="store-tbody"></tbody>
       </table>
     </div>
@@ -396,6 +430,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <!-- PLAYLIST -->
   <section class="page" id="page-playlist">
     <div class="page-actions"><button class="btn btn-primary" onclick="openPlaylistModal()">+ 플레이리스트 생성</button></div>
+    <div class="store-tabs" id="playlist-store-tabs"></div>
     <div class="playlist-layout">
       <div class="playlist-list-panel"><div class="panel-header"><span>플레이리스트 목록</span></div><div id="playlist-list"></div></div>
       <div class="playlist-detail-panel" id="playlist-detail"><div class="empty-state"><div class="empty-icon">⊕</div><div>플레이리스트를 선택하세요</div></div></div>
@@ -446,7 +481,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div class="guide-step"><span class="guide-num">1</span>콘텐츠 관리 → 매장 탭 선택 → <b>+ 콘텐츠 등록</b></div>
           <div class="guide-step"><span class="guide-num">2</span>유형 선택 (이미지/영상/유튜브/웹)</div>
           <div class="guide-step"><span class="guide-num">3</span>URL 입력 (구글드라이브 링크 자동 변환)</div>
-          <div class="guide-step" style="color:var(--accent-cyan)">💡 이미지: imgur.com 업로드 후 URL</div>
+          <div class="guide-step" style="color:var(--accent-cyan)">💡 이미지: imgur.com → New post → 이미지 업로드 → 우클릭 → 이미지 주소 복사</div>
           <div class="guide-step" style="color:var(--accent-cyan)">💡 영상: 유튜브 업로드 후 URL</div>
         </div>
       </div>
@@ -489,46 +524,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
           <div id="fb-detail-status" style="color:var(--accent-green)">● 연결됨</div>
         </div>
       </div>
-      <div class="settings-card" style="grid-column:1/-1">
-        <div class="settings-card-header">⏰ 운영 시간대 설정</div>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">시간대별 자동 플레이리스트 전환 기준 시간을 설정합니다.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px" id="timeslot-settings">
-          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
-            <div style="font-size:11px;color:var(--accent-blue);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">오전 (MORNING)</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="time" id="ts-morning-start" class="form-input" style="padding:6px 10px;font-size:13px" value="06:00"/>
-              <span style="color:var(--text-muted)">~</span>
-              <input type="time" id="ts-morning-end" class="form-input" style="padding:6px 10px;font-size:13px" value="12:00"/>
-            </div>
-          </div>
-          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
-            <div style="font-size:11px;color:var(--accent-yellow);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">점심 (LUNCH)</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="time" id="ts-lunch-start" class="form-input" style="padding:6px 10px;font-size:13px" value="12:00"/>
-              <span style="color:var(--text-muted)">~</span>
-              <input type="time" id="ts-lunch-end" class="form-input" style="padding:6px 10px;font-size:13px" value="14:00"/>
-            </div>
-          </div>
-          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
-            <div style="font-size:11px;color:var(--accent-cyan);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">오후 (AFTERNOON)</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="time" id="ts-afternoon-start" class="form-input" style="padding:6px 10px;font-size:13px" value="14:00"/>
-              <span style="color:var(--text-muted)">~</span>
-              <input type="time" id="ts-afternoon-end" class="form-input" style="padding:6px 10px;font-size:13px" value="18:00"/>
-            </div>
-          </div>
-          <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px">
-            <div style="font-size:11px;color:var(--accent-red);font-family:var(--font-mono);margin-bottom:10px;letter-spacing:1px">저녁 (DINNER)</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="time" id="ts-dinner-start" class="form-input" style="padding:6px 10px;font-size:13px" value="18:00"/>
-              <span style="color:var(--text-muted)">~</span>
-              <input type="time" id="ts-dinner-end" class="form-input" style="padding:6px 10px;font-size:13px" value="22:00"/>
-            </div>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveTimeslots()">⏰ 시간 설정 저장</button>
-      </div>
-
       <div class="settings-card" style="color:var(--accent-red)">
         <div class="settings-card-header" style="color:var(--accent-red)">⚠ 데이터 초기화</div>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">Firebase 데이터를 초기화합니다. 삭제된 데이터는 복구 불가합니다.</p>
@@ -561,13 +556,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="form-group"><label>연락처</label><input type="text" id="store-phone" class="form-input" placeholder="010-0000-0000"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>총 운영 시작</label><input type="time" id="store-open" class="form-input" value="09:00"/></div>
-        <div class="form-group"><label>총 운영 종료</label><input type="time" id="store-close" class="form-input" value="22:00"/></div>
+        <div class="form-group">
+          <label>총 운영 시작</label>
+          <input type="time" id="store-open" class="form-input" value="09:00"/>
+        </div>
+        <div class="form-group">
+          <label>총 운영 종료</label>
+          <input type="time" id="store-close" class="form-input" value="22:00"/>
+        </div>
       </div>
       <div class="form-group">
-        <label>시간대 설정 <span style="color:var(--text-muted);font-size:10px">(이름·시작·종료 직접 입력)</span></label>
-        <div id="store-timeslots" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-        <button type="button" class="btn btn-outline btn-sm" style="width:100%" onclick="addTimeslotRow()">+ 시간대 추가</button>
+        <label>스케줄</label>
+        <div class="slot-list" id="store-timeslots"></div>
+        <button type="button" class="slot-add" onclick="addSlotCard()">+ 시간대 추가</button>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-store')">취소</button><button class="btn btn-primary" onclick="saveStore()">저장</button></div>
@@ -583,14 +584,12 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="form-group"><label>콘텐츠명 <span class="required">*</span></label><input type="text" id="content-name" class="form-input" placeholder="예: 점심 특선 메뉴"/></div>
       <div class="form-group"><label>적용 매장 <span class="required">*</span></label><select id="content-store-id" class="form-input"></select></div>
       <div class="form-row">
-        <div class="form-group"><label>유형</label><select id="content-type" class="form-input"><option value="image">이미지</option><option value="video">영상</option><option value="youtube">유튜브</option><option value="url">웹페이지</option></select></div>
+        <div class="form-group"><label>유형</label><select id="content-type" class="form-input"><option value="image">이미지</option><option value="video">영상</option></select></div>
         <div class="form-group"><label>재생시간 (초)</label><input type="number" id="content-duration" class="form-input" value="15" min="1"/></div>
       </div>
       <div class="form-group">
         <label>콘텐츠 URL <span class="required">*</span></label>
-        <input type="text" id="content-url" class="form-input" placeholder="https://..." oninput="onUrlInput()"/>
-        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">구글드라이브 공유링크를 그대로 붙여넣으면 자동 변환됩니다</small>
-        <div id="url-preview" style="display:none;font-size:11px;color:var(--accent-green);font-family:var(--font-mono);margin-top:4px;word-break:break-all;padding:6px 10px;background:rgba(0,232,160,.08);border-radius:4px;border:1px solid rgba(0,232,160,.2)"></div>
+        <input type="text" id="content-url" class="form-input" placeholder="https://i.imgur.com/..." />
       </div>
       <div class="form-group"><label>태그 (쉼표로 구분)</label><input type="text" id="content-tags" class="form-input" placeholder="예: 메뉴, 점심, 할인"/></div>
       <div class="form-group"><label>메모</label><textarea id="content-memo" class="form-input" rows="2" placeholder="설명 메모"></textarea></div>
@@ -609,7 +608,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="form-group"><label>매장 선택 <span class="required">*</span></label><select id="playlist-store" class="form-input" onchange="onPlaylistStoreChange()"></select></div>
         <div class="form-group"><label>사이니지 선택 <span class="required">*</span></label><select id="playlist-screen" class="form-input"></select></div>
       </div>
-      <div class="form-group"><label>운영 시간대</label><select id="playlist-time" class="form-input"><option value="all">상시 (항상 재생)</option></select></div>
+      <div class="form-group"><label>스케줄</label><select id="playlist-schedule" class="form-input"><option value="all">스케줄 없음 (항상 재생)</option></select></div>
       <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist"></div></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist')">취소</button><button class="btn btn-primary" onclick="savePlaylist()">생성</button></div>
@@ -627,7 +626,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <div class="form-group"><label>매장</label><select id="playlist-edit-store" class="form-input" onchange="onPlaylistEditStoreChange()"></select></div>
         <div class="form-group"><label>사이니지</label><select id="playlist-edit-screen" class="form-input"></select></div>
       </div>
-      <div class="form-group"><label>운영 시간대</label><select id="playlist-edit-time" class="form-input"><option value="all">상시 (항상 재생)</option></select></div>
+      <div class="form-group"><label>스케줄</label><select id="playlist-edit-schedule" class="form-input"><option value="all">스케줄 없음 (항상 재생)</option></select></div>
       <div class="form-group"><label>포함 콘텐츠 선택</label><div class="content-checklist" id="content-checklist-edit"></div></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-playlist-edit')">취소</button><button class="btn btn-primary" onclick="updatePlaylist()">저장</button></div>
@@ -687,13 +686,22 @@ const db = firebase.firestore();
 
 // ── 상태 ──
 let stores=[], screens=[], contents=[], playlists=[];
-let selectedPlaylistId=null, currentPage='dashboard', selectedContentStore='all';
+let selectedPlaylistId=null, currentPage='dashboard', selectedContentStore='all', selectedPlaylistStore='all';
+let storeSortKey='', storeSortAsc=true;
 
 // ── 헬퍼 ──
+function formatDate(str) {
+  if(!str) return '-';
+  // ISO 형식 (2026-05-29T09:59:04.023Z) → 2026-05-29 09:59
+  if(str.includes('T')) return str.replace('T',' ').slice(0,16);
+  // 이미 포맷된 형식 그대로
+  return str.slice(0,16);
+}
+
 function nowStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function typeIcon(t){return{image:'🖼',video:'▶',youtube:'▶️',url:'🌐'}[t]||'📄';}
-function timeSlotLabel(t){return{all:'상시',morning:'오전',lunch:'점심',afternoon:'오후',dinner:'저녁'}[t]||t;}
+function scheduleLabel(t){return{all:'상시',morning:'오전',lunch:'점심',afternoon:'오후',dinner:'저녁'}[t]||t;}
 
 function calcStatus(lastSeen){
   if(!lastSeen) return 'offline';
@@ -816,7 +824,7 @@ function renderDashboard(){
           <div class="${st==='offline'?'alert-dot-red':'alert-dot-yellow'}"></div>
           <div>
             <div class="alert-title">${store?store.name:'-'} · ${sc.name}</div>
-            <div class="alert-meta">${st==='offline'?'오프라인':'응답 지연'} · 마지막 접속: ${sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-'}</div>
+            <div class="alert-meta">${st==='offline'?'오프라인':'응답 지연'} · 마지막 접속: ${formatDate(sc.lastSeen)}</div>
           </div>
         </div>`;
       }).join('')
@@ -826,8 +834,59 @@ function renderDashboard(){
 // ── STORES ──
 let expandedStoreId = null;
 
+function sortStores(key) {
+  if(storeSortKey === key) {
+    storeSortAsc = !storeSortAsc;
+  } else {
+    storeSortKey = key;
+    storeSortAsc = true;
+  }
+  // 아이콘 업데이트
+  ['name','region','manager','screens','status','lastSeen'].forEach(k => {
+    const el = document.getElementById('sort-'+k);
+    if(!el) return;
+    if(k === storeSortKey) {
+      el.innerHTML = storeSortAsc
+        ? '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L9 8H1Z" fill="var(--accent-blue)"/></svg>'
+        : '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 8L9 2H1Z" fill="var(--accent-blue)"/></svg>';
+    } else {
+      el.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="rgba(100,140,180,.3)"/><path d="M5 8L8 4H2Z" fill="rgba(100,140,180,.3)"/></svg>';
+    }
+  });
+  renderStores(document.getElementById('store-search').value);
+}
+
 function renderStores(filter=''){
+  // 초기 아이콘 세팅
+  ['name','region','manager','screens','status','lastSeen'].forEach(k => {
+    const el = document.getElementById('sort-'+k);
+    if(!el || el.innerHTML !== '') return;
+    el.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="rgba(100,140,180,.3)"/><path d="M5 8L8 4H2Z" fill="rgba(100,140,180,.3)"/></svg>';
+  });
   let list=filter?stores.filter(s=>s.name.includes(filter)||s.region.includes(filter)):stores;
+  // 정렬 적용
+  if(storeSortKey) {
+    list = [...list].sort((a,b) => {
+      let av, bv;
+      if(storeSortKey==='screens') {
+        av = screens.filter(sc=>sc.storeId===a.id).length;
+        bv = screens.filter(sc=>sc.storeId===b.id).length;
+      } else if(storeSortKey==='status') {
+        const ord = {online:0,warning:1,offline:2,error:3};
+        av = ord[calcStatus(a.lastSeen)]??4;
+        bv = ord[calcStatus(b.lastSeen)]??4;
+      } else if(storeSortKey==='lastSeen') {
+        av = a.lastSeen||'';
+        bv = b.lastSeen||'';
+      } else {
+        av = (a[storeSortKey]||'').toLowerCase();
+        bv = (b[storeSortKey]||'').toLowerCase();
+      }
+      if(av<bv) return storeSortAsc?-1:1;
+      if(av>bv) return storeSortAsc?1:-1;
+      return 0;
+    });
+  }
   const tbody=document.getElementById('store-tbody');
   tbody.innerHTML=list.length
     ?list.map(s=>{
@@ -844,7 +903,7 @@ function renderStores(filter=''){
                 <span class="screen-icon">📺</span>
                 <div style="flex:1">
                   <div class="screen-name">${sc.name}</div>
-                  <div class="screen-location">${sc.location||'위치 미지정'} · 마지막접속: ${sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-'}</div>
+                  <div class="screen-location">${sc.location||'위치 미지정'} · 마지막접속: ${formatDate(sc.lastSeen)}</div>
                 </div>
                 ${statusBadge(scStatus)}
                 <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
@@ -866,7 +925,7 @@ function renderStores(filter=''){
           </div>
         </td></tr>`:'';
       return`<tr style="cursor:pointer" onclick="if(event.target.tagName==='INPUT'||event.target.tagName==='SELECT'||event.target.tagName==='BUTTON'||event.target.tagName==='OPTION')return;toggleStore('${s.id}')">
-        <td style="font-weight:700;font-size:14px;color:var(--text-primary)">${isExpanded?'▼ ':''} ${s.name}</td>
+        <td style="font-weight:600;font-size:13px;color:var(--text-primary)">${isExpanded?'▼ ':''} ${s.name}</td>
         <td class="td-mono">${s.region}</td>
         <td>${s.manager||'-'}</td>
         <td><span style="color:var(--accent-cyan);font-family:var(--font-mono)">${storeScreens.length}대</span> <span style="color:var(--text-muted);font-size:11px">(온라인 ${onlineCount})</span></td>
@@ -953,38 +1012,109 @@ function copyScreenUrl(screenId, screenName){
 
 // 매장 모달
 // ── 시간대 행 추가/삭제 ──
-function addTimeslotRow(name='', start='', end='') {
-  const container = document.getElementById('store-timeslots');
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;align-items:center';
-  row.innerHTML = `
-    <input type="text" placeholder="이름 (예: 아침)" class="form-input" style="flex:1;padding:7px 10px;font-size:12px" value="${name}"/>
-    <input type="time" class="form-input" style="padding:7px 10px;font-size:12px" value="${start||'09:00'}"/>
-    <span style="color:var(--text-muted);flex-shrink:0">~</span>
-    <input type="time" class="form-input" style="padding:7px 10px;font-size:12px" value="${end||'12:00'}"/>
-    <button type="button" class="btn btn-danger btn-xs" onclick="this.parentElement.remove()" style="flex-shrink:0">✕</button>
+const TIMESLOT_NAMES = ['아침','브런치','점심','브레이크','오후','저녁','야간','상시'];
+const SLOT_COLORS  = ['#2196F3','#4CAF50','#FF9800','#607D8B','#F44336','#9C27B0','#3F51B5','#009688'];
+
+function getSlotColor(n){ const i=TIMESLOT_NAMES.indexOf(n); return i>=0?SLOT_COLORS[i]:'#7a9bbf'; }
+
+// 시간 → {h, m} 파싱 (HH:MM)
+function parseTime(str){ const [h,m]=(str||'09:00').split(':').map(Number); return {h,m}; }
+// {h, m} → HH:MM
+function fmtTime(h,m){ return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+
+
+function makeTimeBox(timeStr, onchange) {
+  const {h, m} = parseTime(timeStr);
+  const wrap = document.createElement('div');
+  wrap.className = 'slot-time-box';
+  wrap.innerHTML = `
+    <input type="number" min="0" max="23" value="${String(h).padStart(2,'0')}" style="width:30px"
+      oninput="clampInput(this,0,23)"/>
+    <span class="slot-colon">:</span>
+    <input type="number" min="0" max="59" value="${String(m).padStart(2,'0')}" style="width:30px"
+      oninput="clampInput(this,0,59)"/>
   `;
-  container.appendChild(row);
+  return wrap;
+}
+
+function clampInput(el, min, max){
+  let v = parseInt(el.value)||min;
+  if(v<min) v=min;
+  if(v>max) v=max;
+  el.value = v;
+}
+
+
+
+function getTimeFromBox(wrap){
+  const nums = wrap.querySelectorAll('input[type=number]');
+  const h = parseInt(nums[0].value)||0;
+  const m = parseInt(nums[1].value)||0;
+  return fmtTime(h, m);
+}
+
+function addSlotCard(name='', start='', end=''){
+  const container = document.getElementById('store-timeslots');
+  const card = document.createElement('div');
+  card.className = 'slot-card';
+  const color = getSlotColor(name);
+  const opts  = TIMESLOT_NAMES.map(n=>`<option value="${n}" ${n===name?'selected':''}>${n}</option>`).join('');
+
+  // 이름 셀렉트
+  const nameWrap = document.createElement('span');
+  nameWrap.className = 'slot-dot';
+  nameWrap.style.background = color;
+
+  const nameSel = document.createElement('select');
+  nameSel.className = 'slot-name-sel';
+  nameSel.innerHTML = opts;
+  nameSel.value = name || TIMESLOT_NAMES[0];
+  nameSel.onchange = function(){ 
+    const c = getSlotColor(this.value);
+    card.querySelector('.slot-dot').style.background = c;
+    card.style.borderLeftColor = c;
+  };
+
+  // 시간 박스
+  const timeWrap = document.createElement('div');
+  timeWrap.className = 'slot-time-wrap';
+  const startBox = makeTimeBox(start||'09:00','');
+  const sep = document.createElement('span');
+  sep.className = 'slot-sep'; sep.textContent = '~';
+  const endBox = makeTimeBox(end||'12:00','');
+  timeWrap.append(startBox, sep, endBox);
+
+  // 삭제 버튼
+  const del = document.createElement('button');
+  del.type='button'; del.className='slot-del'; del.textContent='✕';
+  del.title='삭제';
+  del.onclick = ()=> card.remove();
+
+  card.style.borderLeft = `3px solid ${color}`;
+  card.append(nameWrap, nameSel, timeWrap, del);
+  container.appendChild(card);
+}
+
+// 하위 호환 (loadTimeslotsToModal에서 사용)
+function addTimeslotRow(name='', start='', end=''){
+  addSlotCard(name, start, end);
 }
 
 function getTimeslotsFromModal() {
-  const rows = document.getElementById('store-timeslots').querySelectorAll('div');
-  const slots = [];
-  rows.forEach(row => {
-    const inputs = row.querySelectorAll('input');
-    if(inputs.length >= 3) {
-      const name  = inputs[0].value.trim();
-      const start = inputs[1].value;
-      const end   = inputs[2].value;
-      if(name) slots.push({name, start, end});
-    }
-  });
-  return slots;
+  const cards = document.getElementById('store-timeslots').querySelectorAll('.slot-card');
+  return Array.from(cards).map(card => {
+    const name  = card.querySelector('.slot-name-sel')?.value || '';
+    const boxes = card.querySelectorAll('.slot-time-box');
+    const start = boxes[0] ? getTimeFromBox(boxes[0]) : '09:00';
+    const end   = boxes[1] ? getTimeFromBox(boxes[1]) : '12:00';
+    return {name, start, end};
+  }).filter(s => s.name);
 }
 
 function loadTimeslotsToModal(slots) {
-  document.getElementById('store-timeslots').innerHTML = '';
-  (slots||[]).forEach(s => addTimeslotRow(s.name, s.start, s.end));
+  const container = document.getElementById('store-timeslots');
+  container.innerHTML = '';
+  (slots||[]).forEach(s => addSlotCard(s.name, s.start, s.end));
 }
 
 function openStoreModal(id=null){
@@ -996,11 +1126,11 @@ function openStoreModal(id=null){
   document.getElementById('store-open').value='09:00';
   document.getElementById('store-close').value='22:00';
   document.getElementById('store-timeslots').innerHTML='';
+  // 슬롯 초기화됨
   // 기본 시간대
-  addTimeslotRow('아침','09:00','11:30');
-  addTimeslotRow('점심','11:30','14:00');
-  addTimeslotRow('브레이크','14:00','17:00');
-  addTimeslotRow('저녁','17:00','22:00');
+  document.getElementById('store-timeslots').innerHTML='';
+  [['아침','09:00','11:30'],['점심','11:30','14:00'],['브레이크','14:00','17:00'],['저녁','17:00','22:00']]
+    .forEach(([n,s,e]) => addSlotCard(n,s,e));
   if(id){
     const s=stores.find(x=>x.id===id);if(!s)return;
     document.getElementById('store-edit-id').value=s.id;
@@ -1106,7 +1236,6 @@ function openContentModal(id=null){
   document.getElementById('content-type').value='image';
   document.getElementById('content-edit-id').value='';
   document.getElementById('content-modal-title').textContent='콘텐츠 등록';
-  document.getElementById('url-preview').style.display='none';
   const sel=document.getElementById('content-store-id');
   sel.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   if(selectedContentStore!=='all') sel.value=selectedContentStore;
@@ -1134,7 +1263,7 @@ async function deleteContent(id){
 }
 async function saveContent(){
   const name=document.getElementById('content-name').value.trim();
-  const url=convertUrl(document.getElementById('content-url').value.trim());
+  const url=document.getElementById('content-url').value.trim();
   if(!name){showToast('콘텐츠명을 입력하세요','error');return;}
   if(!url){showToast('URL을 입력하세요','error');return;}
   const id=document.getElementById('content-edit-id').value;
@@ -1201,16 +1330,41 @@ function previewContent(id){
 function closePreview(){document.getElementById('preview-body').innerHTML='';closeModal('modal-preview');}
 
 // ── PLAYLIST ──
+function renderPlaylistStoreTabs(){
+  const tabEl = document.getElementById('playlist-store-tabs');
+  if(!tabEl) return;
+  const allActive = selectedPlaylistStore==='all'?'active':'';
+  let html = `<button class="store-tab ${allActive}" onclick="selectPlaylistStore('all')">전체</button>`;
+  stores.forEach(s => {
+    const act = selectedPlaylistStore===s.id?'active':'';
+    html += `<button class="store-tab ${act}" onclick="selectPlaylistStore('${s.id}')">${s.name}</button>`;
+  });
+  tabEl.innerHTML = html;
+}
+
+function selectPlaylistStore(storeId){
+  selectedPlaylistStore = storeId;
+  selectedPlaylistId = null;
+  document.getElementById('playlist-detail').innerHTML='<div class="empty-state"><div class="empty-icon">⊕</div><div>플레이리스트를 선택하세요</div></div>';
+  renderPlaylist();
+}
+
 function renderPlaylist(){
+  renderPlaylistStoreTabs();
+  // 매장 필터 적용
+  let list = selectedPlaylistStore==='all'
+    ? playlists
+    : playlists.filter(p=>p.storeId===selectedPlaylistStore);
+
   const listEl=document.getElementById('playlist-list');
-  listEl.innerHTML=playlists.length
-    ?playlists.map(p=>{
+  listEl.innerHTML=list.length
+    ?list.map(p=>{
       const s=stores.find(x=>x.id===p.storeId);
       const sc=screens.find(x=>x.id===p.screenId);
       return`<div class="playlist-item ${p.id===selectedPlaylistId?'active':''}" onclick="selectPlaylist('${p.id}')">
         <div>
           <div class="playlist-item-name">${p.name}</div>
-          <div class="playlist-item-meta">${s?s.name:'미지정'} · ${sc?sc.name:'전체'}</div>
+          <div class="playlist-item-meta">${s?s.name:'미지정'} · ${sc?sc.name:'전체'} · ${p.schedule||p.timeSlot||'상시'}</div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
           <button class="btn btn-outline btn-xs" onclick="event.stopPropagation();openPlaylistEdit('${p.id}')">수정</button>
@@ -1218,7 +1372,7 @@ function renderPlaylist(){
         </div>
       </div>`;
     }).join('')
-    :'<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">플레이리스트 없음</div>';
+    :'<div style="padding:20px;color:var(--text-secondary);font-size:13px;text-align:center">플레이리스트 없음</div>';
   if(selectedPlaylistId) showPlaylistDetail(selectedPlaylistId);
 }
 function selectPlaylist(id){selectedPlaylistId=id;renderPlaylist();showPlaylistDetail(id);}
@@ -1232,7 +1386,7 @@ function showPlaylistDetail(id){
     <div class="detail-title">◈ ${p.name}</div>
     <div class="detail-row"><span class="detail-label">매장</span><span>${s?s.name:'미지정'}</span></div>
     <div class="detail-row"><span class="detail-label">사이니지</span><span style="color:var(--accent-cyan)">${sc?sc.name+' ('+sc.location+')':'미지정'}</span></div>
-    <div class="detail-row"><span class="detail-label">시간대</span><span>${timeSlotLabel(p.timeSlot||'all')}</span></div>
+    <div class="detail-row"><span class="detail-label">시간대</span><span>${scheduleLabel(p.schedule||'all')}</span></div>
     <div class="detail-row"><span class="detail-label">콘텐츠</span><span>${(p.contentIds||[]).length}개</span></div>
     <div class="detail-row"><span class="detail-label">총 재생시간</span><span>${total}초 (${Math.floor(total/60)}분 ${total%60}초)</span></div>
     <div style="margin-top:16px;font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">콘텐츠 목록</div>
@@ -1240,60 +1394,75 @@ function showPlaylistDetail(id){
 }
 function openPlaylistModal(){
   document.getElementById('playlist-name').value='';
-  document.getElementById('playlist-time').value='all';
   const storeEl=document.getElementById('playlist-store');
   storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   onPlaylistStoreChange();
   openModal('modal-playlist');
 }
+function updateScheduleOptions(storeId, selectId) {
+  const store = stores.find(s=>s.id===storeId);
+  const slots = store ? (store.timeslots||[]) : [];
+  const el = document.getElementById(selectId);
+  if(!el) return;
+  el.innerHTML = '<option value="all">스케줄 없음 (항상 재생)</option>';
+  slots.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.name;
+    opt.textContent = s.name + ' (' + s.start + ' ~ ' + s.end + ')';
+    el.appendChild(opt);
+  });
+}
+
 function onPlaylistStoreChange(){
   const storeId=document.getElementById('playlist-store').value;
   const storeScreens=screens.filter(sc=>sc.storeId===storeId);
   const screenEl=document.getElementById('playlist-screen');
   screenEl.innerHTML=storeScreens.length
-    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name} (${sc.location||'위치미지정'})</option>`).join('')
+    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name||'사이니지'} (${sc.location||'위치미지정'})</option>`).join('')
     :'<option value="">사이니지 없음</option>';
-  // 해당 매장 콘텐츠만 체크리스트에 표시
   const storeContents=contents.filter(c=>c.storeId===storeId);
   document.getElementById('content-checklist').innerHTML=storeContents.length
     ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="chk-${c.id}" value="${c.id}"/><label for="chk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
     :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+  updateScheduleOptions(storeId, 'playlist-schedule');
 }
+
 function onPlaylistEditStoreChange(){
   const storeId=document.getElementById('playlist-edit-store').value;
   const storeScreens=screens.filter(sc=>sc.storeId===storeId);
   const screenEl=document.getElementById('playlist-edit-screen');
   screenEl.innerHTML=storeScreens.length
-    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name} (${sc.location||'위치미지정'})</option>`).join('')
+    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name||'사이니지'} (${sc.location||'위치미지정'})</option>`).join('')
     :'<option value="">사이니지 없음</option>';
   const storeContents=contents.filter(c=>c.storeId===storeId);
   const checklistEl=document.getElementById('content-checklist-edit');
   checklistEl.innerHTML=storeContents.length
     ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${typeIcon(c.type)} ${c.name} (${c.duration}초)</label></div>`).join('')
     :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
-  updateTimeslotOptions(storeId, 'playlist-edit-time');
+  updateScheduleOptions(storeId, 'playlist-edit-schedule');
 }
+
 
 function openPlaylistEdit(id){
   const p=playlists.find(x=>x.id===id); if(!p)return;
   document.getElementById('playlist-edit-id').value=p.id;
   document.getElementById('playlist-edit-name').value=p.name||'';
-  document.getElementById('playlist-edit-time').value=p.timeSlot||'all';
   // 매장 셀렉트
   const storeEl=document.getElementById('playlist-edit-store');
   storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   storeEl.value=p.storeId||'';
-  // 사이니지 셀렉트
+  // 스케줄 + 사이니지 옵션 로드
   onPlaylistEditStoreChange();
-  const screenEl=document.getElementById('playlist-edit-screen');
-  screenEl.value=p.screenId||'';
-  // 콘텐츠 체크
+  // 값 복원 (옵션 로드 후)
   setTimeout(()=>{
+    document.getElementById('playlist-edit-screen').value=p.screenId||'';
+    document.getElementById('playlist-edit-schedule').value=p.schedule||p.timeSlot||'all';
+    // 콘텐츠 체크
     (p.contentIds||[]).forEach(cid=>{
       const chk=document.getElementById('echk-'+cid);
       if(chk) chk.checked=true;
     });
-  },50);
+  },80);
   openModal('modal-playlist-edit');
 }
 
@@ -1304,7 +1473,7 @@ async function updatePlaylist(){
   const screenId=document.getElementById('playlist-edit-screen').value;
   const contentIds=Array.from(document.querySelectorAll('#content-checklist-edit input:checked')).map(el=>el.value);
   if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
-  const data={name,storeId:document.getElementById('playlist-edit-store').value,screenId,timeSlot:document.getElementById('playlist-edit-time').value,contentIds};
+  const data={name,storeId:document.getElementById('playlist-edit-store').value,screenId,schedule:document.getElementById('playlist-edit-schedule').value,contentIds};
   await db.collection('playlists').doc(id).set(data,{merge:true});
   showToast(`[${name}] 수정됨`,'success');
   closeModal('modal-playlist-edit');
@@ -1318,7 +1487,7 @@ async function savePlaylist(){
   if(!screenId){showToast('사이니지를 선택하세요','error');return;}
   const contentIds=Array.from(document.querySelectorAll('#content-checklist input:checked')).map(el=>el.value);
   if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
-  const data={name,storeId:document.getElementById('playlist-store').value,screenId,timeSlot:document.getElementById('playlist-time').value,contentIds,createdAt:new Date().toISOString()};
+  const data={name,storeId:document.getElementById('playlist-store').value,screenId,schedule:document.getElementById('playlist-schedule').value,contentIds,createdAt:new Date().toISOString()};
   const ref=await db.collection('playlists').add(data);
   selectedPlaylistId=ref.id;
   showToast(`[${name}] 생성됨`,'success');
@@ -1357,20 +1526,26 @@ function renderMonitor(){
       const status=calcStatus(sc.lastSeen);
       const pl=playlists.find(p=>p.screenId===sc.id);
       const isOnline=status==='online';
+      const isWarn=status==='warning';
       const net=sc.network||0;
       const netC=net>300?'var(--accent-red)':net>100?'var(--accent-yellow)':'var(--accent-green)';
-      const lastSeen=sc.lastSeen?sc.lastSeen.replace('T',' ').slice(0,16):'-';
+      const lastSeen=formatDate(sc.lastSeen);
+      const statusColor=isOnline?'var(--accent-green)':isWarn?'var(--accent-yellow)':'var(--text-secondary)';
+      const currentContent=isOnline?(sc.currentContent||pl?.name||'재생 대기중'):'-';
       return`<div class="monitor-card status-${status}">
         <div class="mc-header">
-          <div>
-            <div class="mc-name">📺 ${sc.name}</div>
-            <div class="mc-sub">${sc.location||'위치미지정'}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📺</div>
+            <div>
+              <div class="mc-name">${sc.name}</div>
+              <div class="mc-sub">${sc.location||'위치 미지정'}</div>
+            </div>
           </div>
           ${statusBadge(status)}
         </div>
         <div class="mc-screen ${isOnline?'playing':''}">
-          <span class="mc-screen-label">${isOnline?'▶ 재생중':'신호 없음'}</span>
-          <span class="mc-screen-content">${isOnline?(sc.currentContent||pl?.name||'-'):'-'}</span>
+          <span class="mc-screen-label" style="color:${statusColor};font-size:13px;font-weight:600">${isOnline?'▶ 재생중':isWarn?'⚠ 응답 지연':'● 신호 없음'}</span>
+          <span class="mc-screen-content">${currentContent}</span>
         </div>
         <div class="mc-info">
           <div class="mc-info-item">
@@ -1379,7 +1554,7 @@ function renderMonitor(){
           </div>
           <div class="mc-info-item">
             <div class="mc-info-label">마지막 접속</div>
-            <div class="mc-info-value" style="font-size:10px;color:var(--text-secondary)">${lastSeen}</div>
+            <div class="mc-info-value" style="font-size:12px">${lastSeen}</div>
           </div>
         </div>
         <div class="mc-actions">
@@ -1389,7 +1564,7 @@ function renderMonitor(){
           <button class="btn btn-sm" style="background:rgba(0,232,160,.1);border:1px solid rgba(0,232,160,.3);color:var(--accent-green)" onclick="sendCmd('${sc.id}','playlist_update')">↺ 재생재개</button>
         </div>
       </div>`;
-    }).join('');
+    }).join('');;
     const storeOnline=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
     const allOnline = storeOnline === storeScreens.length;
     const headerColor = allOnline ? 'var(--accent-green)' : storeOnline > 0 ? 'var(--accent-yellow)' : 'var(--accent-red)';
@@ -1398,14 +1573,14 @@ function renderMonitor(){
         <div style="display:flex;align-items:center;gap:14px">
           <div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div>
           <div>
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:.5px">${s.name}</div>
-            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:3px">${s.region} · 사이니지 ${storeScreens.length}대 · 담당: ${s.manager||'-'}</div>
+            <div style="font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:.3px">${s.name}</div>
+            <div style="font-size:13px;color:var(--text-secondary);font-family:var(--font-body);margin-top:4px;font-weight:400">${s.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${s.manager||'-'}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
-            <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:${headerColor}">${storeOnline}<span style="font-size:12px;color:var(--text-muted)">/${storeScreens.length}</span></div>
-            <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">온라인</div>
+            <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:${headerColor}">${storeOnline}<span style="font-size:14px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
+            <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-body);margin-top:2px">온라인</div>
           </div>
           <span class="badge badge-${allOnline?'online':storeOnline>0?'warning':'offline'}">${allOnline?'전체 정상':storeOnline>0?'일부 오프라인':'전체 오프라인'}</span>
         </div>
@@ -1445,8 +1620,8 @@ async function resetSampleData(){
   const c1=await db.collection('contents').add({name:'점심 특선 메뉴',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=1',storeId:s1.id,tags:['메뉴','점심'],createdAt:new Date().toISOString()});
   const c2=await db.collection('contents').add({name:'저녁 코스 안내',type:'image',duration:20,url:'https://picsum.photos/1920/1080?random=2',storeId:s1.id,tags:['메뉴','저녁'],createdAt:new Date().toISOString()});
   const c3=await db.collection('contents').add({name:'홍대 이벤트',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=3',storeId:s2.id,tags:['이벤트'],createdAt:new Date().toISOString()});
-  await db.collection('playlists').add({name:'강남 입구 리스트',storeId:s1.id,screenId:sc1.id,timeSlot:'all',contentIds:[c1.id,c2.id],createdAt:new Date().toISOString()});
-  await db.collection('playlists').add({name:'홍대 카운터 리스트',storeId:s2.id,screenId:sc3.id,timeSlot:'all',contentIds:[c3.id],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'강남 입구 리스트',storeId:s1.id,screenId:sc1.id,schedule:'all',contentIds:[c1.id,c2.id],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'홍대 카운터 리스트',storeId:s2.id,screenId:sc3.id,schedule:'all',contentIds:[c3.id],createdAt:new Date().toISOString()});
   await fetchAll();
   showToast('샘플 데이터 초기화 완료!','success');
 }
@@ -1464,15 +1639,20 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(el=>el.classList.remove('open'));document.getElementById('preview-body').innerHTML='';}});
 document.querySelectorAll('.modal-overlay').forEach(function(o){
-  o.addEventListener('click',function(e){
-    if(e.target===o){
+  let mousedownTarget = null;
+  // mousedown 시작점 기록
+  o.addEventListener('mousedown', function(e){ mousedownTarget = e.target; });
+  // mouseup 끝점이 overlay이고 시작점도 overlay일 때만 닫기
+  o.addEventListener('mouseup', function(e){
+    if(e.target === o && mousedownTarget === o){
       o.classList.remove('open');
-      if(o.id==='modal-preview')document.getElementById('preview-body').innerHTML='';
+      if(o.id==='modal-preview') document.getElementById('preview-body').innerHTML='';
     }
+    mousedownTarget = null;
   });
-  // 모달 내부 클릭이 테이블 행 클릭으로 전파되지 않게
-  const modal=o.querySelector('.modal,.preview-modal');
-  if(modal) modal.addEventListener('click',function(e){e.stopPropagation();});
+  // 모달 내부 클릭이 테이블 행으로 전파 안 되게
+  const modal = o.querySelector('.modal,.preview-modal');
+  if(modal) modal.addEventListener('click', function(e){ e.stopPropagation(); });
 });
 
 // ── TOAST ──
@@ -1533,7 +1713,7 @@ async function saveTimeslots() {
     dinner:    { start: document.getElementById('ts-dinner-start').value,    end: document.getElementById('ts-dinner-end').value },
   };
   await db.collection('settings').doc('timeslots').set(data);
-  showToast('운영 시간대가 저장되었습니다!', 'success');
+  showToast('스케줄가 저장되었습니다!', 'success');
 }
 
 // ── 자동 장애 감지 (토스트 알림만, 로그 기록 없음) ──
@@ -1566,6 +1746,8 @@ setInterval(async () => {
 // ── 초기화 ──
 async function init(){
   try{
+    // 폰트 로드 완료 대기
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
     const snap=await db.collection('stores').get();
     if(snap.empty) await resetSampleData();
     else await fetchAll();

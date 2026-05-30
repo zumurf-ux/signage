@@ -241,8 +241,8 @@ async function fetchCommand(){
       return;
     }
 
-    const matched=myPlaylists.find(p=>p.timeSlot===slot)
-                ||myPlaylists.find(p=>p.timeSlot==='all')
+    const matched=myPlaylists.find(p=>p.schedule===slot)
+                ||myPlaylists.find(p=>p.schedule==='all')
                 ||myPlaylists[0];
 
     // 시간대 바뀌면 자동 전환
