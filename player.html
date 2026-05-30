@@ -30,10 +30,13 @@ body.rotate-180 #player{transform:rotate(180deg)}
 .standby-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,170,255,.4),transparent);margin:4px 0}
 .standby-info{font-size:15px;color:#5a7a9a;margin-top:4px;font-family:monospace;text-align:center;line-height:2;letter-spacing:1px}
 
+
+
 /* 미디어 플레이어 */
 #img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative}
 
 /* 진행바 */
 #progress-bar{display:none}
@@ -60,6 +63,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
   <img    id="img-player"    src="" alt=""/>
   <video  id="video-player"  autoplay muted playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <div id="text-player"></div>
   <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
 </div>
 
@@ -311,10 +315,61 @@ function playContent(c){
     if(isYoutube) playIframe(convertYoutubeUrl(c.url),duration);
     else playVideo(c.url,duration);
   }
+  else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
   else playImage(c.url,duration);
   db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
 }
 
+// ── 공지 템플릿 렌더러 (player)
+const PL_FONT="'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
+const PL_MONO="'SFMono-Regular',ui-monospace,monospace";
+function plDot(s){return(s||'').replaceAll('-','.');}
+function plTint(hex,alpha){const h=hex.replace('#','');const n=h.length===3?h.split('').map(c=>c+c).join(''):h;const r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16);return `rgba(${r},${g},${b},${alpha})`;}
+function plInfoRows(d){
+  const rows=[];
+  if(d.periodOn&&(d.start||d.end)){const p=d.start&&d.end?`${plDot(d.start)} ~ ${plDot(d.end)}`:plDot(d.start||d.end);rows.push({k:'기간',v:p});}
+  if(d.hoursOn&&(d.open||d.close))rows.push({k:'시간',v:`${d.open||''} ~ ${d.close||''}`.trim()});
+  if(d.daysOn){const sel=d.days.map((v,i)=>v?['월','화','수','목','금','토','일'][i]:null).filter(Boolean);if(sel.length){const w=sel.length===7?'매일':sel.length===5&&d.days.slice(0,5).every(Boolean)?'평일 (월–금)':sel.length===2&&d.days[5]&&d.days[6]?'주말 (토·일)':sel.join('·');rows.push({k:'요일',v:w});}}
+  if(d.phoneOn&&d.phone)rows.push({k:'문의',v:d.phone});
+  return rows;
+}
+function plBadge(d){return d.badgeOn&&d.badge&&d.badge.trim();}
+function plKindEn(d){return d.kind==='이벤트'?'EVENT':'NOTICE';}
+function plChip(rows,a,ic){const vc=ic||'inherit';return rows.map(r=>`<div style="display:flex;align-items:center;gap:22px"><span style="background:${a};color:#fff;font-size:32px;font-weight:700;padding:10px 26px;border-radius:999px;min-width:110px;text-align:center">${r.k}</span><span style="color:${vc};font-size:46px;font-weight:600">${r.v}</span></div>`).join('');}
+function plDotInfo(rows,a,m,s,ic){return rows.map(r=>`<div style="display:flex;align-items:baseline;gap:24px"><span style="width:14px;height:14px;border-radius:999px;background:${a};transform:translateY(-6px);flex-shrink:0;display:inline-block"></span><span style="color:${ic||m};font-size:36px;font-weight:500;width:130px">${r.k}</span><span style="color:${ic||s};font-size:46px;font-weight:600">${r.v}</span></div>`).join('');}
+function plLine(rows,m,s,div,ic){return rows.map((r,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:26px 4px;border-top:${i===0?'2px solid '+div:'none'};border-bottom:2px solid ${div}"><span style="color:${ic||m};font-size:38px;font-weight:600;letter-spacing:6px">${r.k}</span><span style="color:${ic||s};font-size:46px;font-weight:600">${r.v}</span></div>`).join('');}
+function plSoft(rows,a,ic){return rows.map(r=>`<div style="background:${plTint(a,0.08)};border-radius:18px;padding:22px 36px;display:flex;align-items:center;justify-content:space-between"><span style="color:${a};font-size:36px;font-weight:700">${r.k}</span><span style="color:${ic||'inherit'};font-size:44px;font-weight:600">${r.v}</span></div>`).join('');}
+const PL_SHELL=`width:100%;height:100%;position:relative;overflow:hidden;word-break:keep-all;font-family:${PL_FONT};box-sizing:border-box`;
+
+function plRenderClassic(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:#fff;padding:120px 100px;display:flex;flex-direction:column;color:#111"><div style="display:flex;flex-direction:column;align-items:center;gap:22px"><div style="color:${a};font-size:30px;font-weight:700;letter-spacing:8px;font-family:${PL_MONO}">${plKindEn(d)}</div><div style="width:90px;height:8px;background:${a};border-radius:999px"></div><div style="font-size:48px;font-weight:700;letter-spacing:8px">${d.storeName||'상호명'}</div></div><div style="margin-top:90px;text-align:center"><div style="font-size:116px;font-weight:800;line-height:1.12;word-break:keep-all;color:${d.titleColor||'#111'}">${d.title||'타이틀'}</div></div>${plBadge(d)?`<div style="margin-top:56px;display:flex;justify-content:center"><span style="background:${a};color:#fff;font-size:52px;font-weight:800;padding:20px 56px;border-radius:999px">${d.badge}</span></div>`:''}<div style="margin-top:70px;text-align:center;flex:1"><div style="color:${d.contentColor||'#3a3f47'};font-size:56px;line-height:1.55;white-space:pre-wrap">${d.content||''}</div>${rows.length?`<div style="margin-top:80px;padding-top:70px;border-top:2px solid #ececec;display:flex;flex-direction:column;gap:24px;align-items:center">${plChip(rows,a,d.infoColor)}</div>`:''}</div><div style="display:flex;align-items:center;justify-content:center;margin-top:50px">${plLogoHtml(d,110,'#c9ccd2',false)}</div></div>`;}
+function plRenderBanner(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:#fff;display:flex;flex-direction:column"><div style="background:${a};padding:110px 90px 96px;display:flex;flex-direction:column;gap:40px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="color:rgba(255,255,255,0.85);font-size:44px;font-weight:600">${d.storeName||'상호명'}</div><span style="background:rgba(255,255,255,0.2);color:#fff;font-size:30px;font-weight:700;padding:10px 24px;border-radius:999px">${d.kind}</span></div><div style="color:${d.titleColor||'#fff'};font-size:124px;font-weight:900;line-height:1.08">${d.title||'타이틀'}</div>${plBadge(d)?`<div><span style="background:#fff;color:${a};font-size:56px;font-weight:900;padding:18px 50px;border-radius:16px;display:inline-block">${d.badge}</span></div>`:''}</div><div style="flex:1;padding:84px 90px;display:flex;flex-direction:column;color:#2f343c"><div style="font-size:58px;line-height:1.55;white-space:pre-wrap">${d.content||''}</div><div style="margin-top:auto;padding-top:70px;display:flex;flex-direction:column;gap:30px">${plDotInfo(rows,a,'#9aa0aa','#222',d.infoColor)}</div></div><div style="border-top:2px solid #eee;padding:44px 90px;display:flex;align-items:center;justify-content:center">${plLogoHtml(d,96,'#c9ccd2',false)}</div></div>`;}
+function plRenderDark(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:#101216;padding:70px"><div style="height:100%;border:2px solid ${a};border-radius:6px;padding:100px 80px;display:flex;flex-direction:column"><div style="text-align:center"><div style="margin-bottom:30px"><span style="border:1px solid ${a};color:${a};font-size:26px;font-weight:600;padding:8px 22px;border-radius:999px">${plKindEn(d)}</span></div><div style="color:${a};font-size:40px;font-weight:600;letter-spacing:14px">${(d.storeName||'').toUpperCase()}</div><div style="width:60px;height:2px;background:rgba(255,255,255,0.25);margin:44px auto"></div></div><div style="text-align:center;margin-top:20px"><div style="color:${d.titleColor||'#fff'};font-size:112px;font-weight:800;line-height:1.14">${d.title||'타이틀'}</div></div>${plBadge(d)?`<div style="margin-top:54px;display:flex;justify-content:center"><span style="border:2px solid ${a};color:${a};font-size:46px;font-weight:700;padding:16px 48px;border-radius:999px">${d.badge}</span></div>`:''}<div style="margin-top:70px;text-align:center"><div style="color:${d.contentColor||'#c4c8d0'};font-size:52px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div></div><div style="margin-top:auto;display:flex;flex-direction:column;gap:30px">${plDotInfo(rows,a,'#7d838f','#e8eaee',d.infoColor)}</div><div style="margin-top:80px;display:flex;align-items:center;justify-content:center">${plLogoHtml(d,100,'#454b57',true)}</div></div></div>`;}
+function plRenderPop(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:${a};padding:90px 80px;display:flex;flex-direction:column"><div style="display:flex;align-items:center;justify-content:space-between"><div style="color:#fff;font-size:46px;font-weight:800">${d.storeName||'상호명'}</div><div style="color:rgba(255,255,255,0.8);font-size:34px;font-weight:700">${plKindEn(d)}</div></div><div style="margin-top:56px;flex:1;position:relative">${plBadge(d)?`<div style="position:absolute;top:-80px;right:30px;width:260px;height:260px;border-radius:999px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;transform:rotate(-12deg);box-shadow:0 24px 48px rgba(0,0,0,0.45);padding:20px;z-index:10"><span style="font-size:56px;font-weight:900;line-height:1.1">${d.badge}</span></div>`:''}<div style="height:100%;background:#fff;border-radius:40px;padding:90px 70px;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,0.18)"><div style="color:${d.titleColor||'#111'};font-size:118px;font-weight:900;line-height:1.08;max-width:${plBadge(d)?'640px':'100%'}">${d.title||'타이틀'}</div><div style="margin-top:50px;color:${d.contentColor||'#41464e'};font-size:56px;line-height:1.55;white-space:pre-wrap">${d.content||''}</div><div style="margin-top:auto;padding-top:60px;display:flex;flex-direction:column;gap:24px;align-items:center">${plChip(rows,a,d.infoColor)}</div>${d&&d.logo?`<div style="margin-top:60px;display:flex;justify-content:center"><img src="${d.logo}" style="max-height:120px;max-width:400px;object-fit:contain;display:block"/></div>`:''}</div></div></div>`;}
+function plRenderSoft(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:${plTint(a,0.1)};padding:80px;display:flex"><div style="background:#fff;border-radius:56px;flex:1;padding:84px 76px 64px;display:flex;flex-direction:column;overflow:hidden"><div style="display:flex;flex-direction:column;align-items:center;gap:18px"><span style="color:${a};font-size:28px;font-weight:700;letter-spacing:6px">${plKindEn(d)}</span><span style="background:${plTint(a,0.14)};color:${a};font-size:40px;font-weight:700;padding:16px 44px;border-radius:999px">${d.storeName||'상호명'}</span></div><div style="margin-top:56px;text-align:center"><div style="color:${d.titleColor||'#1f242b'};font-size:104px;font-weight:800;line-height:1.14">${d.title||'타이틀'}</div></div>${plBadge(d)?`<div style="margin-top:40px;display:flex;justify-content:center"><span style="background:${a};color:#fff;font-size:48px;font-weight:800;padding:18px 48px;border-radius:18px">${d.badge}</span></div>`:''}<div style="margin-top:48px;text-align:center"><div style="color:${d.contentColor||'#4a4f57'};font-size:52px;line-height:1.55;white-space:pre-wrap">${d.content||''}</div></div><div style="margin-top:auto;padding-top:48px;display:flex;flex-direction:column;gap:14px">${plSoft(rows,a,d.infoColor)}<div style="margin-top:26px;display:flex;align-items:center;justify-content:center">${plLogoHtml(d,84,'#d3d6dc',false)}</div></div></div></div>`;}
+function plRenderEditorial(d){const a=d.accent,rows=plInfoRows(d);return `<div style="${PL_SHELL};background:#f7f6f3;display:flex"><div style="width:150px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="color:#fff;font-size:46px;font-weight:700;letter-spacing:10px;writing-mode:vertical-rl;white-space:nowrap">${d.storeName||'상호명'}</div></div><div style="flex:1;padding:110px 90px 90px;display:flex;flex-direction:column"><div style="display:flex;align-items:center;gap:20px"><span style="color:${a};font-size:32px;font-weight:700;letter-spacing:4px">${plKindEn(d)}</span><span style="flex:1;height:2px;background:#dcdad4;display:block"></span></div><div style="margin-top:56px"><div style="color:${d.titleColor||'#16181c'};font-size:122px;font-weight:900;line-height:1.05">${d.title||'타이틀'}</div></div>${plBadge(d)?`<div style="margin-top:44px"><span style="border:3px solid ${a};color:${a};font-size:48px;font-weight:800;padding:14px 40px;display:inline-block">${d.badge}</span></div>`:''}<div style="margin-top:60px"><div style="color:${d.contentColor||'#3c4047'};font-size:54px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div></div><div style="margin-top:auto">${plLine(rows,'#8a8d93','#1a1c20','#dcdad4',d.infoColor)}<div style="margin-top:70px;display:flex;align-items:flex-end">${plLogoHtml(d,104,'#c4c2bc',false)}</div></div></div></div>`;}
+
+function plLogoHtml(d, size, fallColor, dark){
+  if(d&&d.logo){
+    return `<img src="${d.logo}" style="max-height:${size}px;max-width:${size*3.2}px;object-fit:contain;display:block" />`;
+  }
+  const op = dark ? 0.5 : 0.65;
+  return `<div style="height:${size}px;min-width:${size*2.2}px;padding:0 40px;border:3px dashed ${fallColor};border-radius:14px;display:flex;align-items:center;justify-content:center;color:${fallColor};font-size:34px;font-weight:600;letter-spacing:4px;opacity:${op}">LOGO</div>`;
+}
+const PL_RENDERERS={classic:plRenderClassic,banner:plRenderBanner,dark:plRenderDark,pop:plRenderPop,soft:plRenderSoft,editorial:plRenderEditorial};
+
+function playText(tc,duration){
+  const el=document.getElementById('text-player');
+  el.style.display='flex';
+  el.style.alignItems='stretch';
+  document.getElementById('standby').style.display='none';
+  if(tc&&tc.tplId&&tc.sgData){
+    const fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
+    el.innerHTML=fn(tc.sgData);
+  }else{
+    el.innerHTML='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;margin:auto">'+((tc&&tc.body)||'')+'</div>';
+  }
+  playTimer=setTimeout(()=>playNext(),duration);
+}
 function playImage(url,duration){
   const el=document.getElementById('img-player');
   el.src=url;el.style.display='block';
@@ -374,7 +429,7 @@ function convertYoutubeUrl(url){
     +'&controls=0&rel=0&modestbranding=1';
 }
 function hideAllPlayers(){
-  ['img-player','video-player','iframe-player'].forEach(id=>{
+  ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
     if(id==='video-player'){el.pause();el.src='';}
@@ -463,7 +518,6 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 document.addEventListener('fullscreenchange',()=>setTimeout(fetchCommand,500));
 document.addEventListener('webkitfullscreenchange',()=>setTimeout(fetchCommand,500));
 
-// ── 토스트 ──
 function showCmdToast(msg){
   const el=document.getElementById('cmd-toast');
   el.textContent=msg;el.style.display='block';
