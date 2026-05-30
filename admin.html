@@ -73,8 +73,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .page::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:12px;transition:all .25s}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:28px}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all .25s}
 .kpi-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
 .kpi-icon{width:40px;height:40px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .kpi-icon.blue{background:rgba(0,170,255,.12);color:var(--accent-blue)}
@@ -375,21 +375,53 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .pl-add-slot:hover{color:var(--accent-blue);background:rgba(0,170,255,.04)}
 .pl-empty{padding:20px;color:var(--text-secondary);font-size:13px;text-align:center}
 
-.dash-store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.dash-store-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;transition:all .2s;cursor:default}
+.dash-store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.dash-store-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all .2s;cursor:default;border-left:3px solid var(--border)}
 .dash-store-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
-.dash-store-card.online{border-left:3px solid var(--accent-green)}
-.dash-store-card.warning{border-left:3px solid var(--accent-yellow)}
-.dash-store-card.offline{border-left:3px solid var(--text-muted);opacity:.7}
-.dash-store-card-name{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dash-store-card-meta{font-size:11px;color:var(--text-secondary);margin-bottom:10px}
-.dash-alert-grid{display:flex;flex-direction:column;gap:8px}
-.dash-alert-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;display:flex;align-items:flex-start;gap:10px;transition:all .2s}
-.dash-alert-card.error{border-left:3px solid var(--accent-red)}
-.dash-alert-card.warning{border-left:3px solid var(--accent-yellow)}
-.dash-alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.dash-alert-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:3px}
-.dash-alert-meta{font-size:11px;color:var(--text-secondary)}
+.dash-store-card.online{border-left-color:var(--accent-green)}
+.dash-store-card.warning{border-left-color:var(--accent-yellow)}
+.dash-store-card.offline{border-left-color:var(--text-muted);opacity:.75}
+.dash-store-card-name{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-store-card-meta{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+.dash-alert-grid{display:flex;flex-direction:column;gap:10px}
+.dash-alert-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:all .2s;border-left:3px solid var(--border)}
+.dash-alert-card.error{border-left-color:var(--accent-red)}
+.dash-alert-card.warning{border-left-color:var(--accent-yellow)}
+.dash-alert-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dash-alert-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.dash-alert-meta{font-size:12px;color:var(--text-secondary)}
+
+/* ── 매장 관리 보드 ── */
+.store-block{margin-bottom:12px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-lg);overflow:hidden}
+.store-block-hd{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--bg-panel);cursor:pointer;user-select:none;transition:background .15s}
+.store-block-hd:hover{background:var(--bg-hover)}
+.store-block-icon{width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.store-block-name{font-size:16px;font-weight:700;color:var(--text-primary)}
+.store-block-meta{font-size:12px;color:var(--text-secondary);margin-top:3px}
+.store-block-arrow{margin-left:auto;color:var(--text-muted);font-size:13px;transition:transform .2s;flex-shrink:0}
+.store-block-actions{display:flex;gap:6px;flex-shrink:0}
+.store-block-body{display:none;border-top:1px solid var(--border);padding:16px 20px}
+.store-block-body.open{display:block}
+.store-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.store-info-item{background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px}
+.store-info-label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:4px}
+.store-info-value{font-size:13px;color:var(--text-primary);font-weight:500}
+.store-screen-list{display:flex;flex-direction:column;gap:8px}
+.store-screen-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);transition:border-color .15s}
+.store-screen-item:hover{border-color:var(--border-bright)}
+.store-screen-name{font-size:14px;font-weight:600;color:var(--text-primary);flex:1}
+.store-screen-loc{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.store-add-screen{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-top:1px dashed var(--border);margin-top:10px}
+
+
+/* ── 실시간 관제 아코디언 ── */
+.monitor-store-section{margin-bottom:12px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-lg);overflow:hidden}
+.monitor-store-header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--bg-panel);cursor:pointer;user-select:none;transition:background .15s}
+.monitor-store-header:hover{background:var(--bg-hover)}
+.monitor-store-body{display:none;border-top:1px solid var(--border)}
+.monitor-store-body.open{display:block}
+.monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:16px}
+
 .loading-overlay{position:fixed;inset:0;background:var(--bg-base);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:20px;transition:opacity .4s}
 .loading-logo{font-family:"Orbitron",sans-serif;font-size:28px;color:var(--accent-blue);letter-spacing:4px;text-shadow:var(--glow-blue)}
 .loading-bar{width:300px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
@@ -452,17 +484,17 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       <div class="kpi-card"><div class="kpi-icon purple">▣</div><div><div class="kpi-label">사이니지</div><div class="kpi-value" id="kpi-screens">0</div></div></div>
       <div class="kpi-card"><div class="kpi-icon cyan">⊕</div><div><div class="kpi-label">콘텐츠</div><div class="kpi-value" id="kpi-content">0</div></div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:14px;font-weight:700;color:var(--text-primary)">매장 상태 현황</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary)">매장 상태 현황</div>
           <span class="panel-tag">LIVE</span>
         </div>
         <div class="dash-store-grid" id="dash-store-list"></div>
       </div>
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:14px;font-weight:700;color:var(--text-primary)">최근 장애 알림</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary)">최근 장애 알림</div>
           <span class="panel-tag red">ALERT</span>
         </div>
         <div class="dash-alert-grid" id="dash-alert-list"></div>
@@ -473,23 +505,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <!-- STORES -->
   <section class="page" id="page-stores">
     <div class="page-actions">
-      <div class="search-box"><span class="search-icon">⌕</span><input type="text" id="store-search" placeholder="매장명, 지역으로 검색..."/></div>
+      <div class="search-box"><span class="search-icon">⌕</span><input type="text" id="store-search" placeholder="매장명, 지역으로 검색..." oninput="renderStores(this.value)"/></div>
       <button class="btn btn-primary" onclick="openStoreModal()">+ 매장 추가</button>
     </div>
-    <div class="table-panel">
-      <table class="data-table">
-        <thead><tr>
-          <th onclick="sortStores('name')" style="cursor:pointer;user-select:none">매장명 <span id="sort-name" class="sort-icon"></span></th>
-          <th onclick="sortStores('region')" style="cursor:pointer;user-select:none">지역 <span id="sort-region" class="sort-icon"></span></th>
-          <th onclick="sortStores('manager')" style="cursor:pointer;user-select:none">담당자 <span id="sort-manager" class="sort-icon"></span></th>
-          <th onclick="sortStores('screens')" style="cursor:pointer;user-select:none">사이니지 <span id="sort-screens" class="sort-icon"></span></th>
-          <th onclick="sortStores('status')" style="cursor:pointer;user-select:none">상태 <span id="sort-status" class="sort-icon"></span></th>
-          <th onclick="sortStores('lastSeen')" style="cursor:pointer;user-select:none">마지막 접속 <span id="sort-lastSeen" class="sort-icon"></span></th>
-          <th>작업</th>
-        </tr></thead>
-        <tbody id="store-tbody"></tbody>
-      </table>
-    </div>
+    <div id="store-board"></div>
   </section>
 
   <!-- CONTENT -->
@@ -966,88 +985,97 @@ function renderDashboard(){
 let expandedStoreId = null;
 
 function renderStores(filter=''){
-  let list=filter?stores.filter(s=>s.name.includes(filter)||s.region.includes(filter)):stores;
-  // 정렬 아이콘 초기화
-  ['name','region','manager','screens','status','lastSeen'].forEach(k => {
-    const el = document.getElementById('sort-'+k);
-    if(!el || el.innerHTML !== '') return;
-    el.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="rgba(100,140,180,.3)"/><path d="M5 8L8 4H2Z" fill="rgba(100,140,180,.3)"/></svg>';
-  });
-  // 정렬 적용
-  if(storeSortKey) {
-    list = [...list].sort((a,b) => {
-      let av, bv;
-      if(storeSortKey==='screens') {
-        av = screens.filter(sc=>sc.storeId===a.id).length;
-        bv = screens.filter(sc=>sc.storeId===b.id).length;
-      } else if(storeSortKey==='status') {
-        const ord = {online:0,warning:1,offline:2,error:3};
-        av = ord[calcStatus(a.lastSeen)]??4;
-        bv = ord[calcStatus(b.lastSeen)]??4;
-      } else if(storeSortKey==='lastSeen') {
-        av = a.lastSeen||'';
-        bv = b.lastSeen||'';
-      } else {
-        av = (a[storeSortKey]||'').toLowerCase();
-        bv = (b[storeSortKey]||'').toLowerCase();
-      }
-      if(av<bv) return storeSortAsc?-1:1;
-      if(av>bv) return storeSortAsc?1:-1;
-      return 0;
-    });
+  let list = filter ? stores.filter(s=>s.name.includes(filter)||s.region.includes(filter)) : stores;
+  const board = document.getElementById('store-board');
+  if(!board) return;
+
+  if(!list.length){
+    board.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-secondary)">등록된 매장 없음</div>';
+    return;
   }
-  const tbody=document.getElementById('store-tbody');
-  tbody.innerHTML=list.length
-    ?list.map(s=>{
-      const storeScreens=screens.filter(sc=>sc.storeId===s.id);
-      const onlineCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
-      const isExpanded=expandedStoreId===s.id;
-      const screenRows=isExpanded?`
-        <tr class="store-expand"><td colspan="7">
-          <div class="screen-list">
-            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">◈ 사이니지 목록</div>
-            ${storeScreens.length?storeScreens.map(sc=>{
-              const scStatus=calcStatus(sc.lastSeen);
-              return`<div class="screen-item">
-                <span class="screen-icon">📺</span>
-                <div style="flex:1">
-                  <div class="screen-name">${sc.name}</div>
-                  <div class="screen-location">${sc.location||'위치 미지정'} · 마지막접속: ${formatDate(sc.lastSeen)}</div>
-                </div>
-                ${statusBadge(scStatus)}
-                <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
-                <button class="btn btn-outline btn-xs" onclick="openScreenModal('${sc.id}')">수정</button>
-                <button class="btn btn-danger btn-xs" onclick="deleteScreen('${sc.id}','${sc.name}')">삭제</button>
-              </div>`;
-            }).join(''):'<div style="color:var(--text-muted);font-size:12px;padding:8px 0">등록된 사이니지 없음</div>'}
-            <div class="add-screen-row">
-              <input type="text" placeholder="사이니지 이름" class="form-input" id="new-screen-name-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
-              <input type="text" placeholder="위치" class="form-input" id="new-screen-loc-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
-              <select class="form-input" id="new-screen-orient-${s.id}" style="padding:7px 12px;font-size:12px;width:auto">
-                <option value="landscape">가로</option>
-                <option value="portrait-left">세로(좌)</option>
-                <option value="portrait-right">세로(우)</option>
-                <option value="flip">180°</option>
-              </select>
-              <button class="btn btn-primary btn-sm" onclick="addScreen('${s.id}')">+ 추가</button>
-            </div>
+
+  board.innerHTML = list.map(store=>{
+    const storeScreens = screens.filter(sc=>sc.storeId===store.id);
+    const onlineCount = storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+    const worstStatus = storeScreens.length===0?'offline':
+      storeScreens.some(sc=>calcStatus(sc.lastSeen)==='offline')?'offline':
+      storeScreens.some(sc=>calcStatus(sc.lastSeen)==='warning')?'warning':'online';
+    const statusColor = worstStatus==='online'?'var(--accent-green)':worstStatus==='warning'?'var(--accent-yellow)':'var(--text-muted)';
+    const isOpen = openStoreIds.has(store.id);
+
+    const screenItems = storeScreens.map(sc=>{
+      const scStatus = calcStatus(sc.lastSeen);
+      return`<div class="store-screen-item">
+        <div style="width:32px;height:32px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📺</div>
+        <div style="flex:1;min-width:0">
+          <div class="store-screen-name">${sc.name||'사이니지'}</div>
+          <div class="store-screen-loc">${sc.location||'위치 미지정'} · 마지막접속: ${formatDate(sc.lastSeen)}</div>
+        </div>
+        ${statusBadge(scStatus)}
+        <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
+        <button class="btn btn-outline btn-xs" onclick="openScreenModal('${sc.id}')">수정</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteScreen('${sc.id}','${sc.name}')">삭제</button>
+      </div>`;
+    }).join('');
+
+    return`<div class="store-block">
+      <div class="store-block-hd" onclick="toggleStoreBlock('${store.id}',this)">
+        <div class="store-block-icon">⊞</div>
+        <div style="flex:1;min-width:0">
+          <div class="store-block-name">${store.name}</div>
+          <div class="store-block-meta">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-size:16px;font-weight:700;color:${statusColor};font-family:var(--font-mono)">${onlineCount}<span style="font-size:12px;color:var(--text-muted)">/${storeScreens.length}</span></div>
+            <div style="font-size:11px;color:var(--text-muted)">온라인</div>
           </div>
-        </td></tr>`:'';
-      return`<tr style="cursor:pointer" onclick="if(event.target.tagName==='INPUT'||event.target.tagName==='SELECT'||event.target.tagName==='BUTTON'||event.target.tagName==='OPTION')return;toggleStore('${s.id}')">
-        <td style="font-weight:600;font-size:13px;color:var(--text-primary)">${isExpanded?'▼ ':''} ${s.name}</td>
-        <td class="td-mono">${s.region}</td>
-        <td>${s.manager||'-'}</td>
-        <td><span style="color:var(--accent-cyan);font-family:var(--font-mono)">${storeScreens.length}대</span> <span style="color:var(--text-muted);font-size:11px">(온라인 ${onlineCount})</span></td>
-        <td onclick="event.stopPropagation()">${statusBadge(storeScreens.length?calcStatus(storeScreens[0]?.lastSeen):'offline')}</td>
-        <td class="td-mono" onclick="event.stopPropagation()">${formatDate(s.lastSeen)}</td>
-        <td onclick="event.stopPropagation()"><div class="action-btns">
-          <button class="btn btn-outline btn-sm" onclick="editStore('${s.id}')">수정</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteStore('${s.id}')">삭제</button>
-          <button class="btn btn-sm" style="background:rgba(0,232,160,.12);border:1px solid rgba(0,232,160,.3);color:var(--accent-green)" onclick="copyScreenUrl('${s.id}','${s.name}')">📋 URL복사</button>
-        </div></td>
-      </tr>${screenRows}`;
-    }).join('')
-    :'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">매장 없음</td></tr>';
+          ${statusBadge(worstStatus)}
+          <div class="store-block-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-outline btn-sm" onclick="editStore('${store.id}')">수정</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStore('${store.id}')">삭제</button>
+          </div>
+          <span class="store-block-arrow" style="transform:${isOpen?'rotate(90deg)':''}">▶</span>
+        </div>
+      </div>
+      <div class="store-block-body ${isOpen?'open':''}" id="store-body-${store.id}">
+        <div class="store-info-grid">
+          <div class="store-info-item"><div class="store-info-label">주소</div><div class="store-info-value">${store.address||'-'}</div></div>
+          <div class="store-info-item"><div class="store-info-label">연락처</div><div class="store-info-value">${store.phone||'-'}</div></div>
+          <div class="store-info-item"><div class="store-info-label">운영시간</div><div class="store-info-value">${store.openTime||'-'} ~ ${store.closeTime||'-'}</div></div>
+          <div class="store-info-item"><div class="store-info-label">마지막 접속</div><div class="store-info-value">${formatDate(store.lastSeen)}</div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent-blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">◈ 사이니지 목록</div>
+        <div class="store-screen-list">
+          ${screenItems||'<div style="color:var(--text-secondary);font-size:13px;padding:8px 0">등록된 사이니지 없음</div>'}
+        </div>
+        <div class="store-add-screen">
+          <input type="text" placeholder="사이니지 이름" class="form-input" id="new-screen-name-${store.id}" style="padding:8px 12px;font-size:13px"/>
+          <input type="text" placeholder="위치" class="form-input" id="new-screen-loc-${store.id}" style="padding:8px 12px;font-size:13px"/>
+          <select class="form-input" id="new-screen-orient-${store.id}" style="padding:8px 12px;font-size:13px;width:auto">
+            <option value="landscape">가로</option>
+            <option value="portrait-left">세로(좌)</option>
+            <option value="portrait-right">세로(우)</option>
+            <option value="flip">180°</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addScreen('${store.id}')">+ 추가</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// 매장 관리 아코디언
+const openStoreIds = new Set();
+
+function toggleStoreBlock(storeId, hd){
+  const body = document.getElementById('store-body-'+storeId);
+  const arrow = hd.querySelector('.store-block-arrow');
+  const isOpen = body.classList.toggle('open');
+  if(arrow) arrow.style.transform = isOpen ? 'rotate(90deg)' : '';
+  if(isOpen) openStoreIds.add(storeId);
+  else openStoreIds.delete(storeId);
 }
 
 function toggleStore(id){
@@ -1520,26 +1548,39 @@ async function deletePlaylist(id){
 
 // ── MONITOR ──
 function renderMonitor(){
-  const container=document.getElementById('monitor-container');
-  if(!stores.length){container.innerHTML='<div style="color:var(--text-muted);padding:40px;text-align:center">등록된 매장 없음</div>';return;}
-  container.innerHTML=stores.map(s=>{
-    const storeScreens=screens.filter(sc=>sc.storeId===s.id);
-    if(!storeScreens.length)return`<div class="monitor-store-section"><div class="monitor-store-header"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div><div><div style="font-size:16px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text-muted)">${s.region} · 사이니지 없음</div></div></div></div></div>`;
-    const cards=storeScreens.map(sc=>{
-      const status=calcStatus(sc.lastSeen);
-      const pl=playlists.find(p=>p.screenId===sc.id);
-      const isOnline=status==='online';const isWarn=status==='warning';
-      const net=sc.network||0;
-      const netC=net>300?'var(--accent-red)':net>100?'var(--accent-yellow)':'var(--accent-green)';
-      const lastSeen=formatDate(sc.lastSeen);
-      const statusColor=isOnline?'var(--accent-green)':isWarn?'var(--accent-yellow)':'var(--text-secondary)';
-      const currentContent=isOnline?(sc.currentContent||pl?.name||'재생 대기중'):'-';
+  const container = document.getElementById('monitor-container');
+  if(!stores.length){
+    container.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-secondary)">등록된 매장 없음</div>';
+    return;
+  }
+
+  container.innerHTML = stores.map(store=>{
+    const storeScreens = screens.filter(sc=>sc.storeId===store.id);
+    const onlineCount = storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+    const allOnline = onlineCount===storeScreens.length && storeScreens.length>0;
+    const headerColor = allOnline?'var(--accent-green)':onlineCount>0?'var(--accent-yellow)':'var(--accent-red)';
+    const isOpen = openMonitorIds.has(store.id);
+
+    const cards = storeScreens.map(sc=>{
+      const status = calcStatus(sc.lastSeen);
+      const pl = playlists.find(p=>p.screenId===sc.id);
+      const isOnline = status==='online';
+      const isWarn = status==='warning';
+      const net = sc.network||0;
+      const netC = net>300?'var(--accent-red)':net>100?'var(--accent-yellow)':'var(--accent-green)';
+      const lastSeen = formatDate(sc.lastSeen);
+      const statusColor = isOnline?'var(--accent-green)':isWarn?'var(--accent-yellow)':'var(--text-secondary)';
+      const currentContent = isOnline?(sc.currentContent||pl?.name||'재생 대기중'):'-';
       return`<div class="monitor-card status-${status}">
         <div class="mc-header">
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:36px;height:36px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📺</div>
-            <div><div class="mc-name">${sc.name}</div><div class="mc-sub">${sc.location||'위치 미지정'}</div></div>
-          </div>${statusBadge(status)}
+            <div>
+              <div class="mc-name">${sc.name}</div>
+              <div class="mc-sub">${sc.location||'위치 미지정'}</div>
+            </div>
+          </div>
+          ${statusBadge(status)}
         </div>
         <div class="mc-screen ${isOnline?'playing':''}">
           <span class="mc-screen-label" style="color:${statusColor};font-size:13px;font-weight:600">${isOnline?'▶ 재생중':isWarn?'⚠ 응답 지연':'● 신호 없음'}</span>
@@ -1557,29 +1598,53 @@ function renderMonitor(){
         </div>
       </div>`;
     }).join('');
-    const storeOnline=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
-    const allOnline=storeOnline===storeScreens.length;
-    const headerColor=allOnline?'var(--accent-green)':storeOnline>0?'var(--accent-yellow)':'var(--accent-red)';
+
+    const emptyContent = storeScreens.length
+      ? ''
+      : '<div style="padding:20px;text-align:center;color:var(--text-secondary);font-size:13px">등록된 사이니지 없음</div>';
+
     return`<div class="monitor-store-section">
-      <div class="monitor-store-header">
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div>
-          <div>
-            <div style="font-size:18px;font-weight:700;color:var(--text-primary)">${s.name}</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-top:3px">${s.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${s.manager||'-'}</div>
-          </div>
+      <div class="monitor-store-header" onclick="toggleMonitorStore('${store.id}',this)">
+        <div style="width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">⊞</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${store.name}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
           <div style="text-align:right">
-            <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:${headerColor}">${storeOnline}<span style="font-size:14px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
-            <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-body);margin-top:2px">온라인</div>
+            <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:${headerColor}">${onlineCount}<span style="font-size:14px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
+            <div style="font-size:11px;color:var(--text-secondary)">온라인</div>
           </div>
-          <span class="badge badge-${allOnline?'online':storeOnline>0?'warning':'offline'}">${allOnline?'전체 정상':storeOnline>0?'일부 오프라인':'전체 오프라인'}</span>
+          <span class="badge badge-${allOnline?'online':onlineCount>0?'warning':'offline'}">${allOnline?'전체 정상':onlineCount>0?'일부 오프라인':'전체 오프라인'}</span>
+          <span style="color:var(--text-muted);font-size:13px;transition:transform .2s;flex-shrink:0;transform:${isOpen?'rotate(90deg)':''}">▶</span>
         </div>
       </div>
-      <div class="monitor-grid">${cards}</div>
+      <div class="monitor-store-body ${isOpen?'open':''}" id="monitor-body-${store.id}">
+        <div class="monitor-grid">${cards}${emptyContent}</div>
+      </div>
     </div>`;
   }).join('');
+}
+
+
+// 실시간 관제 아코디언
+const openMonitorIds = new Set();
+
+function toggleMonitorStore(storeId, hd){
+  const body = document.getElementById('monitor-body-'+storeId);
+  const arrow = hd.querySelector('span:last-child');
+  const isOpen = body.classList.toggle('open');
+  if(arrow) arrow.style.transform = isOpen ? 'rotate(90deg)' : '';
+  if(isOpen) openMonitorIds.add(storeId);
+  else openMonitorIds.delete(storeId);
+}
+
+function restoreMonitorState(){
+  openMonitorIds.forEach(storeId=>{
+    const body = document.getElementById('monitor-body-'+storeId);
+    if(!body) return;
+    body.classList.add('open');
+  });
 }
 
 async function sendCmd(screenId,type){
