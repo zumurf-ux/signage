@@ -395,7 +395,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .store-block{margin-bottom:12px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-lg);overflow:hidden}
 .store-block-hd{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--bg-panel);cursor:pointer;user-select:none;transition:background .15s}
 .store-block-hd:hover{background:var(--bg-hover)}
-.store-block-icon{width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.store-block-icon{width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:var(--accent-blue)}
 .store-block-name{font-size:16px;font-weight:700;color:var(--text-primary)}
 .store-block-meta{font-size:12px;color:var(--text-secondary);margin-top:3px}
 .store-block-arrow{margin-left:auto;color:var(--text-muted);font-size:13px;transition:transform .2s;flex-shrink:0}
@@ -909,13 +909,13 @@ function updateAlertBadge(){}
 
 // ── 라우터 ──
 const PAGE_META={
-  dashboard:{title:'실시간 대시보드',bc:'홈 / 대시보드'},
-  stores:{title:'매장 관리',bc:'홈 / 매장 관리'},
-  content:{title:'콘텐츠 관리',bc:'홈 / 콘텐츠 관리'},
-  playlist:{title:'플레이리스트 관리',bc:'홈 / 플레이리스트'},
-  monitor:{title:'실시간 관제',bc:'홈 / 실시간 관제'},
-  guide:{title:'사용법 안내',bc:'홈 / 사용법 안내'},
-  settings:{title:'설정',bc:'홈 / 설정'},
+  dashboard:{title:'⬡  실시간 대시보드',bc:'홈 / 대시보드'},
+  stores:{title:'⊞  매장 관리',bc:'홈 / 매장 관리'},
+  content:{title:'▣  콘텐츠 관리',bc:'홈 / 콘텐츠 관리'},
+  playlist:{title:'⊕  플레이리스트',bc:'홈 / 플레이리스트'},
+  monitor:{title:'◉  실시간 관제',bc:'홈 / 실시간 관제'},
+  guide:{title:'?  사용법 안내',bc:'홈 / 사용법 안내'},
+  settings:{title:'⚙  설정',bc:'홈 / 설정'},
 };
 function navigate(page){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
@@ -1509,7 +1509,7 @@ function renderPlaylist(){
 
     return`<div class="pl-store-block">
       <div class="pl-store-hd" onclick="togglePlStore('pl-body-${store.id}',this)">
-        <div class="pl-store-icon">⊞</div>
+        <div class="pl-store-icon">⊕</div>
         <div style="flex:1">
           <div class="pl-store-name">${store.name}</div>
           <div class="pl-store-meta">${store.region} · 사이니지 ${storeScreens.length}대 · 플레이리스트 ${totalPl}개</div>
@@ -1605,7 +1605,7 @@ function renderMonitor(){
 
     return`<div class="monitor-store-section">
       <div class="monitor-store-header" onclick="toggleMonitorStore('${store.id}',this)">
-        <div style="width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">⊞</div>
+        <div style="width:38px;height:38px;background:rgba(0,212,232,.1);border:1px solid rgba(0,212,232,.25);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--accent-cyan)">◉</div>
         <div style="flex:1">
           <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${store.name}</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
