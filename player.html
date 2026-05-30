@@ -163,8 +163,12 @@ async function startPlayer(){
 
   // 사이니지 + 매장 정보 로드
   try{
+    document.getElementById('standby-info').textContent='Firebase 연결 중...';
     const scSnap=await db.collection('screens').doc(SCREEN_ID).get();
-    if(!scSnap.exists){document.getElementById('standby-info').textContent='⚠ 사이니지 정보 없음';return;}
+    if(!scSnap.exists){
+      document.getElementById('standby-info').innerHTML='<span style="color:#ffc840">⚠ 사이니지 정보 없음</span><br/><small style="font-size:11px">ID: '+SCREEN_ID+'</small>';
+      return;
+    }
     const sc=scSnap.data();
     const storeSnap=await db.collection('stores').doc(sc.storeId).get();
     const storeName=storeSnap.exists?storeSnap.data().name:'';
@@ -184,7 +188,12 @@ async function startPlayer(){
 
     // 화면 방향 적용
     applyRotation(sc.orientation||'landscape');
-  }catch(e){console.error(e);}
+  }catch(e){
+    console.error(e);
+    document.getElementById('standby-info').innerHTML=
+      '<span style="color:#ff3d5a">⚠ 연결 오류</span><br/>' +
+      '<span style="font-size:11px;color:#7a9bbf">'+e.message+'</span>';
+  }
 
   // 폴링 시작
   fetchPlaylist();
