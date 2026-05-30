@@ -278,3 +278,157 @@ async function fetchCommand(){
     }else{if(!isStandbyForced)showStandby();}
   }catch(e){console.error('플레이리스트 오류:',e);}
 }
+
+// ── 명령 처리 ──
+function handleCommand(type,cmd){
+  cmd=cmd||{};
+  showCmdToast('명령: '+type);
+  if(type==='reload'){setTimeout(()=>location.reload(),1000);}
+  else if(type==='restart'){isPlaying=false;isStandbyForced=false;clearTimeout(playTimer);currentIdx=0;setTimeout(()=>playNext(),1500);}
+  else if(type==='standby'){isPlaying=false;isStandbyForced=true;clearTimeout(playTimer);showStandby();}
+  else if(type==='playlist_update'){isPlaying=false;isStandbyForced=false;clearTimeout(playTimer);currentIdx=0;setTimeout(()=>fetchPlaylist(),500);}
+  else if(type==='orientation'){applyRotation(cmd.orientation||'landscape');}
+}
+
+// ── 재생 ──
+function playNext(){
+  if(!contentList.length){showStandby();return;}
+  const c=contentList[currentIdx];
+  currentIdx=(currentIdx+1)%contentList.length;
+  document.getElementById('hud-content').textContent='콘텐츠: '+c.name;
+  document.getElementById('hud-status').textContent='스케줄: '+(getCurrentTimeSlot()||'상시');
+  fadeTransition(()=>playContent(c));
+}
+
+function playContent(c){
+  hideAllPlayers();isPlaying=true;
+  const duration=(c.duration||15)*1000;
+  const type=c.type||'image';
+  if(type==='image') playImage(c.url,duration);
+  else if(type==='video'){
+    const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
+    if(isYoutube) playIframe(convertYoutubeUrl(c.url),duration);
+    else playVideo(c.url,duration);
+  }
+  else playImage(c.url,duration);
+  db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
+}
+
+function playImage(url,duration){
+  const el=document.getElementById('img-player');
+  el.src=url;el.style.display='block';
+  document.getElementById('standby').style.display='none';
+  playTimer=setTimeout(()=>playNext(),duration);
+}
+function playVideo(url,duration){
+  const el=document.getElementById('video-player');
+  el.src=url;el.style.display='block';el.play().catch(()=>{});
+  document.getElementById('standby').style.display='none';
+  playTimer=setTimeout(()=>playNext(),duration);
+}
+function playIframe(url,duration){
+  const el=document.getElementById('iframe-player');
+  el.src=url;el.style.display='block';
+  document.getElementById('standby').style.display='none';
+  playTimer=setTimeout(()=>playNext(),duration);
+}
+function convertYoutubeUrl(url){
+  let vid='';
+  const m1=(url||'').match(/watch\?v=([^&]+)/);
+  const m2=(url||'').match(/youtu\.be\/([^?]+)/);
+  if(m1)vid=m1[1];else if(m2)vid=m2[1];
+  return vid?'https://www.youtube.com/embed/'+vid+'?autoplay=1&mute=1&loop=1&playlist='+vid+'&controls=0':url;
+}
+function hideAllPlayers(){
+  ['img-player','video-player','iframe-player'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.display='none';
+    if(id==='video-player'){el.pause();el.src='';}
+    if(id==='iframe-player') el.src='';
+  });
+}
+function showStandby(){
+  isPlaying=false;hideAllPlayers();
+  document.getElementById('standby').style.display='flex';
+  document.getElementById('hud-status').textContent='상태: 대기중';
+}
+
+// ── 페이드 ──
+function fadeTransition(cb){
+  const player=document.getElementById('player');
+  player.style.opacity='0';
+  setTimeout(()=>{cb();player.style.opacity='1';},500);
+}
+
+// ── 화면 회전 ──
+function applyRotation(orientation){
+  document.body.classList.remove('rotate-90','rotate-180','rotate-270');
+  if(orientation==='portrait-left')  document.body.classList.add('rotate-90');
+  if(orientation==='portrait-right') document.body.classList.add('rotate-270');
+  if(orientation==='flip')           document.body.classList.add('rotate-180');
+  localStorage.setItem('signage_orientation',orientation||'landscape');
+}
+const savedOrientation=localStorage.getItem('signage_orientation');
+if(savedOrientation)applyRotation(savedOrientation);
+
+// ── 전체화면 ──
+function requestFullscreen(){
+  const el=document.documentElement;
+  if(el.requestFullscreen)el.requestFullscreen();
+  else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+  else if(el.mozRequestFullScreen)el.mozRequestFullScreen();
+}
+window.addEventListener('load',()=>setTimeout(requestFullscreen,1000));
+document.addEventListener('click',()=>{
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();
+});
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement)setTimeout(requestFullscreen,2000);
+});
+document.addEventListener('webkitfullscreenchange',()=>{
+  if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);
+});
+
+// ── 상태 업데이트 ──
+async function measurePing(){
+  const start=Date.now();
+  try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}
+  catch(e){return -1;}
+}
+async function updateStatus(){
+  if(!SCREEN_ID)return;
+  try{
+    const ping=await measurePing();
+    await db.collection('screens').doc(SCREEN_ID).set({
+      status:'online',lastSeen:new Date().toISOString(),network:ping,
+    },{merge:true});
+  }catch(e){console.error(e);}
+}
+
+// ── HUD 토글 (5번 탭) ──
+let tapCount=0;
+document.addEventListener('click',()=>{
+  tapCount++;
+  if(tapCount>=5){tapCount=0;document.getElementById('hud').classList.toggle('visible');}
+});
+
+// ── 온/오프라인 ──
+window.addEventListener('offline',()=>document.getElementById('offline-overlay').classList.add('show'));
+window.addEventListener('online', ()=>document.getElementById('offline-overlay').classList.remove('show'));
+
+// ── visibility 변경 시 즉시 명령 확인 ──
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')fetchCommand();});
+document.addEventListener('fullscreenchange',()=>setTimeout(fetchCommand,500));
+document.addEventListener('webkitfullscreenchange',()=>setTimeout(fetchCommand,500));
+
+// ── 토스트 ──
+function showCmdToast(msg){
+  const el=document.getElementById('cmd-toast');
+  el.textContent=msg;el.style.display='block';
+  setTimeout(()=>el.style.display='none',3000);
+}
+
+startPlayer();
+</script>
+</body>
+</html>
