@@ -1198,8 +1198,7 @@ function renderContent(filter=''){
       }else if(c.type==='video'){
         const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
         if(isYoutube){
-          let vid='';const m1=(c.url||'').match(/[?&]v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?&]+)/);
-          if(m1)vid=m1[1];else if(m2)vid=m2[1];
+          const vid=extractYoutubeId(c.url);
           thumbHtml=vid?`<img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover"/>`:'<div style="font-size:36px">▶️</div>';
         }else{
           thumbHtml=`<video src="${c.url}" style="width:100%;height:100%;object-fit:cover" preload="metadata" muted></video>`;
@@ -1291,10 +1290,9 @@ function previewContent(id){
     }else if(c.type==='video'){
       const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
       if(isYoutube){
-        let vid='';const m1=(c.url||'').match(/[?&]v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?&]+)/);
-        if(m1)vid=m1[1];else if(m2)vid=m2[1];
-        if(vid)body.innerHTML=`<iframe style="width:100%;height:70vh;border:none" src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
-        else body.innerHTML='<div class="preview-error">⚠ 유튜브 URL 인식 불가</div>';
+        const vid2=extractYoutubeId(c.url);
+        if(vid2)body.innerHTML=`<iframe style="width:100%;height:70vh;border:none" src="https://www.youtube.com/embed/${vid2}?autoplay=1&mute=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+        else body.innerHTML=`<div class="preview-error">⚠ 유튜브 URL 인식 불가<br/><small style="color:var(--text-muted)">${c.url}</small></div>`;
       }else{
         body.innerHTML=`<video controls autoplay muted style="max-width:100%;max-height:70vh" src="${c.url}"></video>`;
       }
@@ -1303,6 +1301,26 @@ function previewContent(id){
     }
   },100);
 }
+function extractYoutubeId(url){
+  if(!url) return '';
+  // youtu.be/ID
+  const m1 = url.match(/youtu\.be\/([^?&/#]+)/);
+  if(m1) return m1[1];
+  // youtube.com/watch?v=ID
+  const m2 = url.match(/[?&]v=([^?&/#]+)/);
+  if(m2) return m2[1];
+  // youtube.com/embed/ID
+  const m3 = url.match(/embed\/([^?&/#]+)/);
+  if(m3) return m3[1];
+  // youtube.com/shorts/ID
+  const m4 = url.match(/shorts\/([^?&/#]+)/);
+  if(m4) return m4[1];
+  // youtube.com/v/ID
+  const m5 = url.match(/\/v\/([^?&/#]+)/);
+  if(m5) return m5[1];
+  return '';
+}
+
 function closePreview(){document.getElementById('preview-body').innerHTML='';closeModal('modal-preview');}
 
 // ── PLAYLIST ──
@@ -1382,6 +1400,100 @@ function openPlaylistEdit(id){
     (p.contentIds||[]).forEach(cid=>{const chk=document.getElementById('echk-'+cid);if(chk)chk.checked=true;});
   },80);
   openModal('modal-playlist-edit');
+}
+
+// ── PLAYLIST ──
+function renderPlaylistStoreTabs(){
+  const tabEl=document.getElementById('playlist-store-tabs');
+  if(!tabEl)return;
+  const allActive=selectedPlaylistStore==='all'?'active':'';
+  let html=`<button class="store-tab ${allActive}" onclick="selectPlaylistStore('all')">전체</button>`;
+  stores.forEach(s=>{
+    const act=selectedPlaylistStore===s.id?'active':'';
+    html+=`<button class="store-tab ${act}" onclick="selectPlaylistStore('${s.id}')">${s.name}</button>`;
+  });
+  tabEl.innerHTML=html;
+}
+
+function selectPlaylistStore(storeId){
+  selectedPlaylistStore=storeId;
+  renderPlaylist();
+}
+
+function renderPlaylist(){
+  renderPlaylistStoreTabs();
+  const board=document.getElementById('playlist-board');
+  if(!board)return;
+
+  const storeList=selectedPlaylistStore==='all'
+    ?stores
+    :stores.filter(s=>s.id===selectedPlaylistStore);
+
+  if(!storeList.length){
+    board.innerHTML='<div class="pl-empty">등록된 매장 없음</div>';
+    return;
+  }
+
+  board.innerHTML=storeList.map(store=>{
+    const storeScreens=screens.filter(sc=>sc.storeId===store.id);
+    const storeSlots=store.timeslots||[];
+    const totalPl=storeScreens.reduce((sum,sc)=>sum+playlists.filter(p=>p.screenId===sc.id).length,0);
+
+    const screenCards=storeScreens.length?storeScreens.map(sc=>{
+      const scPlaylists=playlists.filter(p=>p.screenId===sc.id);
+
+      const slots=scPlaylists.map(p=>{
+        const scheduleStr=p.schedule&&p.schedule!=='all'?p.schedule:'상시';
+        const slotInfo=storeSlots.find(s=>s.name===p.schedule);
+        const timeStr=slotInfo?slotInfo.start+'~'+slotInfo.end:'항상';
+        const cItems=(p.contentIds||[]).map(cid=>contents.find(c=>c.id===cid)).filter(Boolean);
+        const totalDur=cItems.reduce((sum,c)=>sum+(c.duration||0),0);
+        return`<div class="pl-slot">
+          <div class="pl-slot-left">
+            <span class="pl-slot-schedule">${scheduleStr}</span>
+            <span class="pl-slot-time">${timeStr}</span>
+          </div>
+          <div class="pl-slot-mid">
+            <div class="pl-slot-name" title="${p.name}">${p.name}</div>
+            <div class="pl-slot-sub">${cItems.length}개 · ${totalDur}초</div>
+          </div>
+          <div class="pl-slot-actions">
+            <button class="btn btn-outline btn-xs" onclick="openPlaylistEdit('${p.id}')">수정</button>
+            <button class="btn btn-danger btn-xs" onclick="deletePlaylist('${p.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      return`<div class="pl-screen-card">
+        <div class="pl-screen-card-hd">
+          <div style="flex:1;min-width:0">
+            <div class="pl-screen-card-name">📺 ${sc.name||'사이니지'}</div>
+            <div class="pl-screen-card-loc">${sc.location||'위치 미지정'}</div>
+          </div>
+          <span class="pl-screen-card-count">${scPlaylists.length}개</span>
+        </div>
+        <div class="pl-slot-list">
+          ${slots||'<div class="pl-empty">플레이리스트 없음</div>'}
+        </div>
+        <button class="pl-add-slot" onclick="openPlaylistModalForScreen('${store.id}','${sc.id}')">+ 추가</button>
+      </div>`;
+    }).join(''):'<div class="pl-empty">등록된 사이니지 없음</div>';
+
+    return`<div class="pl-store-block">
+      <div class="pl-store-hd" onclick="togglePlStore('pl-body-${store.id}',this)">
+        <div class="pl-store-icon">⊞</div>
+        <div style="flex:1">
+          <div class="pl-store-name">${store.name}</div>
+          <div class="pl-store-meta">${store.region} · 사이니지 ${storeScreens.length}대 · 플레이리스트 ${totalPl}개</div>
+        </div>
+        <span class="pl-store-arrow">▶</span>
+      </div>
+      <div class="pl-store-body" id="pl-body-${store.id}">
+        <div class="pl-screen-grid">${screenCards}</div>
+      </div>
+    </div>`;
+  }).join('');
+  restorePlStoreState();
 }
 
 async function updatePlaylist(){
@@ -1584,6 +1696,145 @@ setInterval(async()=>{
   await fetchAll();
   checkScreenAlerts();
 },10000);
+
+// ── 정렬 ──
+function sortStores(key){
+  if(storeSortKey===key){storeSortAsc=!storeSortAsc;}
+  else{storeSortKey=key;storeSortAsc=true;}
+  ['name','region','manager','screens','status','lastSeen'].forEach(k=>{
+    const el=document.getElementById('sort-'+k);
+    if(!el)return;
+    if(k===storeSortKey){
+      el.innerHTML=storeSortAsc
+        ?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L9 8H1Z" fill="var(--accent-blue)"/></svg>'
+        :'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 8L9 2H1Z" fill="var(--accent-blue)"/></svg>';
+    }else{
+      el.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="rgba(100,140,180,.3)"/><path d="M5 8L8 4H2Z" fill="rgba(100,140,180,.3)"/></svg>';
+    }
+  });
+  renderStores(document.getElementById('store-search').value);
+}
+
+// ── 플레이리스트 아코디언 ──
+const openPlStores = new Set();
+
+function togglePlStore(bodyId, hd){
+  const body=document.getElementById(bodyId);
+  const arrow=hd.querySelector('.pl-store-arrow');
+  const isOpen=body.classList.toggle('open');
+  if(arrow) arrow.style.transform=isOpen?'rotate(90deg)':'';
+  const storeId=bodyId.replace('pl-body-','');
+  if(isOpen) openPlStores.add(storeId);
+  else openPlStores.delete(storeId);
+}
+
+function restorePlStoreState(){
+  openPlStores.forEach(storeId=>{
+    const body=document.getElementById('pl-body-'+storeId);
+    if(!body)return;
+    body.classList.add('open');
+    const arrow=body.previousElementSibling?.querySelector('.pl-store-arrow');
+    if(arrow) arrow.style.transform='rotate(90deg)';
+  });
+}
+
+// ── 슬롯 카드 (스케줄) ──
+const TIMESLOT_NAMES = ['아침','브런치','점심','브레이크','오후','저녁','야간','상시'];
+const SLOT_COLORS   = ['#2196F3','#4CAF50','#FF9800','#607D8B','#F44336','#9C27B0','#3F51B5','#009688'];
+
+function getSlotColor(n){ const i=TIMESLOT_NAMES.indexOf(n); return i>=0?SLOT_COLORS[i]:'#7a9bbf'; }
+
+function parseTime(str){ const [h,m]=(str||'09:00').split(':').map(Number); return {h,m}; }
+function fmtTime(h,m){ return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+function timeToMinutes(t){ if(!t)return 0; const [h,m]=t.split(':').map(Number); return h*60+m; }
+
+function makeTimeBox(timeStr){
+  const {h,m}=parseTime(timeStr);
+  const wrap=document.createElement('div');
+  wrap.className='slot-time-box';
+  wrap.innerHTML=`
+    <input type="number" min="0" max="23" value="${String(h).padStart(2,'0')}" style="width:30px" oninput="clampInput(this,0,23)"/>
+    <span class="slot-colon">:</span>
+    <input type="number" min="0" max="59" value="${String(m).padStart(2,'0')}" style="width:30px" oninput="clampInput(this,0,59)"/>
+  `;
+  return wrap;
+}
+
+function clampInput(el,min,max){
+  let v=parseInt(el.value)||min;
+  if(v<min)v=min; if(v>max)v=max; el.value=v;
+}
+
+function getTimeFromBox(wrap){
+  const nums=wrap.querySelectorAll('input[type=number]');
+  return fmtTime(parseInt(nums[0].value)||0, parseInt(nums[1].value)||0);
+}
+
+function addSlotCard(name='',start='',end=''){
+  const container=document.getElementById('store-timeslots');
+  const card=document.createElement('div');
+  card.className='slot-card';
+  const color=getSlotColor(name);
+  const opts=TIMESLOT_NAMES.map(n=>`<option value="${n}" ${n===name?'selected':''}>${n}</option>`).join('');
+  const nameSel=document.createElement('select');
+  nameSel.className='slot-name-sel';
+  nameSel.innerHTML=opts;
+  nameSel.value=name||TIMESLOT_NAMES[0];
+  nameSel.onchange=function(){
+    const c=getSlotColor(this.value);
+    card.querySelector('.slot-dot').style.background=c;
+    card.style.borderLeftColor=c;
+  };
+  const dot=document.createElement('span');
+  dot.className='slot-dot'; dot.style.background=color;
+  const timeWrap=document.createElement('div');
+  timeWrap.className='slot-time-wrap';
+  const startBox=makeTimeBox(start||'09:00');
+  const sep=document.createElement('span');
+  sep.className='slot-sep'; sep.textContent='~';
+  const endBox=makeTimeBox(end||'12:00');
+  timeWrap.append(startBox,sep,endBox);
+  const del=document.createElement('button');
+  del.type='button'; del.className='slot-del'; del.textContent='✕';
+  del.onclick=()=>card.remove();
+  card.style.borderLeft=`3px solid ${color}`;
+  card.append(dot,nameSel,timeWrap,del);
+  container.appendChild(card);
+}
+
+function getTimeslotsFromModal(){
+  const cards=document.getElementById('store-timeslots').querySelectorAll('.slot-card');
+  return Array.from(cards).map(card=>{
+    const sel=card.querySelector('select');
+    const boxes=card.querySelectorAll('.slot-time-box');
+    const name=sel?sel.value:'';
+    const start=boxes[0]?getTimeFromBox(boxes[0]):'09:00';
+    const end=boxes[1]?getTimeFromBox(boxes[1]):'12:00';
+    return {name,start,end};
+  }).filter(s=>s.name);
+}
+
+function loadTimeslotsToModal(slots){
+  const container=document.getElementById('store-timeslots');
+  container.innerHTML='';
+  (slots||[]).forEach(s=>addSlotCard(s.name,s.start,s.end));
+}
+
+// ── 장애 감지 ──
+const screenAlertState={};
+function checkScreenAlerts(){
+  for(const sc of screens){
+    const status=calcStatus(sc.lastSeen);
+    const prev=screenAlertState[sc.id];
+    const store=stores.find(s=>s.id===sc.storeId);
+    const storeName=store?store.name:'-';
+    if(prev!==undefined&&prev!==status){
+      if(status==='offline'&&prev==='online') showToast(`⚠ ${storeName} · ${sc.name} 오프라인!`,'error');
+      else if(status==='online'&&(prev==='offline'||prev==='warning')) showToast(`✓ ${storeName} · ${sc.name} 복구됨`,'success');
+    }
+    screenAlertState[sc.id]=status;
+  }
+}
 
 // ── 초기화 ──
 async function init(){
