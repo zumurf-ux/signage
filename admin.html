@@ -959,4 +959,647 @@ function renderDashboard(){
         <div><div class="dash-alert-title" style="color:var(--accent-green)">✓ 모든 사이니지 정상</div><div class="dash-alert-meta">이상 없음</div></div>
       </div>`;
 
+  updateTopStats();
+}
 
+// ── STORES ──
+let expandedStoreId = null;
+
+function renderStores(filter=''){
+  let list=filter?stores.filter(s=>s.name.includes(filter)||s.region.includes(filter)):stores;
+  // 정렬 아이콘 초기화
+  ['name','region','manager','screens','status','lastSeen'].forEach(k => {
+    const el = document.getElementById('sort-'+k);
+    if(!el || el.innerHTML !== '') return;
+    el.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2Z" fill="rgba(100,140,180,.3)"/><path d="M5 8L8 4H2Z" fill="rgba(100,140,180,.3)"/></svg>';
+  });
+  // 정렬 적용
+  if(storeSortKey) {
+    list = [...list].sort((a,b) => {
+      let av, bv;
+      if(storeSortKey==='screens') {
+        av = screens.filter(sc=>sc.storeId===a.id).length;
+        bv = screens.filter(sc=>sc.storeId===b.id).length;
+      } else if(storeSortKey==='status') {
+        const ord = {online:0,warning:1,offline:2,error:3};
+        av = ord[calcStatus(a.lastSeen)]??4;
+        bv = ord[calcStatus(b.lastSeen)]??4;
+      } else if(storeSortKey==='lastSeen') {
+        av = a.lastSeen||'';
+        bv = b.lastSeen||'';
+      } else {
+        av = (a[storeSortKey]||'').toLowerCase();
+        bv = (b[storeSortKey]||'').toLowerCase();
+      }
+      if(av<bv) return storeSortAsc?-1:1;
+      if(av>bv) return storeSortAsc?1:-1;
+      return 0;
+    });
+  }
+  const tbody=document.getElementById('store-tbody');
+  tbody.innerHTML=list.length
+    ?list.map(s=>{
+      const storeScreens=screens.filter(sc=>sc.storeId===s.id);
+      const onlineCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+      const isExpanded=expandedStoreId===s.id;
+      const screenRows=isExpanded?`
+        <tr class="store-expand"><td colspan="7">
+          <div class="screen-list">
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">◈ 사이니지 목록</div>
+            ${storeScreens.length?storeScreens.map(sc=>{
+              const scStatus=calcStatus(sc.lastSeen);
+              return`<div class="screen-item">
+                <span class="screen-icon">📺</span>
+                <div style="flex:1">
+                  <div class="screen-name">${sc.name}</div>
+                  <div class="screen-location">${sc.location||'위치 미지정'} · 마지막접속: ${formatDate(sc.lastSeen)}</div>
+                </div>
+                ${statusBadge(scStatus)}
+                <button class="screen-url-btn" onclick="copyScreenUrl('${sc.id}','${sc.name}')">📋 URL복사</button>
+                <button class="btn btn-outline btn-xs" onclick="openScreenModal('${sc.id}')">수정</button>
+                <button class="btn btn-danger btn-xs" onclick="deleteScreen('${sc.id}','${sc.name}')">삭제</button>
+              </div>`;
+            }).join(''):'<div style="color:var(--text-muted);font-size:12px;padding:8px 0">등록된 사이니지 없음</div>'}
+            <div class="add-screen-row">
+              <input type="text" placeholder="사이니지 이름" class="form-input" id="new-screen-name-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
+              <input type="text" placeholder="위치" class="form-input" id="new-screen-loc-${s.id}" style="flex:1;padding:7px 12px;font-size:12px"/>
+              <select class="form-input" id="new-screen-orient-${s.id}" style="padding:7px 12px;font-size:12px;width:auto">
+                <option value="landscape">가로</option>
+                <option value="portrait-left">세로(좌)</option>
+                <option value="portrait-right">세로(우)</option>
+                <option value="flip">180°</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="addScreen('${s.id}')">+ 추가</button>
+            </div>
+          </div>
+        </td></tr>`:'';
+      return`<tr style="cursor:pointer" onclick="if(event.target.tagName==='INPUT'||event.target.tagName==='SELECT'||event.target.tagName==='BUTTON'||event.target.tagName==='OPTION')return;toggleStore('${s.id}')">
+        <td style="font-weight:600;font-size:13px;color:var(--text-primary)">${isExpanded?'▼ ':''} ${s.name}</td>
+        <td class="td-mono">${s.region}</td>
+        <td>${s.manager||'-'}</td>
+        <td><span style="color:var(--accent-cyan);font-family:var(--font-mono)">${storeScreens.length}대</span> <span style="color:var(--text-muted);font-size:11px">(온라인 ${onlineCount})</span></td>
+        <td onclick="event.stopPropagation()">${statusBadge(storeScreens.length?calcStatus(storeScreens[0]?.lastSeen):'offline')}</td>
+        <td class="td-mono" onclick="event.stopPropagation()">${formatDate(s.lastSeen)}</td>
+        <td onclick="event.stopPropagation()"><div class="action-btns">
+          <button class="btn btn-outline btn-sm" onclick="editStore('${s.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStore('${s.id}')">삭제</button>
+          <button class="btn btn-sm" style="background:rgba(0,232,160,.12);border:1px solid rgba(0,232,160,.3);color:var(--accent-green)" onclick="copyScreenUrl('${s.id}','${s.name}')">📋 URL복사</button>
+        </div></td>
+      </tr>${screenRows}`;
+    }).join('')
+    :'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">매장 없음</td></tr>';
+}
+
+function toggleStore(id){
+  expandedStoreId = expandedStoreId===id ? null : id;
+  renderStores(document.getElementById('store-search').value);
+}
+
+async function addScreen(storeId){
+  const name=document.getElementById('new-screen-name-'+storeId).value.trim();
+  const loc=document.getElementById('new-screen-loc-'+storeId).value.trim();
+  const orient=document.getElementById('new-screen-orient-'+storeId).value;
+  if(!name){showToast('사이니지 이름을 입력하세요','error');return;}
+  await db.collection('screens').add({storeId,name,location:loc,orientation:orient,lastSeen:null,status:'offline',currentContent:'-',createdAt:new Date().toISOString()});
+  showToast(`[${name}] 사이니지 추가됨`,'success');
+  await fetchAll();
+}
+
+async function deleteScreen(id,name){
+  if(!confirm(`[${name}] 사이니지를 삭제하시겠습니까?`))return;
+  await db.collection('screens').doc(id).delete();
+  showToast(`[${name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+
+function copyScreenUrl(screenId,screenName){
+  const base=window.location.href.replace('admin.html','');
+  const url=base+'player.html?screen='+screenId;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast(`[${screenName}] URL 복사됨!`,'success');
+  }).catch(()=>{prompt(`[${screenName}] 플레이어 URL:`,url);});
+}
+
+function openStoreModal(id=null){
+  ['store-name','store-address','store-manager','store-phone'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('store-status').value='online';
+  document.getElementById('store-region').value='서울';
+  document.getElementById('store-edit-id').value='';
+  document.getElementById('store-modal-title').textContent='매장 추가';
+  document.getElementById('store-open').value='09:00';
+  document.getElementById('store-close').value='22:00';
+  document.getElementById('store-timeslots').innerHTML='';
+  // 슬롯 초기화됨
+  // 기본 시간대
+  document.getElementById('store-timeslots').innerHTML='';
+  [['아침','09:00','11:30'],['점심','11:30','14:00'],['브레이크','14:00','17:00'],['저녁','17:00','22:00']]
+    .forEach(([n,s,e]) => addSlotCard(n,s,e));
+  if(id){
+    const s=stores.find(x=>x.id===id);if(!s)return;
+    document.getElementById('store-edit-id').value=s.id;
+    document.getElementById('store-name').value=s.name;
+    document.getElementById('store-region').value=s.region||'서울';
+    document.getElementById('store-address').value=s.address||'';
+    document.getElementById('store-manager').value=s.manager||'';
+    document.getElementById('store-phone').value=s.phone||'';
+    document.getElementById('store-status').value=s.status||'online';
+    document.getElementById('store-open').value=s.openTime||'09:00';
+    document.getElementById('store-close').value=s.closeTime||'22:00';
+    loadTimeslotsToModal(s.timeslots||[]);
+    document.getElementById('store-modal-title').textContent='매장 수정';
+  }
+  openModal('modal-store');
+}
+
+function editStore(id){openStoreModal(id);}
+
+async function deleteStore(id){
+  const s=stores.find(x=>x.id===id);if(!s)return;
+  if(!confirm(`[${s.name}] 매장과 모든 사이니지를 삭제하시겠습니까?`))return;
+  const storeScreens=screens.filter(sc=>sc.storeId===id);
+  for(const sc of storeScreens) await db.collection('screens').doc(sc.id).delete();
+  await db.collection('stores').doc(id).delete();
+  showToast(`[${s.name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+
+async function saveStore(){
+  const name=document.getElementById('store-name').value.trim();
+  if(!name){showToast('매장명을 입력하세요','error');return;}
+  const id=document.getElementById('store-edit-id').value;
+  const data={name,region:document.getElementById('store-region').value,address:document.getElementById('store-address').value.trim(),manager:document.getElementById('store-manager').value.trim(),phone:document.getElementById('store-phone').value.trim(),status:document.getElementById('store-status').value,openTime:document.getElementById('store-open').value,closeTime:document.getElementById('store-close').value,timeslots:getTimeslotsFromModal(),lastSeen:nowStr()};
+  if(id) await db.collection('stores').doc(id).set(data,{merge:true});
+  else await db.collection('stores').add(data);
+  showToast(`[${name}] ${id?'수정':'추가'}됨`,'success');
+  closeModal('modal-store');
+  await fetchAll();
+}
+
+// 사이니지 수정
+function openScreenModal(id){
+  const sc=screens.find(x=>x.id===id);if(!sc)return;
+  document.getElementById('screen-edit-id').value=sc.id;
+  document.getElementById('screen-edit-name').value=sc.name||'';
+  document.getElementById('screen-edit-location').value=sc.location||'';
+  document.getElementById('screen-edit-orientation').value=sc.orientation||'landscape';
+  openModal('modal-screen');
+}
+
+async function saveScreen(){
+  const id=document.getElementById('screen-edit-id').value;
+  const name=document.getElementById('screen-edit-name').value.trim();
+  if(!name){showToast('사이니지 이름을 입력하세요','error');return;}
+  const data={name,location:document.getElementById('screen-edit-location').value.trim(),orientation:document.getElementById('screen-edit-orientation').value};
+  await db.collection('screens').doc(id).set(data,{merge:true});
+  await db.collection('commands').doc(id).set({type:'orientation',orientation:data.orientation,ts:new Date().toISOString(),executed:false});
+  showToast(`[${name}] 사이니지 수정됨`,'success');
+  closeModal('modal-screen');
+  await fetchAll();
+}
+
+// ── CONTENT ──
+function renderStoreTabs(){
+  const tabEl=document.getElementById('store-tabs');
+  if(!tabEl)return;
+  const allActive=selectedContentStore==='all'?'active':'';
+  let html=`<button class="store-tab ${allActive}" onclick="selectContentStore('all')">전체</button>`;
+  stores.forEach(s=>{
+    const act=selectedContentStore===s.id?'active':'';
+    html+=`<button class="store-tab ${act}" onclick="selectContentStore('${s.id}')">${s.name}</button>`;
+  });
+  tabEl.innerHTML=html;
+}
+
+function selectContentStore(storeId){
+  selectedContentStore=storeId;
+  renderStoreTabs();
+  renderContent();
+  const store=stores.find(s=>s.id===storeId);
+  const btn=document.getElementById('btn-add-content');
+  if(btn) btn.textContent=store?`+ ${store.name} 콘텐츠 등록`:'+ 콘텐츠 등록';
+  const label=document.getElementById('content-store-label');
+  if(label){
+    const list=selectedContentStore==='all'?contents:contents.filter(c=>c.storeId===selectedContentStore);
+    label.textContent=(store?store.name+' 콘텐츠':'전체 콘텐츠')+' ('+list.length+'개)';
+  }
+}
+
+function renderContent(filter=''){
+  let list=selectedContentStore==='all'?contents:contents.filter(c=>c.storeId===selectedContentStore);
+  if(filter) list=list.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+  const label=document.getElementById('content-store-label');
+  if(label){const store=stores.find(s=>s.id===selectedContentStore);label.textContent=(store?store.name+' 콘텐츠':'전체 콘텐츠')+' ('+list.length+'개)';}
+  document.getElementById('content-grid').innerHTML=list.length
+    ?list.map(c=>{
+      const cStore=stores.find(s=>s.id===c.storeId);
+      let thumbHtml='';
+      if(c.type==='image'){
+        thumbHtml=`<img src="${c.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'" />`;
+      }else if(c.type==='video'){
+        const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
+        if(isYoutube){
+          let vid='';const m1=(c.url||'').match(/[?&]v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?&]+)/);
+          if(m1)vid=m1[1];else if(m2)vid=m2[1];
+          thumbHtml=vid?`<img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover"/>`:'<div style="font-size:36px">▶️</div>';
+        }else{
+          thumbHtml=`<video src="${c.url}" style="width:100%;height:100%;object-fit:cover" preload="metadata" muted></video>`;
+        }
+      }else{thumbHtml=`<div style="font-size:36px">📄</div>`;}
+      return`<div class="content-card">
+        <div class="content-thumb" onclick="previewContent('${c.id}')" style="overflow:hidden">${thumbHtml}<span class="content-type-badge">${c.type.toUpperCase()}</span></div>
+        <div class="content-info">
+          <div class="content-info-name">${c.name}</div>
+          <div class="content-info-meta">${c.duration}초 · ${cStore?'<span style="color:var(--accent-cyan)">'+cStore.name+'</span>':''}</div>
+          <div class="content-info-url">${c.url?c.url.slice(0,45)+'...':''}</div>
+          <div class="content-tags">${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="content-actions">
+          <button class="btn btn-primary btn-sm" style="flex:1" onclick="previewContent('${c.id}')">▶ 미리보기</button>
+          <button class="btn btn-outline btn-sm" onclick="editContent('${c.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteContent('${c.id}')">삭제</button>
+        </div>
+      </div>`;
+    }).join('')
+    :'<div style="color:var(--text-muted);font-size:13px;padding:20px">콘텐츠 없음</div>';
+}
+
+function openContentModal(id=null){
+  ['content-name','content-url','content-tags','content-memo'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('content-duration').value=15;
+  document.getElementById('content-type').value='image';
+  document.getElementById('content-edit-id').value='';
+  document.getElementById('content-modal-title').textContent='콘텐츠 등록';
+  const sel=document.getElementById('content-store-id');
+  sel.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(selectedContentStore!=='all') sel.value=selectedContentStore;
+  if(id){
+    const c=contents.find(x=>x.id===id);if(!c)return;
+    document.getElementById('content-edit-id').value=c.id;
+    document.getElementById('content-name').value=c.name;
+    document.getElementById('content-type').value=c.type;
+    document.getElementById('content-duration').value=c.duration;
+    document.getElementById('content-url').value=c.url||'';
+    document.getElementById('content-tags').value=(c.tags||[]).join(', ');
+    document.getElementById('content-memo').value=c.memo||'';
+    sel.value=c.storeId||'';
+    document.getElementById('content-modal-title').textContent='콘텐츠 수정';
+  }
+  openModal('modal-content');
+}
+
+function editContent(id){openContentModal(id);}
+
+async function deleteContent(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`[${c.name}] 삭제?`))return;
+  await db.collection('contents').doc(id).delete();
+  showToast(`[${c.name}] 삭제됨`,'warning');
+  await fetchAll();
+}
+
+async function saveContent(){
+  const name=document.getElementById('content-name').value.trim();
+  const url=document.getElementById('content-url').value.trim();
+  if(!name){showToast('콘텐츠명을 입력하세요','error');return;}
+  if(!url){showToast('URL을 입력하세요','error');return;}
+  const id=document.getElementById('content-edit-id').value;
+  const data={name,type:document.getElementById('content-type').value,duration:parseInt(document.getElementById('content-duration').value)||15,url,storeId:document.getElementById('content-store-id').value,tags:document.getElementById('content-tags').value.split(',').map(t=>t.trim()).filter(Boolean),memo:document.getElementById('content-memo').value.trim(),createdAt:new Date().toISOString()};
+  if(id) await db.collection('contents').doc(id).set(data,{merge:true});
+  else await db.collection('contents').add(data);
+  showToast(`[${name}] ${id?'수정':'등록'}됨`,'success');
+  closeModal('modal-content');
+  await fetchAll();
+}
+
+function previewContent(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  document.getElementById('preview-name').textContent=c.name;
+  document.getElementById('preview-icon').textContent=c.type==='image'?'🖼':'▶';
+  document.getElementById('preview-type-tag').textContent=c.type.toUpperCase();
+  document.getElementById('preview-duration').textContent='재생시간: '+c.duration+'초';
+  document.getElementById('preview-url-label').textContent=c.url||'';
+  document.getElementById('preview-open-link').href=c.url||'#';
+  const body=document.getElementById('preview-body');
+  body.innerHTML='<div class="preview-loading"><div class="preview-spinner"></div><span>로딩 중...</span></div>';
+  openModal('modal-preview');
+  setTimeout(()=>{
+    if(c.type==='image'){
+      const img=document.createElement('img');
+      img.src=c.url;img.style.cssText='max-width:100%;max-height:70vh;object-fit:contain';
+      img.onload=()=>{body.innerHTML='';body.appendChild(img);};
+      img.onerror=()=>{body.innerHTML=`<div class="preview-error">⚠ 이미지를 불러올 수 없습니다</div>`;};
+    }else if(c.type==='video'){
+      const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
+      if(isYoutube){
+        let vid='';const m1=(c.url||'').match(/[?&]v=([^&]+)/);const m2=(c.url||'').match(/youtu\.be\/([^?&]+)/);
+        if(m1)vid=m1[1];else if(m2)vid=m2[1];
+        if(vid)body.innerHTML=`<iframe style="width:100%;height:70vh;border:none" src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+        else body.innerHTML='<div class="preview-error">⚠ 유튜브 URL 인식 불가</div>';
+      }else{
+        body.innerHTML=`<video controls autoplay muted style="max-width:100%;max-height:70vh" src="${c.url}"></video>`;
+      }
+    }else{
+      body.innerHTML=`<div class="preview-error">⚠ 미리보기 불가</div>`;
+    }
+  },100);
+}
+function closePreview(){document.getElementById('preview-body').innerHTML='';closeModal('modal-preview');}
+
+// ── PLAYLIST ──
+function updateScheduleOptions(storeId,selectId){
+  const store=stores.find(s=>s.id===storeId);
+  const slots=store?store.timeslots||[]:[]; 
+  const el=document.getElementById(selectId);
+  if(!el)return;
+  el.innerHTML='<option value="all">스케줄 없음 (항상 재생)</option>';
+  slots.forEach(s=>{const opt=document.createElement('option');opt.value=s.name;opt.textContent=s.name+' ('+s.start+' ~ '+s.end+')';el.appendChild(opt);});
+}
+
+function onPlaylistStoreChange(){
+  const storeId=document.getElementById('playlist-store').value;
+  const storeScreens=screens.filter(sc=>sc.storeId===storeId);
+  const screenEl=document.getElementById('playlist-screen');
+  screenEl.innerHTML=storeScreens.length?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name||'사이니지'} (${sc.location||'위치미지정'})</option>`).join(''):'<option value="">사이니지 없음</option>';
+  const storeContents=contents.filter(c=>c.storeId===storeId);
+  document.getElementById('content-checklist').innerHTML=storeContents.length?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="chk-${c.id}" value="${c.id}"/><label for="chk-${c.id}">${c.name} (${c.duration}초)</label></div>`).join(''):'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+  updateScheduleOptions(storeId,'playlist-schedule');
+}
+
+function onPlaylistEditStoreChange(){
+  const storeId=document.getElementById('playlist-edit-store').value;
+  const storeScreens=screens.filter(sc=>sc.storeId===storeId);
+  const screenEl=document.getElementById('playlist-edit-screen');
+  screenEl.innerHTML=storeScreens.length?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name||'사이니지'} (${sc.location||'위치미지정'})</option>`).join(''):'<option value="">사이니지 없음</option>';
+  const storeContents=contents.filter(c=>c.storeId===storeId);
+  const checklistEl=document.getElementById('content-checklist-edit');
+  checklistEl.innerHTML=storeContents.length?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${c.name} (${c.duration}초)</label></div>`).join(''):'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+  updateScheduleOptions(storeId,'playlist-edit-schedule');
+}
+
+function openPlaylistModalForScreen(storeId,screenId){
+  document.getElementById('playlist-name').value='';
+  const storeEl=document.getElementById('playlist-store');
+  storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  storeEl.value=storeId;
+  onPlaylistStoreChange();
+  setTimeout(()=>{document.getElementById('playlist-screen').value=screenId;document.getElementById('playlist-schedule').value='all';},50);
+  openModal('modal-playlist');
+}
+
+function openPlaylistModal(){
+  document.getElementById('playlist-name').value='';
+  const storeEl=document.getElementById('playlist-store');
+  storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  onPlaylistStoreChange();
+  openModal('modal-playlist');
+}
+
+async function savePlaylist(){
+  const name=document.getElementById('playlist-name').value.trim();
+  if(!name){showToast('플레이리스트명을 입력하세요','error');return;}
+  const screenId=document.getElementById('playlist-screen').value;
+  if(!screenId){showToast('사이니지를 선택하세요','error');return;}
+  const contentIds=Array.from(document.querySelectorAll('#content-checklist input:checked')).map(el=>el.value);
+  if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
+  const data={name,storeId:document.getElementById('playlist-store').value,screenId,schedule:document.getElementById('playlist-schedule').value,contentIds,createdAt:new Date().toISOString()};
+  await db.collection('playlists').add(data);
+  showToast(`[${name}] 생성됨`,'success');
+  closeModal('modal-playlist');
+  await fetchAll();
+}
+
+function openPlaylistEdit(id){
+  const p=playlists.find(x=>x.id===id);if(!p)return;
+  document.getElementById('playlist-edit-id').value=p.id;
+  document.getElementById('playlist-edit-name').value=p.name||'';
+  const storeEl=document.getElementById('playlist-edit-store');
+  storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  storeEl.value=p.storeId||'';
+  onPlaylistEditStoreChange();
+  setTimeout(()=>{
+    document.getElementById('playlist-edit-screen').value=p.screenId||'';
+    document.getElementById('playlist-edit-schedule').value=p.schedule||p.timeSlot||'all';
+    (p.contentIds||[]).forEach(cid=>{const chk=document.getElementById('echk-'+cid);if(chk)chk.checked=true;});
+  },80);
+  openModal('modal-playlist-edit');
+}
+
+async function updatePlaylist(){
+  const id=document.getElementById('playlist-edit-id').value;
+  const name=document.getElementById('playlist-edit-name').value.trim();
+  if(!name){showToast('플레이리스트명을 입력하세요','error');return;}
+  const screenId=document.getElementById('playlist-edit-screen').value;
+  const contentIds=Array.from(document.querySelectorAll('#content-checklist-edit input:checked')).map(el=>el.value);
+  if(!contentIds.length){showToast('콘텐츠를 1개 이상 선택하세요','error');return;}
+  const data={name,storeId:document.getElementById('playlist-edit-store').value,screenId,schedule:document.getElementById('playlist-edit-schedule').value,contentIds};
+  await db.collection('playlists').doc(id).set(data,{merge:true});
+  showToast(`[${name}] 수정됨`,'success');
+  closeModal('modal-playlist-edit');
+  await fetchAll();
+}
+
+async function deletePlaylist(id){
+  const p=playlists.find(x=>x.id===id);if(!p)return;
+  if(!confirm(`[${p.name}] 삭제?`))return;
+  await db.collection('playlists').doc(id).delete();
+  showToast('삭제됨','warning');
+  await fetchAll();
+}
+
+// ── MONITOR ──
+function renderMonitor(){
+  const container=document.getElementById('monitor-container');
+  if(!stores.length){container.innerHTML='<div style="color:var(--text-muted);padding:40px;text-align:center">등록된 매장 없음</div>';return;}
+  container.innerHTML=stores.map(s=>{
+    const storeScreens=screens.filter(sc=>sc.storeId===s.id);
+    if(!storeScreens.length)return`<div class="monitor-store-section"><div class="monitor-store-header"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div><div><div style="font-size:16px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--text-muted)">${s.region} · 사이니지 없음</div></div></div></div></div>`;
+    const cards=storeScreens.map(sc=>{
+      const status=calcStatus(sc.lastSeen);
+      const pl=playlists.find(p=>p.screenId===sc.id);
+      const isOnline=status==='online';const isWarn=status==='warning';
+      const net=sc.network||0;
+      const netC=net>300?'var(--accent-red)':net>100?'var(--accent-yellow)':'var(--accent-green)';
+      const lastSeen=formatDate(sc.lastSeen);
+      const statusColor=isOnline?'var(--accent-green)':isWarn?'var(--accent-yellow)':'var(--text-secondary)';
+      const currentContent=isOnline?(sc.currentContent||pl?.name||'재생 대기중'):'-';
+      return`<div class="monitor-card status-${status}">
+        <div class="mc-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📺</div>
+            <div><div class="mc-name">${sc.name}</div><div class="mc-sub">${sc.location||'위치 미지정'}</div></div>
+          </div>${statusBadge(status)}
+        </div>
+        <div class="mc-screen ${isOnline?'playing':''}">
+          <span class="mc-screen-label" style="color:${statusColor};font-size:13px;font-weight:600">${isOnline?'▶ 재생중':isWarn?'⚠ 응답 지연':'● 신호 없음'}</span>
+          <span class="mc-screen-content">${currentContent}</span>
+        </div>
+        <div class="mc-info">
+          <div class="mc-info-item"><div class="mc-info-label">네트워크</div><div class="mc-info-value" style="color:${netC}">${net>0?net+'ms':'-'}</div></div>
+          <div class="mc-info-item"><div class="mc-info-label">마지막 접속</div><div class="mc-info-value" style="font-size:12px">${lastSeen}</div></div>
+        </div>
+        <div class="mc-actions">
+          <button class="btn btn-outline btn-sm" onclick="sendCmd('${sc.id}','reload')">⟳ 새로고침</button>
+          <button class="btn btn-outline btn-sm" onclick="sendCmd('${sc.id}','restart')">▶ 재시작</button>
+          <button class="btn btn-yellow btn-sm" onclick="sendCmd('${sc.id}','standby')">⏸ 대기화면</button>
+          <button class="btn btn-sm" style="background:rgba(0,232,160,.1);border:1px solid rgba(0,232,160,.3);color:var(--accent-green)" onclick="sendCmd('${sc.id}','playlist_update')">↺ 재생재개</button>
+        </div>
+      </div>`;
+    }).join('');
+    const storeOnline=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='online').length;
+    const allOnline=storeOnline===storeScreens.length;
+    const headerColor=allOnline?'var(--accent-green)':storeOnline>0?'var(--accent-yellow)':'var(--accent-red)';
+    return`<div class="monitor-store-section">
+      <div class="monitor-store-header">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:40px;height:40px;background:rgba(0,170,255,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⊞</div>
+          <div>
+            <div style="font-size:18px;font-weight:700;color:var(--text-primary)">${s.name}</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:3px">${s.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${s.manager||'-'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:${headerColor}">${storeOnline}<span style="font-size:14px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
+            <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-body);margin-top:2px">온라인</div>
+          </div>
+          <span class="badge badge-${allOnline?'online':storeOnline>0?'warning':'offline'}">${allOnline?'전체 정상':storeOnline>0?'일부 오프라인':'전체 오프라인'}</span>
+        </div>
+      </div>
+      <div class="monitor-grid">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+async function sendCmd(screenId,type){
+  await db.collection('commands').doc(screenId).set({type,ts:new Date().toISOString(),executed:false});
+  const sc=screens.find(x=>x.id===screenId);
+  showToast(`[${sc?sc.name:screenId}] ${type} 명령 전송됨`,'success');
+  await fetchAll();
+}
+
+// ── 사용법 안내 ──
+function renderGuide(){
+  const adminUrl=window.location.href;
+  const playerUrl=window.location.href.replace('admin.html','')+'player.html?screen=사이니지ID';
+  const el=document.getElementById('guide-admin-url');
+  const el2=document.getElementById('guide-admin-url2');
+  const el3=document.getElementById('guide-player-url');
+  if(el)  el.textContent=adminUrl;
+  if(el2) el2.textContent=adminUrl;
+  if(el3) el3.textContent=playerUrl;
+}
+
+// ── 설정 ──
+async function renderSettings(){
+  try{
+    const snap=await db.collection('settings').doc('timeslots').get();
+    if(snap.exists){
+      const ts=snap.data();
+      ['morning','lunch','afternoon','dinner'].forEach(k=>{
+        const s=document.getElementById('ts-'+k+'-start');
+        const e=document.getElementById('ts-'+k+'-end');
+        if(s&&ts[k]) s.value=ts[k].start||'';
+        if(e&&ts[k]) e.value=ts[k].end||'';
+      });
+    }
+  }catch(e){console.error(e);}
+}
+
+// ── 데이터 초기화 ──
+async function resetSampleData(){
+  if(!confirm('샘플 데이터로 초기화하시겠습니까?'))return;
+  showToast('초기화 중...','info');
+  const cols=['stores','screens','contents','playlists'];
+  for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
+  const s1=await db.collection('stores').add({name:'강남본점',region:'서울',address:'서울 강남구 테헤란로 123',manager:'김민준',phone:'010-1234-5678',lastSeen:nowStr(),timeslots:[{name:'아침',start:'09:00',end:'11:30'},{name:'점심',start:'11:30',end:'14:00'},{name:'브레이크',start:'14:00',end:'17:00'},{name:'저녁',start:'17:00',end:'22:00'}],openTime:'09:00',closeTime:'22:00'});
+  const s2=await db.collection('stores').add({name:'홍대점',region:'서울',address:'서울 마포구 홍대입구로 45',manager:'이서연',phone:'010-2345-6789',lastSeen:nowStr(),timeslots:[{name:'점심',start:'11:00',end:'14:00'},{name:'저녁',start:'17:00',end:'23:00'}],openTime:'11:00',closeTime:'23:00'});
+  const sc1=await db.collection('screens').add({storeId:s1.id,name:'입구',location:'1층 입구',orientation:'landscape',lastSeen:null,currentContent:'-'});
+  const sc2=await db.collection('screens').add({storeId:s1.id,name:'메인홀',location:'1층 홀',orientation:'landscape',lastSeen:null,currentContent:'-'});
+  const sc3=await db.collection('screens').add({storeId:s2.id,name:'카운터',location:'계산대',orientation:'portrait-left',lastSeen:null,currentContent:'-'});
+  const c1=await db.collection('contents').add({name:'점심 특선 메뉴',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=1',storeId:s1.id,tags:['메뉴','점심'],createdAt:new Date().toISOString()});
+  const c2=await db.collection('contents').add({name:'저녁 코스 안내',type:'image',duration:20,url:'https://picsum.photos/1920/1080?random=2',storeId:s1.id,tags:['메뉴','저녁'],createdAt:new Date().toISOString()});
+  const c3=await db.collection('contents').add({name:'홍대 이벤트',type:'image',duration:15,url:'https://picsum.photos/1920/1080?random=3',storeId:s2.id,tags:['이벤트'],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'강남 입구 리스트',storeId:s1.id,screenId:sc1.id,schedule:'all',contentIds:[c1.id,c2.id],createdAt:new Date().toISOString()});
+  await db.collection('playlists').add({name:'홍대 카운터 리스트',storeId:s2.id,screenId:sc3.id,schedule:'all',contentIds:[c3.id],createdAt:new Date().toISOString()});
+  await fetchAll();
+  showToast('샘플 데이터 초기화 완료!','success');
+}
+
+async function clearAllData(target){
+  const labels={contents:'콘텐츠',playlists:'플레이리스트',all:'전체 데이터'};
+  if(!confirm(`[${labels[target]||target}] 삭제?`))return;
+  const cols=target==='all'?['stores','screens','contents','playlists']:[target];
+  for(const col of cols){const snap=await db.collection(col).get();for(const d of snap.docs) await d.ref.delete();}
+  await fetchAll();
+  showToast(`${labels[target]||target} 삭제 완료`,'warning');
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(el=>el.classList.remove('open'));document.getElementById('preview-body').innerHTML='';}});
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  let mousedownTarget=null;
+  o.addEventListener('mousedown',function(e){mousedownTarget=e.target;});
+  o.addEventListener('mouseup',function(e){
+    if(e.target===o&&mousedownTarget===o){o.classList.remove('open');if(o.id==='modal-preview')document.getElementById('preview-body').innerHTML='';}
+    mousedownTarget=null;
+  });
+  const modal=o.querySelector('.modal,.preview-modal');
+  if(modal) modal.addEventListener('click',function(e){e.stopPropagation();});
+});
+
+// ── TOAST ──
+function showToast(msg,type='info'){
+  const icons={success:'✓',error:'✕',warning:'⚠',info:'◉'};
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]||'◉'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.classList.add('toast-out');setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ── 시계 ──
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('sys-time').textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+},1000);
+
+// ── 새로고침 버튼 ──
+document.getElementById('btn-refresh').addEventListener('click',async function(){
+  this.classList.add('spinning');
+  setTimeout(()=>this.classList.remove('spinning'),600);
+  await fetchAll();
+  showToast('새로고침됨','info');
+});
+
+// ── 이벤트 ──
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',function(){navigate(this.dataset.page);}));
+document.getElementById('store-search').addEventListener('input',function(){renderStores(this.value);});
+document.getElementById('content-search').addEventListener('input',function(){renderContent(this.value);});
+
+// ── 자동 갱신 ──
+setInterval(async()=>{
+  await fetchAll();
+  checkScreenAlerts();
+},10000);
+
+// ── 초기화 ──
+async function init(){
+  try{
+    if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+    const snap=await db.collection('stores').get();
+    await fetchAll();
+    hideLoading();
+    navigate('dashboard');
+  }catch(e){
+    console.error(e);
+    document.getElementById('loading-text').textContent='연결 실패: '+e.message;
+    setTimeout(()=>hideLoading(),3000);
+  }
+}
+init();
+</script>
+</body>
+</html>
