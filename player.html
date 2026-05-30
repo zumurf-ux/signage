@@ -60,7 +60,6 @@ body.rotate-180 #player{transform:rotate(180deg)}
   <img    id="img-player"    src="" alt=""/>
   <video  id="video-player"  autoplay muted playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-  <div id="iframe-overlay" style="display:none;position:absolute;inset:0;z-index:10;cursor:pointer" onclick="handleIframeClick()"></div>
 </div>
 
 <div id="progress-bar"></div>
@@ -336,20 +335,8 @@ function playIframe(url,duration){
     el.src=url;
     el.style.display='block';
     document.getElementById('standby').style.display='none';
-    // 전체화면 안 된 상태면 오버레이 표시
-    if(!document.fullscreenElement&&!document.webkitFullscreenElement){
-      document.getElementById('iframe-overlay').style.display='block';
-    }
   },100);
   playTimer=setTimeout(()=>playNext(),duration);
-}
-
-function handleIframeClick(){
-  // 전체화면 요청 후 오버레이 숨기기
-  requestFullscreen();
-  setTimeout(()=>{
-    document.getElementById('iframe-overlay').style.display='none';
-  },500);
 }
 function extractYoutubeId(url){
   if(!url) return '';
@@ -378,8 +365,6 @@ function hideAllPlayers(){
     if(id==='video-player'){el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
-  const overlay=document.getElementById('iframe-overlay');
-  if(overlay) overlay.style.display='none';
 }
 function showStandby(){
   isPlaying=false;hideAllPlayers();
@@ -417,13 +402,7 @@ document.addEventListener('click',()=>{
   if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();
 });
 document.addEventListener('fullscreenchange',()=>{
-  if(!document.fullscreenElement){
-    setTimeout(requestFullscreen,2000);
-  } else {
-    // 전체화면 성공 시 오버레이 숨기기
-    const overlay=document.getElementById('iframe-overlay');
-    if(overlay) overlay.style.display='none';
-  }
+  if(!document.fullscreenElement)setTimeout(requestFullscreen,2000);
 });
 document.addEventListener('webkitfullscreenchange',()=>{
   if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);
