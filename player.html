@@ -60,6 +60,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
   <img    id="img-player"    src="" alt=""/>
   <video  id="video-player"  autoplay muted playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
 </div>
 
 <div id="progress-bar"></div>
@@ -335,8 +336,22 @@ function playIframe(url,duration){
     el.src=url;
     el.style.display='block';
     document.getElementById('standby').style.display='none';
+    showIframeOverlay();
   },100);
   playTimer=setTimeout(()=>playNext(),duration);
+}
+
+function showIframeOverlay(){
+  if(!document.fullscreenElement && !document.webkitFullscreenElement){
+    document.getElementById('iframe-overlay').style.display='block';
+  }
+}
+
+function overlayClick(){
+  requestFullscreen();
+  setTimeout(()=>{
+    document.getElementById('iframe-overlay').style.display='none';
+  },800);
 }
 function extractYoutubeId(url){
   if(!url) return '';
@@ -365,6 +380,7 @@ function hideAllPlayers(){
     if(id==='video-player'){el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
+  document.getElementById('iframe-overlay').style.display='none';
 }
 function showStandby(){
   isPlaying=false;hideAllPlayers();
@@ -402,7 +418,14 @@ document.addEventListener('click',()=>{
   if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();
 });
 document.addEventListener('fullscreenchange',()=>{
-  if(!document.fullscreenElement)setTimeout(requestFullscreen,2000);
+  if(!document.fullscreenElement){
+    setTimeout(requestFullscreen,2000);
+    // iframe 재생 중이면 다시 오버레이 표시
+    const iframe=document.getElementById('iframe-player');
+    if(iframe.style.display==='block') setTimeout(showIframeOverlay,2500);
+  } else {
+    document.getElementById('iframe-overlay').style.display='none';
+  }
 });
 document.addEventListener('webkitfullscreenchange',()=>{
   if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);
