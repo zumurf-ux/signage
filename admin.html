@@ -705,6 +705,110 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   padding: 0 3px;
 }
 
+
+@media (max-width: 768px) {
+
+  /* ══ 매장 관리 카드 모바일 ══ */
+  .store-block-hd {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  /* 아이콘 + 이름/메타 → 풀너비 1행 */
+  .store-block-hd > .store-block-icon { align-self: flex-start; }
+  .store-block-hd > div[style*="flex:1"] {
+    flex: 1 !important;
+    min-width: 0 !important;
+    word-break: keep-all !important;
+  }
+  .store-block-name {
+    font-size: 14px !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    line-height: 1.35 !important;
+  }
+  .store-block-meta {
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: break-all !important;
+    margin-top: 4px !important;
+    line-height: 1.5 !important;
+  }
+  /* 오른쪽 버튼 영역 → 2행으로 내려서 풀너비 */
+  .store-block-hd > div[style*="display:flex;align-items:center;gap:10px"] {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  /* 수정/삭제 버튼 컨테이너 너비 고정 해제 */
+  .store-block-hd div[style*="width:120px"],
+  .store-block-hd div[style*="width: 120px"] {
+    width: auto !important;
+  }
+  .store-block-body { padding: 10px 12px !important; }
+
+  /* ══ 실시간 관제 헤더 모바일 ══ */
+  .monitor-store-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+  /* 이름/메타 flex:1 최소 너비 */
+  .monitor-store-header > div[style*="flex:1"] {
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+  }
+  .monitor-store-header div[style*="font-size:16px;font-weight:700"] {
+    font-size: 14px !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    line-height: 1.35 !important;
+  }
+  .monitor-store-header div[style*="font-size:12px;color:var(--text-secondary)"] {
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    line-height: 1.4 !important;
+  }
+  /* 온라인 숫자 + 배지 → 오른쪽 고정 해제, 줄바꿈 허용 */
+  .monitor-store-header > div[style*="display:flex;align-items:center;gap:12px"] {
+    flex-shrink: 0 !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+  .monitor-store-header .badge {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* mc-header 내부 이름도 줄바꿈 */
+  .mc-name {
+    font-size: 14px !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+  }
+  .mc-sub {
+    font-size: 11px !important;
+    white-space: normal !important;
+  }
+
+  /* 스크린 아이템 */
+  .store-screen-item {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .store-screen-name {
+    white-space: normal !important;
+    word-break: keep-all !important;
+    font-size: 13px !important;
+  }
+  .store-screen-loc {
+    font-size: 11px !important;
+    white-space: normal !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1323,14 +1427,14 @@ function renderStores(filter=''){
           <div class="store-block-name">${store.name}</div>
           <div class="store-block-meta">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="display:flex;align-items:center;gap:10px" onclick="event.stopPropagation()">
-            <div style="text-align:right;width:44px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
+            <div style="text-align:right;flex-shrink:0">
               <div style="font-size:16px;font-weight:700;color:${statusColor};font-family:var(--font-mono)">${onlineCount}<span style="font-size:12px;color:var(--text-muted)">/${storeScreens.length}</span></div>
               <div style="font-size:11px;color:var(--text-muted)">온라인</div>
             </div>
             ${statusBadge(worstStatus)}
-            <div style="display:flex;gap:6px;width:120px;justify-content:flex-end">
+            <div style="display:flex;gap:6px">
               <button class="btn btn-outline btn-sm" onclick="editStore('${store.id}')">수정</button>
               <button class="btn btn-danger btn-sm" onclick="deleteStore('${store.id}')">삭제</button>
             </div>
@@ -2471,12 +2575,12 @@ function renderMonitor(){
           <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${store.name}</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
-          <div style="text-align:right;width:44px;flex-shrink:0">
-            <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:${headerColor}">${onlineCount}<span style="font-size:14px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:${headerColor}">${onlineCount}<span style="font-size:13px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
             <div style="font-size:11px;color:var(--text-secondary)">온라인</div>
           </div>
-          <span class="badge badge-${allOnline?'online':onlineCount>0?'warning':'offline'}" style="flex-shrink:0;white-space:nowrap">${allOnline?'전체 정상':onlineCount>0?'일부 오프라인':'전체 오프라인'}</span>
+          <span class="badge badge-${allOnline?'online':onlineCount>0?'warning':'offline'}" style="flex-shrink:0;white-space:nowrap;font-size:12px">${allOnline?'전체 정상':onlineCount>0?'일부 오프라인':'전체 오프라인'}</span>
           <span class="monitor-arrow" id="marr-${store.id}">${isOpen?'<svg width="12" height="12" viewBox="0 0 12 12" style="flex-shrink:0"><path d="M2 8L6 4L10 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12" style="flex-shrink:0"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>'}</span>
         </div>
       </div>
