@@ -394,11 +394,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* ── 매장 관리 보드 ── */
 .store-block{margin-bottom:12px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-lg);overflow:hidden}
-.store-block-hd{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--bg-panel);cursor:pointer;user-select:none}
+.store-block-hd{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--bg-panel);cursor:pointer;user-select:none}
 .store-block-hd:hover{background:var(--bg-hover)}
 .store-block-icon{width:38px;height:38px;background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:var(--accent-blue)}
-.store-block-name{font-size:16px;font-weight:700;color:var(--text-primary)}
-.store-block-meta{font-size:12px;color:var(--text-secondary);margin-top:3px}
+.store-block-name{font-size:16px;font-weight:700;color:var(--text-primary);word-break:keep-all;overflow-wrap:break-word}
+.store-block-meta{font-size:12px;color:var(--text-secondary);margin-top:3px;word-break:keep-all;overflow-wrap:break-word;line-height:1.5}
 .store-block-arrow{color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0}
 .store-block-actions{display:flex;gap:6px;flex-shrink:0;width:130px;justify-content:flex-end}
 .store-block-body{display:none;border-top:1px solid var(--border);padding:16px 20px}
@@ -408,10 +408,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .store-info-label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:4px}
 .store-info-value{font-size:13px;color:var(--text-primary);font-weight:500}
 .store-screen-list{display:flex;flex-direction:column;gap:8px}
-.store-screen-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);transition:border-color .15s}
+.store-screen-item{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px;padding:11px 14px;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);transition:border-color .15s}
 .store-screen-item:hover{border-color:var(--border-bright)}
-.store-screen-name{font-size:14px;font-weight:600;color:var(--text-primary);flex:1}
-.store-screen-loc{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.store-screen-name{font-size:14px;font-weight:600;color:var(--text-primary);flex:1;min-width:0;word-break:keep-all;overflow-wrap:break-word}
+.store-screen-loc{font-size:12px;color:var(--text-secondary);margin-top:2px;word-break:break-all;overflow-wrap:break-word}
 .store-add-screen{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-top:1px dashed var(--border);margin-top:10px}
 
 
@@ -709,43 +709,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 @media (max-width: 768px) {
 
   /* ══ 매장 관리 카드 모바일 ══ */
-  .store-block-hd {
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-    padding: 12px 14px !important;
-  }
-  /* 아이콘 + 이름/메타 → 풀너비 1행 */
-  .store-block-hd > .store-block-icon { align-self: flex-start; }
-  .store-block-hd > div[style*="flex:1"] {
-    flex: 1 !important;
-    min-width: 0 !important;
-    word-break: keep-all !important;
-  }
-  .store-block-name {
-    font-size: 14px !important;
-    white-space: normal !important;
-    word-break: keep-all !important;
-    line-height: 1.35 !important;
-  }
-  .store-block-meta {
-    font-size: 11px !important;
-    white-space: normal !important;
-    word-break: break-all !important;
-    margin-top: 4px !important;
-    line-height: 1.5 !important;
-  }
-  /* 오른쪽 버튼 영역 → 2행으로 내려서 풀너비 */
-  .store-block-hd > div[style*="display:flex;align-items:center;gap:10px"] {
-    width: 100% !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-  /* 수정/삭제 버튼 컨테이너 너비 고정 해제 */
-  .store-block-hd div[style*="width:120px"],
-  .store-block-hd div[style*="width: 120px"] {
-    width: auto !important;
-  }
+  .store-block-name { font-size: 14px !important; line-height: 1.4 !important; }
+  .store-block-meta { font-size: 11px !important; line-height: 1.5 !important; }
   .store-block-body { padding: 10px 12px !important; }
+  .store-screen-item { gap: 6px !important; padding: 8px 10px !important; }
+  .store-screen-name { font-size: 12px !important; }
+  .store-screen-loc  { font-size: 10px !important; }
+  .screen-url-btn    { font-size: 10px !important; padding: 2px 7px !important; }
 
   /* ══ 실시간 관제 헤더 모바일 ══ */
   .monitor-store-header {
@@ -1422,24 +1392,28 @@ function renderStores(filter=''){
 
     return`<div class="store-block">
       <div class="store-block-hd" onclick="toggleStoreBlock('${store.id}',this)">
-        <div class="store-block-icon">⊞</div>
-        <div style="flex:1;min-width:0">
-          <div class="store-block-name">${store.name}</div>
-          <div class="store-block-meta">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+        <div class="store-block-icon" style="margin-top:2px">⊞</div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+          <!-- 1행: 이름 + 화살표 -->
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div class="store-block-name">${store.name}</div>
+              <div class="store-block-meta">${store.region} · 사이니지 ${storeScreens.length}대 · 담당자: ${store.manager||'-'}</div>
+            </div>
+            <span class="store-block-arrow" id="sarr-${store.id}" style="margin-top:4px;flex-shrink:0">${isOpen?'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8L6 4L10 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>'}</span>
+          </div>
+          <!-- 2행: 온라인수 + 배지 + 버튼 -->
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:16px;font-weight:700;color:${statusColor};font-family:var(--font-mono)">${onlineCount}<span style="font-size:12px;color:var(--text-muted)">/${storeScreens.length}</span></div>
-              <div style="font-size:11px;color:var(--text-muted)">온라인</div>
+            <div style="display:flex;align-items:baseline;gap:3px">
+              <span style="font-size:15px;font-weight:700;color:${statusColor};font-family:var(--font-mono)">${onlineCount}/${storeScreens.length}</span>
+              <span style="font-size:11px;color:var(--text-muted)">온라인</span>
             </div>
             ${statusBadge(worstStatus)}
-            <div style="display:flex;gap:6px">
+            <div style="display:flex;gap:6px;margin-left:auto">
               <button class="btn btn-outline btn-sm" onclick="editStore('${store.id}')">수정</button>
               <button class="btn btn-danger btn-sm" onclick="deleteStore('${store.id}')">삭제</button>
             </div>
           </div>
-          <span class="store-block-arrow" id="sarr-${store.id}">${isOpen?'<svg width="12" height="12" viewBox="0 0 12 12" style="flex-shrink:0"><path d="M2 8L6 4L10 8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12" style="flex-shrink:0"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>'}</span>
         </div>
       </div>
       <div class="store-block-body ${isOpen?'open':''}" id="store-body-${store.id}">
