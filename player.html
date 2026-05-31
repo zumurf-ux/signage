@@ -13,7 +13,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans KR',sans-serif;cursor:none}
-#player{width:100vw;height:100vh;position:relative;background:#000;transition:opacity 0.4s ease}
+#player{width:100vw;height:100vh;position:relative;background:#000}
 
 /* 화면 회전 */
 body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
@@ -33,10 +33,10 @@ body.rotate-180 #player{transform:rotate(180deg)}
 
 
 /* 미디어 플레이어 */
-#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
-#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.35s ease}
+#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.35s ease}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
-#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;align-items:center;justify-content:center;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;align-items:center;justify-content:center;background:#000;transition:opacity 0.35s ease}
 
 /* 진행바 */
 #progress-bar{display:none}
@@ -363,11 +363,9 @@ function playText(tc,duration){
   const el=document.getElementById('text-player');
   document.getElementById('standby').style.display='none';
 
-  // 1. 먼저 display:flex + visibility:hidden 으로 공간만 확보 (reflow 없이 크기 측정 가능)
   el.style.display='flex';
   el.style.alignItems='center';
   el.style.justifyContent='center';
-  el.style.visibility='hidden';
 
   let html='';
   if(tc&&tc.tplId&&tc.sgData){
@@ -377,7 +375,6 @@ function playText(tc,duration){
     html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;margin:auto">'+((tc&&tc.body)||'')+'</div>';
   }
 
-  // 2. scale 계산 (display:flex 상태이므로 clientWidth 정확)
   const W=1080, H=1920;
   const sw=el.clientWidth||window.innerWidth;
   const sh=el.clientHeight||window.innerHeight;
@@ -385,14 +382,7 @@ function playText(tc,duration){
   const tx=Math.round((sw-W*scale)/2);
   const ty=Math.round((sh-H*scale)/2);
 
-  // 3. innerHTML 주입 (hidden 상태이므로 reflow 깜박임 없음)
   el.innerHTML=`<div style="width:${W}px;height:${H}px;transform:scale(${scale});transform-origin:top left;position:absolute;top:${ty}px;left:${tx}px">${html}</div>`;
-
-  // 4. 다음 프레임에서 visibility 복원 (렌더링 준비 완료 후)
-  requestAnimationFrame(()=>{
-    el.style.visibility='visible';
-  });
-
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
@@ -475,7 +465,7 @@ function hideAllPlayers(){
   ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
-    el.style.visibility='visible'; // visibility 초기화
+    el.style.opacity='1'; // opacity 초기화
     if(id==='video-player'){el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
@@ -488,17 +478,39 @@ function showStandby(){
 }
 
 // ── 페이드 ──
-const FADE_MS = 400; // 페이드 duration (CSS transition과 동일하게)
+const FADE_MS = 350;
+
+function getVisiblePlayers(){
+  return ['img-player','video-player','iframe-player','text-player']
+    .map(id=>document.getElementById(id))
+    .filter(el=>el&&el.style.display!=='none');
+}
+
 function fadeTransition(cb){
-  const player=document.getElementById('player');
-  player.style.opacity='0';
-  // fade out 완료 후 콘텐츠 교체, 그 다음 프레임에서 fade in
-  setTimeout(()=>{
+  const visibles = getVisiblePlayers();
+
+  if(!visibles.length){
+    // 현재 보이는 요소 없음 (첫 재생 등) → 그냥 실행
     cb();
-    // 브라우저가 DOM 변경을 처리하도록 두 프레임 기다린 후 fade in
+    return;
+  }
+
+  // 1단계: 현재 보이는 요소들만 opacity:0 으로 fade out
+  visibles.forEach(el=>{ el.style.opacity='0'; });
+
+  setTimeout(()=>{
+    // 2단계: 이전 요소 숨기고 새 콘텐츠 준비
+    visibles.forEach(el=>{ el.style.opacity='1'; }); // transition 없이 reset
+    cb(); // hideAllPlayers() + 새 playXxx() 호출
+
+    // 3단계: 새로 보여진 요소를 opacity:0에서 1로 fade in
+    const newVisibles = getVisiblePlayers();
+    newVisibles.forEach(el=>{
+      el.style.opacity='0';
+    });
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{
-        player.style.opacity='1';
+        newVisibles.forEach(el=>{ el.style.opacity='1'; });
       });
     });
   }, FADE_MS);

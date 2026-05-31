@@ -2408,16 +2408,7 @@ function onPlaylistEditStoreChange(){
   const storeContents=contents.filter(c=>c.storeId===storeId);
   const checklistEl=document.getElementById('content-checklist-edit');
   checklistEl.innerHTML=storeContents.length?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${c.name} (${c.duration}초)</label></div>`).join(''):'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
-  // 체크박스 이벤트 연결 (매장 변경 시 재연결)
-  checklistEl.querySelectorAll('input[type=checkbox]').forEach(chk=>{
-    chk.addEventListener('change', function(){
-      const c=contents.find(x=>x.id===this.value);
-      if(!c)return;
-      if(this.checked) addToDragList(c);
-      else removeFromDragList(this.value);
-    });
-  });
-  // 현재 드래그 목록과 체크박스 동기화
+  // 이벤트 연결은 bindChecklistEvents()에서 통합 처리
   syncChecklistFromDrag();
   updateScheduleOptions(storeId,'playlist-edit-schedule');
 }
@@ -2649,30 +2640,54 @@ function setupDragZone() {
 
 function openPlaylistEdit(id){
   const p=playlists.find(x=>x.id===id);if(!p)return;
+
+  // ── 기본 정보
   document.getElementById('playlist-edit-id').value=p.id;
   document.getElementById('playlist-edit-name').value=p.name||'';
+
+  // ── 매장 select
   const storeEl=document.getElementById('playlist-edit-store');
   storeEl.innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   storeEl.value=p.storeId||'';
-  onPlaylistEditStoreChange();
-  setTimeout(()=>{
-    document.getElementById('playlist-edit-screen').value=p.screenId||'';
-    document.getElementById('playlist-edit-schedule').value=p.schedule||p.timeSlot||'all';
-    // 드래그 목록 초기화 (기존 순서 유지)
-    initDragList(p.contentIds||[]);
-    setupDragZone();
-    // 체크박스: 체크된 항목에 이벤트 연결
-    document.querySelectorAll('#content-checklist-edit input[type=checkbox]').forEach(chk=>{
-      chk.addEventListener('change', function(){
-        const c=contents.find(x=>x.id===this.value);
-        if(!c)return;
-        if(this.checked) addToDragList(c);
-        else removeFromDragList(this.value);
-      });
+
+  // ── 사이니지 select
+  const storeScreens=screens.filter(sc=>sc.storeId===(p.storeId||''));
+  const screenEl=document.getElementById('playlist-edit-screen');
+  screenEl.innerHTML=storeScreens.length
+    ?storeScreens.map(sc=>`<option value="${sc.id}">${sc.name||'사이니지'} (${sc.location||'위치미지정'})</option>`).join('')
+    :'<option value="">사이니지 없음</option>';
+  screenEl.value=p.screenId||'';
+
+  // ── 스케줄
+  updateScheduleOptions(p.storeId||'','playlist-edit-schedule');
+  document.getElementById('playlist-edit-schedule').value=p.schedule||p.timeSlot||'all';
+
+  // ── 콘텐츠 체크박스 렌더링 (해당 매장 콘텐츠)
+  const storeContents=contents.filter(c=>c.storeId===(p.storeId||''));
+  const checklistEl=document.getElementById('content-checklist-edit');
+  checklistEl.innerHTML=storeContents.length
+    ?storeContents.map(c=>`<div class="checklist-item"><input type="checkbox" id="echk-${c.id}" value="${c.id}"/><label for="echk-${c.id}">${c.name} (${c.duration||0}초)</label></div>`).join('')
+    :'<div style="padding:12px;color:var(--text-muted);font-size:12px">이 매장에 등록된 콘텐츠 없음</div>';
+
+  // ── 드래그 목록 초기화 (저장된 contentIds 순서 그대로)
+  initDragList(p.contentIds||[]);
+  setupDragZone();
+
+  // ── 체크박스: 드래그 목록에 있는 항목 체크 표시
+  syncChecklistFromDrag();
+
+  // ── 체크박스 이벤트 연결 (cloneNode로 중복 이벤트 완전 방지)
+  checklistEl.querySelectorAll('input[type=checkbox]').forEach(chk=>{
+    const fresh=chk.cloneNode(true);
+    chk.parentNode.replaceChild(fresh,chk);
+    fresh.addEventListener('change',function(){
+      const c=contents.find(x=>x.id===this.value);
+      if(!c)return;
+      if(this.checked) addToDragList(c);
+      else removeFromDragList(this.value);
     });
-    // 기존 contentIds 체크박스 반영
-    (p.contentIds||[]).forEach(cid=>{const chk=document.getElementById('echk-'+cid);if(chk)chk.checked=true;});
-  },80);
+  });
+
   openModal('modal-playlist-edit');
 }
 
