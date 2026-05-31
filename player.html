@@ -13,7 +13,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans KR',sans-serif;cursor:none}
-#player{width:100vw;height:100vh;position:relative;background:#000;transition:opacity 0.5s}
+#player{width:100vw;height:100vh;position:relative;background:#000;transition:opacity 0.4s ease}
 
 /* 화면 회전 */
 body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
@@ -361,10 +361,13 @@ const PL_RENDERERS={classic:plRenderClassic,banner:plRenderBanner,dark:plRenderD
 
 function playText(tc,duration){
   const el=document.getElementById('text-player');
+  document.getElementById('standby').style.display='none';
+
+  // 1. 먼저 display:flex + visibility:hidden 으로 공간만 확보 (reflow 없이 크기 측정 가능)
   el.style.display='flex';
   el.style.alignItems='center';
   el.style.justifyContent='center';
-  document.getElementById('standby').style.display='none';
+  el.style.visibility='hidden';
 
   let html='';
   if(tc&&tc.tplId&&tc.sgData){
@@ -374,7 +377,7 @@ function playText(tc,duration){
     html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;margin:auto">'+((tc&&tc.body)||'')+'</div>';
   }
 
-  // 1080×1920 기준 → 화면 크기에 맞게 scale 피팅
+  // 2. scale 계산 (display:flex 상태이므로 clientWidth 정확)
   const W=1080, H=1920;
   const sw=el.clientWidth||window.innerWidth;
   const sh=el.clientHeight||window.innerHeight;
@@ -382,7 +385,14 @@ function playText(tc,duration){
   const tx=Math.round((sw-W*scale)/2);
   const ty=Math.round((sh-H*scale)/2);
 
+  // 3. innerHTML 주입 (hidden 상태이므로 reflow 깜박임 없음)
   el.innerHTML=`<div style="width:${W}px;height:${H}px;transform:scale(${scale});transform-origin:top left;position:absolute;top:${ty}px;left:${tx}px">${html}</div>`;
+
+  // 4. 다음 프레임에서 visibility 복원 (렌더링 준비 완료 후)
+  requestAnimationFrame(()=>{
+    el.style.visibility='visible';
+  });
+
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
@@ -465,6 +475,7 @@ function hideAllPlayers(){
   ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
+    el.style.visibility='visible'; // visibility 초기화
     if(id==='video-player'){el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
@@ -477,10 +488,20 @@ function showStandby(){
 }
 
 // ── 페이드 ──
+const FADE_MS = 400; // 페이드 duration (CSS transition과 동일하게)
 function fadeTransition(cb){
   const player=document.getElementById('player');
   player.style.opacity='0';
-  setTimeout(()=>{cb();player.style.opacity='1';},500);
+  // fade out 완료 후 콘텐츠 교체, 그 다음 프레임에서 fade in
+  setTimeout(()=>{
+    cb();
+    // 브라우저가 DOM 변경을 처리하도록 두 프레임 기다린 후 fade in
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        player.style.opacity='1';
+      });
+    });
+  }, FADE_MS);
 }
 
 // ── 화면 회전 ──
