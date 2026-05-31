@@ -93,6 +93,7 @@ const db = firebase.firestore();
 
 let SCREEN_ID = '';
 let contentList=[], currentIdx=0, playTimer=null, isPlaying=false, isStandbyForced=false;
+let baseStandbyInfo='';
 
 // ── 시계 ──
 function updateClock(){
@@ -178,7 +179,8 @@ async function startPlayer(){
     const storeSnap=await db.collection('stores').doc(sc.storeId).get();
     const storeName=storeSnap.exists?storeSnap.data().name:'';
 
-    document.getElementById('standby-info').textContent='◈ '+storeName+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
+    baseStandbyInfo='◈ '+storeName+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
+    document.getElementById('standby-info').textContent=baseStandbyInfo;
     document.getElementById('hud-store').textContent='매장: '+storeName;
     document.getElementById('hud-screen').textContent='사이니지: '+sc.name;
     document.getElementById('hud-screen-id').textContent='ID: '+SCREEN_ID;
@@ -249,10 +251,10 @@ async function fetchCommand(){
           showStandby();
           showCmdToast('운영시간 종료 → 대기화면 전환');
         }
-        // standby 화면에 운영시간 표시
+        // standby 화면에 운영시간 표시 (항상 덮어쓰기 — 중복 방지)
         document.getElementById('standby-info').innerHTML=
-          (document.getElementById('standby-info').textContent.split('\n')[0]||'')+
-          '<br/><span style="color:var(--accent-yellow);font-size:13px">운영시간 외 · '+storeOpenTime+'~'+storeCloseTime+'</span>';
+          baseStandbyInfo+
+          (storeOpenTime||storeCloseTime ? '<br/><span style="color:var(--accent-yellow);font-size:13px">운영시간 외 · '+storeOpenTime+'~'+storeCloseTime+'</span>' : '<br/><span style="color:var(--accent-yellow);font-size:13px">운영시간 외</span>');
       }
       currentTimeSlot=slot;
       return;
