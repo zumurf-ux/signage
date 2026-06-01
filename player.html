@@ -13,14 +13,10 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans KR',sans-serif;cursor:none}
-#player{width:100vw;height:100vh;position:relative;background:#000;transition:opacity 0.5s}
-
-/* 화면 회전 */
+#player{width:100vw;height:100vh;position:relative;background:#000}
 body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
 body.rotate-270 #player{transform:rotate(270deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
 body.rotate-180 #player{transform:rotate(180deg)}
-
-/* 대기화면 */
 #standby{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;position:relative;overflow:hidden}
 #standby::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px);pointer-events:none}
 .standby-logo{font-size:18px;color:rgba(0,170,255,.7);font-family:monospace;letter-spacing:10px;text-transform:uppercase;margin-bottom:8px}
@@ -29,26 +25,12 @@ body.rotate-180 #player{transform:rotate(180deg)}
 .standby-date{font-size:20px;color:#7a9bbf;font-weight:300;letter-spacing:2px}
 .standby-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,170,255,.4),transparent);margin:4px 0}
 .standby-info{font-size:15px;color:#5a7a9a;margin-top:4px;font-family:monospace;text-align:center;line-height:2;letter-spacing:1px}
-
-/* 긴급 공지 배너 */
-#notice-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(200,30,30,.95);color:#fff;padding:16px 24px;font-size:22px;font-weight:700;text-align:center;border-top:3px solid #ff6b6b;animation:notice-slide .4s ease-out}
-@keyframes notice-slide{from{transform:translateY(100%)}to{transform:translateY(0)}}
-#notice-icon{font-size:24px;margin-right:10px}
-
-/* 미디어 플레이어 */
 #img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
 #text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:#000}
-
-/* 진행바 */
-#progress-bar{display:none}
-
-/* HUD */
 #hud{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.8);color:#00aaff;font-size:11px;font-family:monospace;padding:10px 14px;border-radius:6px;border:1px solid rgba(0,170,255,.3);z-index:200;line-height:2;opacity:0;transition:opacity .3s}
 #hud.visible{opacity:1}
-
-/* 알림 */
 #offline-overlay{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,61,90,.9);color:#fff;font-family:monospace;font-size:13px;padding:8px 20px;border-radius:6px;z-index:300}
 #offline-overlay.show{display:block}
 #cmd-toast{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,170,255,.9);color:#000;font-family:monospace;font-size:13px;font-weight:700;padding:10px 24px;border-radius:6px;z-index:300}
@@ -63,14 +45,12 @@ body.rotate-180 #player{transform:rotate(180deg)}
     <div class="standby-date" id="standby-date"></div>
     <div class="standby-info" id="standby-info">연결 중...</div>
   </div>
-  <img    id="img-player"    src="" alt=""/>
-  <div id="text-player"></div>
-  <video  id="video-player"  autoplay muted playsinline disablepictureinpicture x5-playsinline webkit-playsinline></video>
+  <img id="img-player" src="" alt=""/>
+  <video id="video-player" autoplay muted playsinline disablepictureinpicture x5-playsinline webkit-playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <div id="text-player"></div>
   <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
 </div>
-
-<div id="progress-bar"></div>
 <div id="hud">
   <div>◈ SIGNAGE PLAYER v4.0</div>
   <div id="hud-store">매장: -</div>
@@ -81,24 +61,17 @@ body.rotate-180 #player{transform:rotate(180deg)}
 </div>
 <div id="offline-overlay">⚠ 서버 연결 끊김</div>
 <div id="cmd-toast"></div>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCB-Bw35hyiuIn__wjUQVqZ8hRdSVo9mKg",
-  authDomain: "signage-all-in-one.firebaseapp.com",
-  projectId: "signage-all-in-one",
-  storageBucket: "signage-all-in-one.firebasestorage.app",
-  messagingSenderId: "119443711079",
-  appId: "1:119443711079:web:186401454f9c7e50f320c2"
-};
+const firebaseConfig={apiKey:"AIzaSyCB-Bw35hyiuIn__wjUQVqZ8hRdSVo9mKg",authDomain:"signage-all-in-one.firebaseapp.com",projectId:"signage-all-in-one",storageBucket:"signage-all-in-one.firebasestorage.app",messagingSenderId:"119443711079",appId:"1:119443711079:web:186401454f9c7e50f320c2"};
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-let SCREEN_ID = '';
+let SCREEN_ID='';
+let contentList=[],currentIdx=0,playTimer=null,isPlaying=false,isStandbyForced=false;
 var baseStandbyInfo='';
-let contentList=[], currentIdx=0, playTimer=null, isPlaying=false, isStandbyForced=false;
+let storeTimeslots=[],storeOpenTime='',storeCloseTime='';
+let currentTimeSlot='';
 
-// ── 시계 ──
 function updateClock(){
   const now=new Date();
   const hh=String(now.getHours()).padStart(2,'0');
@@ -107,70 +80,42 @@ function updateClock(){
   document.getElementById('standby-time').textContent=hh+':'+mm;
   document.getElementById('standby-date').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 ('+days[now.getDay()]+')';
 }
-setInterval(updateClock,1000);
-updateClock();
+setInterval(updateClock,1000);updateClock();
 
-// ── Screen ID 결정 ──
-function getScreenIdFromUrl(){
-  return new URLSearchParams(window.location.search).get('screen')||'';
-}
+function getScreenIdFromUrl(){return new URLSearchParams(window.location.search).get('screen')||'';}
 async function resolveScreenId(){
   const urlId=getScreenIdFromUrl();
   if(urlId){localStorage.setItem('signage_screen_id',urlId);return urlId;}
   const saved=localStorage.getItem('signage_screen_id');
   if(saved)return saved;
-  // 사이니지 없으면 첫번째 사이니지 자동 선택
   const snap=await db.collection('screens').get();
   if(!snap.empty){const id=snap.docs[0].id;localStorage.setItem('signage_screen_id',id);return id;}
   return null;
 }
 
-// ── 시간대 계산 (매장 timeslots 기반) ──
-let storeTimeslots = []; // 매장에 설정된 시간대 배열
-let storeOpenTime  = '';
-let storeCloseTime = '';
-
-function timeToMinutes(t) {
-  if(!t) return 0;
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function getCurrentTimeSlot() {
-  const now = new Date();
-  const cur = now.getHours() * 60 + now.getMinutes();
-
-  // 총 운영시간 체크
-  if (storeOpenTime && storeCloseTime) {
-    const open  = timeToMinutes(storeOpenTime);
-    const close = timeToMinutes(storeCloseTime);
-    if (cur < open || cur >= close) return '__closed__'; // 운영시간 외
+function timeToMinutes(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function getCurrentTimeSlot(){
+  const now=new Date();
+  const cur=now.getHours()*60+now.getMinutes();
+  if(storeOpenTime&&storeCloseTime){
+    const open=timeToMinutes(storeOpenTime);
+    const close=timeToMinutes(storeCloseTime);
+    if(cur<open||cur>=close)return '__closed__';
   }
-
-  // 매장 시간대 체크
-  for (const slot of storeTimeslots) {
-    const start = timeToMinutes(slot.start);
-    const end   = timeToMinutes(slot.end);
-    if (cur >= start && cur < end) return slot.name;
+  for(const slot of storeTimeslots){
+    const start=timeToMinutes(slot.start);
+    const end=timeToMinutes(slot.end);
+    if(cur>=start&&cur<end)return slot.name;
   }
-
-  return 'all'; // 상시
+  return 'all';
 }
 
-async function loadTimeslotConfig() {
-  // 매장 정보에서 timeslots 로드 (startPlayer에서 호출)
-}
-
-// ── 시작 ──
 async function startPlayer(){
-  await loadTimeslotConfig();
   SCREEN_ID=await resolveScreenId();
   if(!SCREEN_ID){
     document.getElementById('standby-info').innerHTML='⚠ 사이니지 미등록<br/>관리자에서 매장 → 사이니지 추가 후<br/>URL복사 버튼을 눌러 접속하세요';
     return;
   }
-
-  // 사이니지 + 매장 정보 로드
   try{
     document.getElementById('standby-info').textContent='Firebase 연결 중...';
     const scSnap=await db.collection('screens').doc(SCREEN_ID).get();
@@ -181,31 +126,22 @@ async function startPlayer(){
     const sc=scSnap.data();
     const storeSnap=await db.collection('stores').doc(sc.storeId).get();
     const storeName=storeSnap.exists?storeSnap.data().name:'';
-
-    baseStandbyInfo='◈ '+storeName;
-    document.getElementById('standby-info').textContent=baseStandbyInfo+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
+    baseStandbyInfo='◈ '+storeName+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
+    document.getElementById('standby-info').textContent=baseStandbyInfo;
     document.getElementById('hud-store').textContent='매장: '+storeName;
     document.getElementById('hud-screen').textContent='사이니지: '+sc.name;
     document.getElementById('hud-screen-id').textContent='ID: '+SCREEN_ID;
-
-    // 매장 운영시간/시간대 설정 로드
-    if(storeSnap.exists) {
-      const storeData = storeSnap.data();
-      storeTimeslots  = storeData.timeslots  || [];
-      storeOpenTime   = storeData.openTime   || '';
-      storeCloseTime  = storeData.closeTime  || '';
+    if(storeSnap.exists){
+      const sd=storeSnap.data();
+      storeTimeslots=sd.timeslots||[];
+      storeOpenTime=sd.openTime||'';
+      storeCloseTime=sd.closeTime||'';
     }
-
-    // 화면 방향 적용
     applyRotation(sc.orientation||'landscape');
   }catch(e){
     console.error(e);
-    document.getElementById('standby-info').innerHTML=
-      '<span style="color:#ff3d5a">⚠ 연결 오류</span><br/>' +
-      '<span style="font-size:11px;color:#7a9bbf">'+e.message+'</span>';
+    document.getElementById('standby-info').innerHTML='<span style="color:#ff3d5a">⚠ 연결 오류</span><br/><span style="font-size:11px;color:#7a9bbf">'+e.message+'</span>';
   }
-
-  // 폴링 시작
   fetchPlaylist();
   fetchCommand();
   setInterval(fetchCommand,5000);
@@ -214,7 +150,6 @@ async function startPlayer(){
   setInterval(updateStatus,60000);
 }
 
-// ── 명령 폴링 ──
 async function fetchCommand(){
   try{
     const snap=await db.collection('commands').doc(SCREEN_ID).get();
@@ -226,73 +161,34 @@ async function fetchCommand(){
   }catch(e){console.error('명령 폴링 오류:',e);}
 }
 
-// ── 플레이리스트 폴링 ──
-// 시간대 추적
-  let currentTimeSlot = '';
-
-  async function fetchPlaylist(){
+async function fetchPlaylist(){
   try{
-    const [pSnap,cSnap]=await Promise.all([
-      db.collection('playlists').get(),
-      db.collection('contents').get(),
-    ]);
+    const[pSnap,cSnap]=await Promise.all([db.collection('playlists').get(),db.collection('contents').get()]);
     const all=pSnap.docs.map(d=>Object.assign({id:d.id},d.data()));
-
-    // 이 사이니지에 등록된 플레이리스트 전체
     const myPlaylists=all.filter(p=>p.screenId===SCREEN_ID);
     if(!myPlaylists.length){if(!isStandbyForced)showStandby();return;}
-
-    // 현재 시간대에 맞는 플레이리스트 선택
     const slot=getCurrentTimeSlot();
-
-    // 운영시간 외 → 대기화면
     if(slot==='__closed__'){
       if(!isStandbyForced){
-        if(isPlaying){
-          isPlaying=false;
-          clearTimeout(playTimer);
-          showStandby();
-          showCmdToast('운영시간 종료 → 대기화면 전환');
-        }
-        // standby 화면에 운영시간 표시
-        document.getElementById('standby-info').innerHTML=
-          baseStandbyInfo+
-          '<br/><span style="color:var(--accent-yellow);font-size:13px">운영시간 외 · '+storeOpenTime+'~'+storeCloseTime+'</span>';
+        if(isPlaying){isPlaying=false;clearTimeout(playTimer);showStandby();showCmdToast('운영시간 종료');}
+        document.getElementById('standby-info').innerHTML=baseStandbyInfo+'<br/><span style="color:#ffc840;font-size:13px">운영시간 외 · '+storeOpenTime+'~'+storeCloseTime+'</span>';
       }
-      currentTimeSlot=slot;
-      return;
+      currentTimeSlot=slot;return;
     }
-
-    const matched=myPlaylists.find(p=>p.schedule===slot)
-                ||myPlaylists.find(p=>p.schedule==='all')
-                ||myPlaylists[0];
-
-    // 시간대 바뀌면 자동 전환
-    if(slot!==currentTimeSlot && currentTimeSlot!==''){
-      currentTimeSlot=slot;
-      showCmdToast('시간대 전환 → '+slot+': '+matched.name);
-      isPlaying=false;
-      isStandbyForced=false;
-      clearTimeout(playTimer);
-      currentIdx=0;
-    } else {
-      currentTimeSlot=slot;
-    }
-
+    const matched=myPlaylists.find(p=>p.schedule===slot)||myPlaylists.find(p=>p.schedule==='all')||myPlaylists[0];
+    if(slot!==currentTimeSlot&&currentTimeSlot!==''){
+      currentTimeSlot=slot;showCmdToast('시간대 전환: '+matched.name);
+      isPlaying=false;isStandbyForced=false;clearTimeout(playTimer);currentIdx=0;
+    }else{currentTimeSlot=slot;}
     const allContents=cSnap.docs.map(d=>Object.assign({id:d.id},d.data()));
     const newList=(matched.contentIds||[]).map(cid=>allContents.find(c=>c.id===cid)).filter(Boolean);
-
-    if(newList.length>0){
-      contentList=newList;
-      if(!isPlaying&&!isStandbyForced){currentIdx=0;playNext();}
-    }else{if(!isStandbyForced)showStandby();}
+    if(newList.length>0){contentList=newList;if(!isPlaying&&!isStandbyForced){currentIdx=0;playNext();}}
+    else{if(!isStandbyForced)showStandby();}
   }catch(e){console.error('플레이리스트 오류:',e);}
 }
 
-// ── 명령 처리 ──
 function handleCommand(type,cmd){
-  cmd=cmd||{};
-  showCmdToast('명령: '+type);
+  cmd=cmd||{};showCmdToast('명령: '+type);
   if(type==='reload'){setTimeout(()=>location.reload(),1000);}
   else if(type==='restart'){isPlaying=false;isStandbyForced=false;clearTimeout(playTimer);currentIdx=0;setTimeout(()=>playNext(),1500);}
   else if(type==='standby'){isPlaying=false;isStandbyForced=true;clearTimeout(playTimer);showStandby();}
@@ -300,7 +196,6 @@ function handleCommand(type,cmd){
   else if(type==='orientation'){applyRotation(cmd.orientation||'landscape');}
 }
 
-// ── 재생 ──
 function playNext(){
   if(!contentList.length){showStandby();return;}
   const c=contentList[currentIdx];
@@ -308,6 +203,9 @@ function playNext(){
   document.getElementById('hud-content').textContent='콘텐츠: '+c.name;
   document.getElementById('hud-status').textContent='스케줄: '+(getCurrentTimeSlot()||'상시');
   fadeTransition(()=>playContent(c));
+  // 다음 이미지 프리로드
+  const next=contentList[currentIdx];
+  if(next&&next.type==='image'&&next.url)new Image().src=next.url;
 }
 
 function playContent(c){
@@ -317,7 +215,7 @@ function playContent(c){
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
     const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
-    if(isYoutube) playIframe(convertYoutubeUrl(c.url),duration);
+    if(isYoutube)playIframe(convertYoutubeUrl(c.url),duration);
     else playVideo(c.url,duration);
   }
   else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
@@ -327,14 +225,17 @@ function playContent(c){
 
 function playImage(url,duration){
   const el=document.getElementById('img-player');
-  el.src=url;el.style.display='block';
-  document.getElementById('standby').style.display='none';
+  const img=new Image();
+  img.onload=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
+  img.onerror=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
+  img.src=url;
+  if(img.complete&&img.naturalWidth>0){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';}
   playTimer=setTimeout(()=>playNext(),duration);
-  if(contentList.length){var _n=contentList[(currentIdx)%contentList.length];if(_n&&_n.type==='image'&&_n.url)new Image().src=_n.url;}
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;el.style.display='block';el.play().catch(()=>{});
+  el.src=url;el.style.display='block';
+  el.play().catch(()=>{});
   document.getElementById('standby').style.display='none';
   playTimer=setTimeout(()=>playNext(),duration);
 }
@@ -343,53 +244,36 @@ function playIframe(url,duration){
   el.allow='autoplay; fullscreen; encrypted-media; picture-in-picture';
   el.setAttribute('allowfullscreen','');
   el.src='';
-  setTimeout(()=>{
-    el.src=url;
-    el.style.display='block';
-    document.getElementById('standby').style.display='none';
-    showIframeOverlay();
-  },100);
+  setTimeout(()=>{el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';showIframeOverlay();},100);
+  playTimer=setTimeout(()=>playNext(),duration);
+}
+function playText(tc,duration){
+  const el=document.getElementById('text-player');
+  document.getElementById('standby').style.display='none';
+  el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';
+  let html='';
+  if(tc&&tc.tplId&&tc.sgData){
+    const fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
+    html=fn(tc.sgData);
+  }else{
+    html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;margin:auto">'+((tc&&tc.body)||'')+'</div>';
+  }
+  const W=1080,H=1920;
+  const sw=el.clientWidth||window.innerWidth;
+  const sh=el.clientHeight||window.innerHeight;
+  const scale=Math.min(sw/W,sh/H);
+  const tx=Math.round((sw-W*scale)/2);
+  const ty=Math.round((sh-H*scale)/2);
+  el.innerHTML='<div style="width:'+W+'px;height:'+H+'px;transform:scale('+scale+');transform-origin:top left;position:absolute;top:'+ty+'px;left:'+tx+'px">'+html+'</div>';
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
-function showIframeOverlay(){
-  if(!document.fullscreenElement && !document.webkitFullscreenElement){
-    document.getElementById('iframe-overlay').style.display='block';
-  }
-}
-
-function overlayClick(){
-  requestFullscreen();
-  setTimeout(()=>{
-    document.getElementById('iframe-overlay').style.display='none';
-  },800);
-}
-function extractYoutubeId(url){
-  if(!url) return '';
-  const m1=url.match(/youtu\.be\/([^?&#/]+)/);
-  if(m1) return m1[1];
-  const m2=url.match(/[?&]v=([^?&#/]+)/);
-  if(m2) return m2[1];
-  const m3=url.match(/embed\/([^?&#/]+)/);
-  if(m3) return m3[1];
-  const m4=url.match(/shorts\/([^?&#/]+)/);
-  if(m4) return m4[1];
-  return '';
-}
-
-function convertYoutubeUrl(url){
-  const vid = extractYoutubeId(url);
-  if(!vid) return url;
-  return 'https://www.youtube.com/embed/'+vid
-    +'?autoplay=1&mute=1&loop=1&playlist='+vid
-    +'&controls=0&rel=0&modestbranding=1';
-}
 function hideAllPlayers(){
   ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
     if(id==='video-player'){el.pause();el.src='';}
-    if(id==='iframe-player') el.src='';
+    if(id==='iframe-player')el.src='';
   });
   document.getElementById('iframe-overlay').style.display='none';
 }
@@ -398,108 +282,80 @@ function showStandby(){
   document.getElementById('standby').style.display='flex';
   document.getElementById('hud-status').textContent='상태: 대기중';
 }
-
-// ── 페이드 ──
+function showIframeOverlay(){
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement)
+    document.getElementById('iframe-overlay').style.display='block';
+}
+function overlayClick(){
+  requestFullscreen();
+  setTimeout(()=>{document.getElementById('iframe-overlay').style.display='none';},800);
+}
+function extractYoutubeId(url){
+  if(!url)return'';
+  const m=url.match(/youtu\.be\/([^?&#/]+)/)||url.match(/[?&]v=([^?&#/]+)/)||url.match(/embed\/([^?&#/]+)/)||url.match(/shorts\/([^?&#/]+)/);
+  return m?m[1]:'';
+}
+function convertYoutubeUrl(url){
+  const vid=extractYoutubeId(url);if(!vid)return url;
+  return'https://www.youtube.com/embed/'+vid+'?autoplay=1&mute=1&loop=1&playlist='+vid+'&controls=0&rel=0&modestbranding=1';
+}
 function fadeTransition(cb){
   const player=document.getElementById('player');
   player.style.opacity='0';
-  setTimeout(()=>{cb();player.style.opacity='1';},500);
+  setTimeout(()=>{cb();player.style.opacity='1';},400);
 }
-
-// ── 화면 회전 ──
 function applyRotation(orientation){
   document.body.classList.remove('rotate-90','rotate-180','rotate-270');
-  if(orientation==='portrait-left')  document.body.classList.add('rotate-90');
-  if(orientation==='portrait-right') document.body.classList.add('rotate-270');
-  if(orientation==='flip')           document.body.classList.add('rotate-180');
+  if(orientation==='portrait-left')document.body.classList.add('rotate-90');
+  if(orientation==='portrait-right')document.body.classList.add('rotate-270');
+  if(orientation==='flip')document.body.classList.add('rotate-180');
   localStorage.setItem('signage_orientation',orientation||'landscape');
 }
 const savedOrientation=localStorage.getItem('signage_orientation');
 if(savedOrientation)applyRotation(savedOrientation);
 
-// ── 전체화면 ──
 function requestFullscreen(){
   const el=document.documentElement;
   if(el.requestFullscreen)el.requestFullscreen();
   else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
-  else if(el.mozRequestFullScreen)el.mozRequestFullScreen();
 }
 window.addEventListener('load',()=>setTimeout(requestFullscreen,1000));
-document.addEventListener('click',()=>{
-  if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();
-});
+document.addEventListener('click',()=>{if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();});
 document.addEventListener('fullscreenchange',()=>{
   if(!document.fullscreenElement){
     setTimeout(requestFullscreen,2000);
-    // iframe 재생 중이면 다시 오버레이 표시
-    const iframe=document.getElementById('iframe-player');
-    if(iframe.style.display==='block') setTimeout(showIframeOverlay,2500);
-  } else {
-    document.getElementById('iframe-overlay').style.display='none';
-  }
+    if(document.getElementById('iframe-player').style.display==='block')setTimeout(showIframeOverlay,2500);
+  }else{document.getElementById('iframe-overlay').style.display='none';}
 });
-document.addEventListener('webkitfullscreenchange',()=>{
-  if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);
-});
+document.addEventListener('webkitfullscreenchange',()=>{if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);});
 
-// ── 상태 업데이트 ──
-async function measurePing(){
-  const start=Date.now();
-  try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}
-  catch(e){return -1;}
-}
+async function measurePing(){const start=Date.now();try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}catch(e){return-1;}}
 async function updateStatus(){
   if(!SCREEN_ID)return;
-  try{
-    const ping=await measurePing();
-    await db.collection('screens').doc(SCREEN_ID).set({
-      status:'online',lastSeen:new Date().toISOString(),network:ping,
-    },{merge:true});
-  }catch(e){console.error(e);}
+  try{const ping=await measurePing();await db.collection('screens').doc(SCREEN_ID).set({status:'online',lastSeen:new Date().toISOString(),network:ping},{merge:true});}catch(e){console.error(e);}
 }
-
-// ── HUD 토글 (5번 탭) ──
 let tapCount=0;
-document.addEventListener('click',()=>{
-  tapCount++;
-  if(tapCount>=5){tapCount=0;document.getElementById('hud').classList.toggle('visible');}
-});
-
-// ── 온/오프라인 ──
+document.addEventListener('click',()=>{tapCount++;if(tapCount>=5){tapCount=0;document.getElementById('hud').classList.toggle('visible');}});
 window.addEventListener('offline',()=>document.getElementById('offline-overlay').classList.add('show'));
-window.addEventListener('online', ()=>document.getElementById('offline-overlay').classList.remove('show'));
-
-// ── visibility 변경 시 즉시 명령 확인 ──
+window.addEventListener('online',()=>document.getElementById('offline-overlay').classList.remove('show'));
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')fetchCommand();});
-document.addEventListener('fullscreenchange',()=>setTimeout(fetchCommand,500));
-document.addEventListener('webkitfullscreenchange',()=>setTimeout(fetchCommand,500));
 
-// ── 긴급 공지 배너 ──
-let noticeTimer = null;
-function showNoticeBanner(text, duration){
-  const banner = document.getElementById('notice-banner');
-  document.getElementById('notice-text').textContent = text;
-  banner.style.display = 'block';
-  if(noticeTimer) clearTimeout(noticeTimer);
-  if(duration > 0){
-    noticeTimer = setTimeout(()=>{
-      banner.style.display = 'none';
-    }, duration * 1000);
+function showCmdToast(msg){const el=document.getElementById('cmd-toast');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+
+window.addEventListener('resize',()=>{
+  const el=document.getElementById('text-player');
+  if(el&&el.style.display==='flex'){
+    const inner=el.querySelector('[style*="transform:scale"]');if(!inner)return;
+    const W=1080,H=1920,sw=el.clientWidth||window.innerWidth,sh=el.clientHeight||window.innerHeight;
+    const scale=Math.min(sw/W,sh/H);
+    inner.style.transform='scale('+scale+')';
+    inner.style.top=Math.round((sh-H*scale)/2)+'px';
+    inner.style.left=Math.round((sw-W*scale)/2)+'px';
   }
-}
-
-// ── 토스트 ──
-function showCmdToast(msg){
-  const el=document.getElementById('cmd-toast');
-  el.textContent=msg;el.style.display='block';
-  setTimeout(()=>el.style.display='none',3000);
-}
+});
 
 startPlayer();
 
-// ════════════════════════════════════
-// 템플릿 렌더러
-// ════════════════════════════════════
 var PL_FONT="'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
 var PL_MONO="'SFMono-Regular',ui-monospace,monospace";
 var PL_SHELL='width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:'+PL_FONT+';box-sizing:border-box';
@@ -727,6 +583,566 @@ function plRenderEditorial(d){
 }
 
 
+function plRenderNeon(d){
+  const a=d.accent,rows=plInfoRows(d);
+  const glow=`0 0 20px ${a},0 0 60px ${a},0 0 120px ${a}`;
+  return `<div style="${PL_SHELL};background:#05060a;padding:90px 80px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div style="text-align:center">
+      <div style="font-size:34px;font-weight:700;letter-spacing:12px;color:${a};text-shadow:${glow};font-family:${PL_MONO};margin-bottom:60px">${(d.storeName||'STORE').toUpperCase()}</div>
+      <div style="width:80%;height:2px;background:${a};margin:0 auto 60px;box-shadow:${glow}"></div>
+      <div style="color:${d.titleColor||'#fff'};font-size:120px;font-weight:900;line-height:1.1;word-break:keep-all;text-shadow:0 0 40px rgba(255,255,255,0.3)">${d.title||'타이틀'}</div>
+      ${plHasBadge(d)?`<div style="margin-top:50px"><span style="border:3px solid ${a};color:${a};font-size:50px;font-weight:800;padding:16px 50px;border-radius:999px;box-shadow:${glow};letter-spacing:3px">${d.badge}</span></div>`:''}
+      <div style="margin-top:60px;color:${d.contentColor||'rgba(255,255,255,0.75)'};font-size:50px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:60px;display:flex;flex-direction:column;gap:20px;align-items:center">${plInfoChip(rows,a,d.infoColor)}</div>`:''}
+      <div style="margin-top:60px">${plLogoHtml(d,90,'#333',true)}</div>
+    </div>
+  </div>`;
+}
+
+// 08. 그라디언트 — 세로 그라디언트 배경
+function plRenderGradient(d){
+  const a=d.accent,rows=plInfoRows(d);
+  const rgb=a.replace('#','');
+  const r=parseInt(rgb.slice(0,2),16),g=parseInt(rgb.slice(2,4),16),b=parseInt(rgb.slice(4,6),16);
+  const dark=`rgb(${Math.round(r*0.3)},${Math.round(g*0.3)},${Math.round(b*0.3)})`;
+  return `<div style="${PL_SHELL};background:linear-gradient(160deg,${dark} 0%,${a} 50%,${dark} 100%);padding:100px 90px;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:32px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:8px;margin-bottom:40px">${d.storeName||'상호명'}</div>
+      <div style="color:${d.titleColor||'#fff'};font-size:130px;font-weight:900;line-height:1.0;word-break:keep-all;letter-spacing:-2px">${d.title||'타이틀'}</div>
+      ${plHasBadge(d)?`<div style="margin-top:50px"><span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);color:#fff;font-size:50px;font-weight:800;padding:20px 56px;border-radius:20px;display:inline-block;border:1px solid rgba(255,255,255,0.3)">${d.badge}</span></div>`:''}
+      <div style="margin-top:60px;color:${d.contentColor||'rgba(255,255,255,0.85)'};font-size:54px;line-height:1.55;white-space:pre-wrap">${d.content||''}</div>
+    </div>
+    ${rows.length?`<div style="border-top:1px solid rgba(255,255,255,0.25);padding-top:50px;display:flex;flex-direction:column;gap:24px">${plInfoDot(rows,a,'rgba(255,255,255,0.6)','#fff',d.infoColor)}</div>`:''}
+    <div style="margin-top:50px">${plLogoHtml(d,90,'rgba(255,255,255,0.4)',true)}</div>
+  </div>`;
+}
+
+// 09. 스플릿 — 좌우 완전 분할
+function plRenderSplit(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};display:flex;flex-direction:column">
+    <div style="flex:1;background:${a};padding:80px 70px;display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="font-size:30px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:6px;margin-bottom:30px">${d.storeName||'상호명'}</div>
+      <div style="color:${d.titleColor||'#fff'};font-size:120px;font-weight:900;line-height:1.05;word-break:keep-all">${d.title||'타이틀'}</div>
+      ${plHasBadge(d)?`<div style="margin-top:40px"><span style="background:#fff;color:${a};font-size:48px;font-weight:900;padding:16px 44px;border-radius:14px;display:inline-block">${d.badge}</span></div>`:''}
+    </div>
+    <div style="flex:1;background:#ffffff;padding:80px 70px;display:flex;flex-direction:column;justify-content:center">
+      <div style="color:${d.contentColor||'#2d3436'};font-size:56px;line-height:1.55;white-space:pre-wrap;flex:1">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:50px;display:flex;flex-direction:column;gap:20px">${plInfoSoft(rows,a,d.infoColor)}</div>`:''}
+      <div style="margin-top:40px">${plLogoHtml(d,90,'#ddd',false)}</div>
+    </div>
+  </div>`;
+}
+
+// 10. 타임테이블 — 시간표/스케줄 특화
+function plRenderTimetable(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#0a0e1a;padding:80px;display:flex;flex-direction:column">
+    <div style="background:${a};border-radius:20px;padding:40px 60px;margin-bottom:60px;text-align:center">
+      <div style="color:rgba(255,255,255,0.8);font-size:28px;font-weight:600;letter-spacing:6px;margin-bottom:10px">${d.storeName||'상호명'}</div>
+      <div style="color:#fff;font-size:100px;font-weight:900;line-height:1.1;word-break:keep-all">${d.title||'타이틀'}</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:24px">
+      ${rows.map(r=>`<div style="display:flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:30px 40px;gap:30px">
+        <div style="background:${a};width:14px;height:14px;border-radius:999px;flex-shrink:0;box-shadow:0 0 12px ${a}"></div>
+        <div style="color:${d.infoColor||'rgba(255,255,255,0.6)'};font-size:34px;font-weight:600;width:120px;flex-shrink:0">${r.k}</div>
+        <div style="color:#fff;font-size:46px;font-weight:700">${r.v}</div>
+      </div>`).join('')}
+      ${!rows.length?`<div style="color:${d.contentColor||'rgba(255,255,255,0.7)'};font-size:54px;line-height:1.6;white-space:pre-wrap;padding:40px">${d.content||''}</div>`:`<div style="color:${d.contentColor||'rgba(255,255,255,0.5)'};font-size:44px;line-height:1.6;white-space:pre-wrap;padding:0 10px;margin-top:20px">${d.content||''}</div>`}
+    </div>
+    <div style="margin-top:60px;display:flex;justify-content:center">${plLogoHtml(d,90,'#333',true)}</div>
+  </div>`;
+}
+
+// 11. 미니멀 — 극도로 심플한 타이포그라피
+function plRenderMinimal(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#fafafa;padding:120px 100px;display:flex;flex-direction:column;justify-content:space-between">
+    <div>
+      <div style="width:60px;height:6px;background:${a};border-radius:3px;margin-bottom:60px"></div>
+      <div style="color:${d.titleColor||'#111'};font-size:128px;font-weight:900;line-height:1.0;letter-spacing:-3px;word-break:keep-all">${d.title||'타이틀'}</div>
+    </div>
+    <div>
+      ${plHasBadge(d)?`<div style="margin-bottom:40px"><span style="background:${a};color:#fff;font-size:44px;font-weight:700;padding:14px 40px;border-radius:8px">${d.badge}</span></div>`:''}
+      <div style="color:${d.contentColor||'#555'};font-size:52px;line-height:1.65;white-space:pre-wrap;border-left:4px solid ${a};padding-left:40px">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:60px;display:flex;flex-direction:column;gap:16px">${plInfoLine(rows,'#999','#111','#ddd',d.infoColor)}</div>`:''}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="color:#999;font-size:32px;letter-spacing:4px;font-family:${PL_MONO}">${d.storeName||'상호명'}</div>
+      ${plLogoHtml(d,70,'#ccc',false)}
+    </div>
+  </div>`;
+}
+
+// 12. 레트로 — 복고풍 디자인
+function plRenderRetro(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#fdf8ee;padding:80px;display:flex;flex-direction:column;align-items:center">
+    <div style="border:8px solid #1a1a1a;border-radius:0;width:100%;flex:1;padding:70px;display:flex;flex-direction:column;align-items:center;position:relative">
+      <div style="position:absolute;top:-1px;left:40px;right:40px;height:8px;background:#1a1a1a"></div>
+      <div style="position:absolute;bottom:-1px;left:40px;right:40px;height:8px;background:#1a1a1a"></div>
+      <div style="font-size:28px;font-weight:700;letter-spacing:14px;color:#1a1a1a;text-transform:uppercase;margin-bottom:30px">${d.storeName||'STORE'}</div>
+      <div style="width:100%;height:4px;background:${a};margin-bottom:50px"></div>
+      ${plHasBadge(d)?`<div style="background:${a};color:#fff;font-size:44px;font-weight:900;padding:14px 50px;margin-bottom:50px;letter-spacing:4px">${d.badge}</div>`:''}
+      <div style="color:${d.titleColor||'#1a1a1a'};font-size:108px;font-weight:900;line-height:1.1;text-align:center;word-break:keep-all;flex:1;display:flex;align-items:center">${d.title||'타이틀'}</div>
+      <div style="width:100%;height:4px;background:${a};margin:50px 0"></div>
+      <div style="color:${d.contentColor||'#444'};font-size:48px;line-height:1.6;white-space:pre-wrap;text-align:center">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:50px;display:flex;flex-direction:column;gap:20px;width:100%;align-items:center">${plInfoChip(rows,a,d.infoColor)}</div>`:''}
+      <div style="margin-top:50px">${plLogoHtml(d,80,'#ccc',false)}</div>
+    </div>
+  </div>`;
+}
+
+// 13. 스포츠보드 — 스코어보드 스타일
+function plRenderSports(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#0d1117;display:flex;flex-direction:column">
+    <div style="background:${a};padding:50px 70px;display:flex;align-items:center;justify-content:space-between">
+      <div style="color:#fff;font-size:38px;font-weight:800;letter-spacing:4px">${d.storeName||'상호명'}</div>
+      <div style="background:rgba(0,0,0,0.3);color:#fff;font-size:28px;font-weight:700;padding:10px 24px;border-radius:8px;letter-spacing:3px;font-family:${PL_MONO}">${plKindEn(d)}</div>
+    </div>
+    <div style="flex:1;padding:80px 70px;display:flex;flex-direction:column;justify-content:center">
+      <div style="color:${d.titleColor||'#fff'};font-size:130px;font-weight:900;line-height:1.0;word-break:keep-all;letter-spacing:-2px">${d.title||'타이틀'}</div>
+      ${plHasBadge(d)?`<div style="margin-top:40px"><span style="background:${a};color:#fff;font-size:56px;font-weight:900;padding:18px 54px;border-radius:10px;display:inline-block;letter-spacing:2px">${d.badge}</span></div>`:''}
+      <div style="margin-top:50px;color:${d.contentColor||'#8899aa'};font-size:50px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+    </div>
+    ${rows.length?`<div style="background:#161b22;border-top:2px solid ${a};padding:40px 70px;display:flex;gap:0">${rows.map((r,i)=>`<div style="flex:1;${i>0?'border-left:1px solid #30363d;padding-left:50px':''};padding-right:30px"><div style="color:${d.infoColor||'#8899aa'};font-size:28px;font-weight:600;letter-spacing:4px;margin-bottom:8px">${r.k}</div><div style="color:#fff;font-size:44px;font-weight:700">${r.v}</div></div>`).join('')}</div>`:''}
+    <div style="padding:30px 70px;display:flex;justify-content:flex-end">${plLogoHtml(d,70,'#333',true)}</div>
+  </div>`;
+}
+
+// 14. 카페메뉴 — 따뜻한 카페 스타일
+function plRenderCafe(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#2c1810;padding:90px 80px;display:flex;flex-direction:column;align-items:center">
+    <div style="text-align:center;margin-bottom:60px">
+      <div style="font-size:36px;color:${a};letter-spacing:8px;font-weight:700;margin-bottom:20px">${d.storeName||'상호명'}</div>
+      <div style="width:120px;height:2px;background:${a};margin:0 auto 20px"></div>
+      <div style="font-size:26px;color:rgba(255,255,255,0.5);letter-spacing:4px;font-family:${PL_MONO}">${plKindEn(d)}</div>
+    </div>
+    ${plHasBadge(d)?`<div style="background:${a};color:#fff;font-size:46px;font-weight:800;padding:16px 50px;border-radius:999px;margin-bottom:50px">${d.badge}</div>`:''}
+    <div style="color:${d.titleColor||'#f5e6c8'};font-size:112px;font-weight:800;line-height:1.1;text-align:center;word-break:keep-all;flex:1;display:flex;align-items:center">${d.title||'타이틀'}</div>
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.15);margin:50px 0"></div>
+    <div style="color:${d.contentColor||'rgba(245,230,200,0.75)'};font-size:50px;line-height:1.65;white-space:pre-wrap;text-align:center">${d.content||''}</div>
+    ${rows.length?`<div style="margin-top:50px;display:flex;flex-direction:column;gap:20px;width:100%;align-items:center">${plInfoChip(rows,a,d.infoColor)}</div>`:''}
+    <div style="margin-top:50px">${plLogoHtml(d,80,'#5a3a28',true)}</div>
+  </div>`;
+}
+
+// 15. 시네마틱 — 영화 포스터 스타일
+function plRenderCinematic(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#000;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:80px;background:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,0.95) 100%)">
+      <div style="font-size:26px;color:${a};letter-spacing:10px;font-weight:700;margin-bottom:40px;font-family:${PL_MONO}">${(d.storeName||'상호명').toUpperCase()}</div>
+      <div style="color:${d.titleColor||'#fff'};font-size:140px;font-weight:900;line-height:0.95;letter-spacing:-3px;word-break:keep-all;margin-bottom:50px">${d.title||'타이틀'}</div>
+      ${plHasBadge(d)?`<div style="margin-bottom:40px"><span style="border:2px solid ${a};color:${a};font-size:40px;font-weight:700;padding:12px 40px;letter-spacing:4px">${d.badge}</span></div>`:''}
+      <div style="color:${d.contentColor||'rgba(255,255,255,0.65)'};font-size:46px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+    </div>
+    <div style="background:#111;border-top:1px solid #222;padding:30px 80px;display:flex;align-items:center;justify-content:space-between">
+      ${rows.length?`<div style="display:flex;gap:40px">${rows.map(r=>`<div><div style="color:${d.infoColor||a};font-size:22px;font-weight:600;letter-spacing:3px">${r.k}</div><div style="color:#fff;font-size:34px;font-weight:700">${r.v}</div></div>`).join('')}</div>`:'<div></div>'}
+      ${plLogoHtml(d,60,'#333',true)}
+    </div>
+  </div>`;
+}
+
+// 16. 모노크롬 — 흑백 고급 느낌
+function plRenderMono(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#fff;display:flex">
+    <div style="width:12px;background:#111;flex-shrink:0"></div>
+    <div style="flex:1;padding:90px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:70px">
+        <div style="font-size:24px;font-weight:700;letter-spacing:8px;color:#111">${(d.storeName||'상호명').toUpperCase()}</div>
+        <div style="background:#111;color:#fff;font-size:22px;font-weight:700;padding:8px 20px;letter-spacing:3px">${plKindEn(d)}</div>
+      </div>
+      <div style="flex:1">
+        ${plHasBadge(d)?`<div style="background:${a};color:#fff;font-size:44px;font-weight:800;padding:14px 44px;display:inline-block;margin-bottom:40px">${d.badge}</div>`:''}
+        <div style="color:${d.titleColor||'#111'};font-size:120px;font-weight:900;line-height:1.0;letter-spacing:-2px;word-break:keep-all">${d.title||'타이틀'}</div>
+        <div style="width:80px;height:6px;background:${a};margin:50px 0"></div>
+        <div style="color:${d.contentColor||'#444'};font-size:52px;line-height:1.65;white-space:pre-wrap">${d.content||''}</div>
+      </div>
+      ${rows.length?`<div style="margin-top:auto;padding-top:50px;border-top:2px solid #111;display:flex;flex-direction:column;gap:0">${plInfoLine(rows,'#888','#111','#e0e0e0',d.infoColor)}</div>`:''}
+      <div style="margin-top:50px;display:flex;align-items:center;justify-content:space-between">
+        <div style="width:40px;height:40px;background:${a}"></div>
+        ${plLogoHtml(d,70,'#ccc',false)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// 17. 야간영업 — 야간/심야 영업 알림
+function plRenderNight(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:linear-gradient(180deg,#0a0a1a 0%,#1a1a3a 50%,#0a0a1a 100%);padding:90px 80px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div style="font-size:80px;margin-bottom:40px">🌙</div>
+    <div style="font-size:30px;color:rgba(255,255,255,0.5);letter-spacing:8px;margin-bottom:40px">${d.storeName||'상호명'}</div>
+    ${plHasBadge(d)?`<div style="background:${a};color:#fff;font-size:44px;font-weight:800;padding:14px 50px;border-radius:999px;margin-bottom:40px">${d.badge}</div>`:''}
+    <div style="color:${d.titleColor||'#fff'};font-size:108px;font-weight:900;line-height:1.1;text-align:center;word-break:keep-all">${d.title||'타이틀'}</div>
+    <div style="width:100px;height:2px;background:${a};margin:50px auto;box-shadow:0 0 20px ${a}"></div>
+    <div style="color:${d.contentColor||'rgba(255,255,255,0.7)'};font-size:50px;line-height:1.6;white-space:pre-wrap;text-align:center">${d.content||''}</div>
+    ${rows.length?`<div style="margin-top:60px;display:flex;flex-direction:column;gap:20px;align-items:center">${plInfoChip(rows,a,d.infoColor)}</div>`:''}
+    <div style="margin-top:60px">${plLogoHtml(d,80,'#333',true)}</div>
+  </div>`;
+}
+
+// 18. 할인폭탄 — 강렬한 프로모션
+function plRenderSale(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:${a};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;text-align:center">
+    <div style="font-size:32px;font-weight:700;color:rgba(255,255,255,0.8);letter-spacing:6px;margin-bottom:30px">${d.storeName||'상호명'}</div>
+    ${plHasBadge(d)?`<div style="background:#fff;color:${a};font-size:80px;font-weight:900;padding:20px 60px;border-radius:20px;margin-bottom:40px;display:inline-block;line-height:1.1">${d.badge}</div>`:''}
+    <div style="color:${d.titleColor||'#fff'};font-size:126px;font-weight:900;line-height:1.0;word-break:keep-all;letter-spacing:-2px">${d.title||'타이틀'}</div>
+    <div style="background:rgba(0,0,0,0.15);border-radius:24px;padding:50px 60px;margin-top:60px;max-width:800px;width:100%">
+      <div style="color:${d.contentColor||'rgba(255,255,255,0.9)'};font-size:52px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+    </div>
+    ${rows.length?`<div style="margin-top:50px;display:flex;flex-wrap:wrap;gap:20px;justify-content:center">${rows.map(r=>`<div style="background:rgba(255,255,255,0.2);border-radius:16px;padding:20px 36px;text-align:center"><div style="color:rgba(255,255,255,0.75);font-size:26px">${r.k}</div><div style="color:${d.infoColor||'#fff'};font-size:42px;font-weight:700">${r.v}</div></div>`).join('')}</div>`:''}
+    <div style="margin-top:50px">${plLogoHtml(d,80,'rgba(255,255,255,0.4)',true)}</div>
+  </div>`;
+}
+
+// 19. 웰컴 — 환영/인사 스타일
+function plRenderWelcome(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#fff;display:flex;flex-direction:column;align-items:center;padding:80px;text-align:center">
+    <div style="width:120px;height:120px;border-radius:999px;background:${plTint(a,0.12)};display:flex;align-items:center;justify-content:center;margin-bottom:40px">
+      <div style="font-size:60px">👋</div>
+    </div>
+    <div style="font-size:36px;color:${a};font-weight:700;letter-spacing:6px;margin-bottom:20px">${d.storeName||'상호명'}</div>
+    <div style="width:60px;height:4px;background:${a};border-radius:2px;margin-bottom:50px"></div>
+    <div style="color:${d.titleColor||'#1a1a2e'};font-size:108px;font-weight:900;line-height:1.1;word-break:keep-all;flex:1;display:flex;align-items:center">${d.title||'타이틀'}</div>
+    ${plHasBadge(d)?`<div style="background:${plTint(a,0.1)};border:2px solid ${a};color:${a};font-size:46px;font-weight:800;padding:16px 50px;border-radius:999px;margin:40px 0">${d.badge}</div>`:''}
+    <div style="color:${d.contentColor||'#555'};font-size:50px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+    ${rows.length?`<div style="margin-top:50px;display:flex;flex-direction:column;gap:14px;width:100%">${plInfoSoft(rows,a,d.infoColor)}</div>`:''}
+    <div style="margin-top:50px">${plLogoHtml(d,80,'#ddd',false)}</div>
+  </div>`;
+}
+
+// 20. 모던스트라이프 — 대각선 스트라이프 포인트
+function plRenderStripe(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#f8f9fa;display:flex;flex-direction:column">
+    <div style="height:260px;background:${a};position:relative;overflow:hidden;flex-shrink:0">
+      <div style="position:absolute;right:-60px;top:0;bottom:0;width:200px;background:#fff;transform:skewX(-8deg)"></div>
+      <div style="position:absolute;right:60px;top:0;bottom:0;width:80px;background:rgba(255,255,255,0.15);transform:skewX(-8deg)"></div>
+      <div style="padding:50px 80px;position:relative;z-index:1">
+        <div style="color:rgba(255,255,255,0.85);font-size:28px;font-weight:700;letter-spacing:6px">${d.storeName||'상호명'}</div>
+        <div style="color:#fff;font-size:36px;font-weight:600;margin-top:12px;letter-spacing:3px;font-family:${PL_MONO}">${plKindEn(d)}</div>
+      </div>
+    </div>
+    <div style="flex:1;padding:70px 80px;display:flex;flex-direction:column">
+      ${plHasBadge(d)?`<div style="margin-bottom:30px"><span style="background:${a};color:#fff;font-size:42px;font-weight:800;padding:12px 40px;border-radius:8px">${d.badge}</span></div>`:''}
+      <div style="color:${d.titleColor||'#111'};font-size:116px;font-weight:900;line-height:1.05;word-break:keep-all">${d.title||'타이틀'}</div>
+      <div style="width:60px;height:5px;background:${a};margin:40px 0"></div>
+      <div style="color:${d.contentColor||'#444'};font-size:50px;line-height:1.6;white-space:pre-wrap;flex:1">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:auto;padding-top:40px;display:flex;flex-direction:column;gap:14px">${plInfoSoft(rows,a,d.infoColor)}</div>`:''}
+      <div style="margin-top:40px;display:flex;align-items:center;justify-content:space-between">
+        <div style="width:30px;height:30px;background:${a};transform:rotate(45deg)"></div>
+        ${plLogoHtml(d,70,'#ddd',false)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// 21. 갤러리형 — 사진 전시 느낌 (텍스트 중심)
+function plRenderGallery(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#1a1a1a;display:flex;flex-direction:column;padding:60px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:60px">
+      <div style="font-size:24px;color:rgba(255,255,255,0.4);letter-spacing:6px;font-family:${PL_MONO}">${(d.storeName||'상호명').toUpperCase()}</div>
+      <div style="background:${a};width:50px;height:50px;border-radius:0"></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      ${plHasBadge(d)?`<div style="margin-bottom:40px"><span style="border-left:6px solid ${a};color:${a};font-size:44px;font-weight:700;padding-left:24px">${d.badge}</span></div>`:''}
+      <div style="color:${d.titleColor||'#fff'};font-size:124px;font-weight:900;line-height:1.0;letter-spacing:-2px;word-break:keep-all">${d.title||'타이틀'}</div>
+      <div style="width:100%;height:1px;background:rgba(255,255,255,0.15);margin:60px 0"></div>
+      <div style="color:${d.contentColor||'rgba(255,255,255,0.6)'};font-size:50px;line-height:1.65;white-space:pre-wrap">${d.content||''}</div>
+    </div>
+    ${rows.length?`<div style="margin-top:auto;padding-top:50px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:50px">${rows.map(r=>`<div><div style="color:${d.infoColor||a};font-size:24px;font-weight:600;letter-spacing:4px;margin-bottom:8px">${r.k}</div><div style="color:#fff;font-size:40px;font-weight:700">${r.v}</div></div>`).join('')}</div>`:''}
+    <div style="margin-top:40px;display:flex;justify-content:flex-end">${plLogoHtml(d,70,'#444',true)}</div>
+  </div>`;
+}
+
+// 22. 공사중/임시안내 — 특별 상황 공지
+function plRenderNotice(d){
+  const a=d.accent,rows=plInfoRows(d);
+  return `<div style="${PL_SHELL};background:#fff8e1;display:flex;flex-direction:column">
+    <div style="background:${a};padding:0">
+      ${Array.from({length:1},(_,i)=>`<div style="display:flex;overflow:hidden;height:40px">${Array.from({length:20},(_,j)=>`<div style="width:60px;height:40px;background:${(j%2===0)?a:'#000'};flex-shrink:0;transform:skewX(-20deg);margin:0 2px"></div>`).join('')}</div>`).join('')}
+    </div>
+    <div style="flex:1;padding:80px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center">
+      <div style="font-size:70px;margin-bottom:30px">⚠️</div>
+      <div style="font-size:30px;color:#555;letter-spacing:6px;margin-bottom:30px">${d.storeName||'상호명'}</div>
+      ${plHasBadge(d)?`<div style="background:${a};color:#fff;font-size:44px;font-weight:800;padding:14px 50px;border-radius:10px;margin-bottom:40px">${d.badge}</div>`:''}
+      <div style="color:${d.titleColor||'#1a1a1a'};font-size:104px;font-weight:900;line-height:1.1;word-break:keep-all">${d.title||'타이틀'}</div>
+      <div style="width:80px;height:4px;background:${a};margin:40px auto"></div>
+      <div style="color:${d.contentColor||'#555'};font-size:50px;line-height:1.6;white-space:pre-wrap">${d.content||''}</div>
+      ${rows.length?`<div style="margin-top:50px;display:flex;flex-direction:column;gap:16px;width:100%">${plInfoSoft(rows,a,d.infoColor)}</div>`:''}
+      <div style="margin-top:50px">${plLogoHtml(d,80,'#ddd',false)}</div>
+    </div>
+    <div style="background:${a};padding:0">
+      ${Array.from({length:1},(_,i)=>`<div style="display:flex;overflow:hidden;height:40px">${Array.from({length:20},(_,j)=>`<div style="width:60px;height:40px;background:${(j%2===0)?a:'#000'};flex-shrink:0;transform:skewX(-20deg);margin:0 2px"></div>`).join('')}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── 편집기 상태 관리
+function sgSet(patch){
+  sgData=Object.assign({},sgData,patch);
+  sgRefreshUI();
+  sgRenderPreview();
+}
+function sgToggle(key){
+  sgData[key]=!sgData[key];
+  sgRefreshUI();
+  sgRenderPreview();
+}
+function sgRefreshUI(){
+  const d=sgData;
+  // 기본 필드
+  ['storeName','title','content','start','end','open','close','phone','badge'].forEach(k=>{
+    const el=document.getElementById('sg-'+k);
+    if(el&&el.value!==d[k]) el.value=d[k]||'';
+  });
+  // kind 버튼
+  document.getElementById('sg-kind-notice')?.classList.toggle('sg-kind-active',d.kind==='공지사항');
+  document.getElementById('sg-kind-event')?.classList.toggle('sg-kind-active',d.kind==='이벤트');
+  // 로고 상태 동기화
+  const logoPreview=document.getElementById('sg-logo-preview');
+  const logoLabel=document.getElementById('sg-logo-upload-label');
+  const logoImg=document.getElementById('sg-logo-img');
+  if(logoPreview&&logoLabel&&logoImg){
+    if(d.logo){
+      logoImg.src=d.logo;
+      logoPreview.style.display='block';
+      logoLabel.style.display='none';
+      const st=document.getElementById('sg-logo-status');
+      if(st&&st.textContent==='처리 중...') st.textContent='로고 적용됨 ✓';
+    }else{
+      logoPreview.style.display='none';
+      logoLabel.style.display='flex';
+    }
+  }
+  // 토글들
+  ['periodOn','hoursOn','daysOn','phoneOn','badgeOn'].forEach(k=>{
+    const tog=document.getElementById('sg-tog-'+k);
+    const body=document.getElementById('sg-body-'+k);
+    const lbl=document.getElementById('sg-lbl-'+k);
+    if(tog){tog.className='sg-toggle '+(d[k]?'on':'off');}
+    if(body){body.style.display=d[k]?'block':'none';}
+    if(lbl){lbl.style.color=d[k]?'var(--text-primary)':'var(--text-muted)';}
+  });
+  // 요일 버튼
+  const dayWrap=document.getElementById('sg-days-btns');
+  if(dayWrap){
+    dayWrap.innerHTML=SG_WD.map((w,i)=>`<button class="sg-day-btn ${d.days[i]?'on':''}" onclick="sgToggleDay(${i})">${w}</button>`).join('');
+  }
+  // 컬러 스와치
+  const sw=document.getElementById('sg-color-swatches');
+  if(sw){
+    sw.innerHTML=SG_PRESET_COLORS.map(c=>`<div class="sg-swatch ${d.accent.toLowerCase()===c.toLowerCase()?'active':''}" style="background:${c}" onclick="sgSet({accent:'${c}'})"></div>`).join('')
+      +`<label style="width:30px;height:30px;border-radius:7px;cursor:pointer;position:relative;overflow:hidden;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px">+<input type="color" value="${d.accent}" oninput="sgSet({accent:this.value})" style="position:absolute;inset:0;opacity:0;cursor:pointer"/></label>`;
+  }
+  // 폰트 색상 스와치
+  function renderFontSwatches(containerId, prop){
+    const el=document.getElementById(containerId);
+    if(!el)return;
+    el.innerHTML=PL_FONT_COLORS.map(c=>`
+      <div onclick="sgSet({${prop}:'${c.v}'})" title="${c.label}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+        <div style="width:28px;height:28px;border-radius:6px;background:${c.v||'transparent'};border:2px solid ${(d[prop]===c.v)?'#fff':'var(--border)'};${c.v===''?'background:repeating-conic-gradient(#444 0% 25%,#222 0% 50%) 50%/8px 8px':''}"></div>
+        <span style="font-size:9px;color:var(--text-muted)">${c.label}</span>
+      </div>`).join('');
+  }
+  renderFontSwatches('sg-title-color-swatches','titleColor');
+  renderFontSwatches('sg-content-color-swatches','contentColor');
+  renderFontSwatches('sg-info-color-swatches','infoColor');
+  // 템플릿 바
+  const bar=document.getElementById('sg-tpl-bar');
+  if(bar){
+    const W=72, scale=W/1080;
+    bar.innerHTML=SG_TEMPLATES.map(t=>`
+      <button class="sg-tpl-thumb ${t.id===sgTplId?'active':''}" style="width:${W+4}px;height:${W*(1920/1080)+4}px" onclick="sgSelectTpl('${t.id}')" title="${t.name}">
+        <div style="width:1080px;height:1920px;transform:scale(${scale});transform-origin:top left;pointer-events:none">
+          ${t.render(d)}
+        </div>
+        <span class="sg-tpl-label">${t.name}</span>
+      </button>`).join('');
+  }
+}
+function sgToggleDay(i){
+  const nd=[...sgData.days]; nd[i]=!nd[i]; sgSet({days:nd});
+}
+function sgSelectTpl(id){
+  sgTplId=id;
+  sgRefreshUI();
+  sgRenderPreview();
+}
+function sgRenderPreview(){
+  const root=document.getElementById('sg-preview-root');
+  if(!root)return;
+  const tpl=SG_TEMPLATES.find(t=>t.id===sgTplId)||SG_TEMPLATES[0];
+  root.innerHTML=tpl.render(sgData);
+  // 9:16 비율 스케일 피팅
+  const stage=document.getElementById('sg-stage');
+  if(stage){
+    const pad=40;
+    const sw=stage.clientWidth-pad, sh=stage.clientHeight-pad;
+    // 9:16 = 1080:1920 — 가로/세로 중 더 제약이 큰 쪽 기준
+    sgScale=Math.min(sw/1080, sh/1920);
+  }
+  const wrap=document.getElementById('sg-preview-wrap');
+  const inner=document.getElementById('sg-preview-inner');
+  if(wrap&&inner){
+    const w=Math.round(1080*sgScale), h=Math.round(1920*sgScale);
+    wrap.style.width=w+'px';
+    wrap.style.height=h+'px';
+    wrap.style.aspectRatio='9/16';
+    wrap.style.overflow='hidden';
+    inner.style.transform=`scale(${sgScale})`;
+  }
+}
+
+
+// ── 공지 편집기 모바일 탭 ──
+function sgMobileTab(tab){
+  const isMob=window.innerWidth<=768;
+  if(!isMob)return;
+  const panel=document.getElementById('sg-panel');
+  const stage=document.querySelector('#modal-signage-editor > div > div:last-child > div:last-child');
+  const tplBar=document.getElementById('sg-tpl-bar');
+  const editBtn=document.getElementById('sg-mtab-edit');
+  const prevBtn=document.getElementById('sg-mtab-preview');
+  if(tab==='edit'){
+    if(panel){panel.style.display='flex';}
+    if(stage){stage.style.display='none';}
+    if(tplBar){tplBar.parentElement.style.display='none';}
+    editBtn.style.background='var(--accent-blue)';editBtn.style.color='#000';
+    prevBtn.style.background='transparent';prevBtn.style.color='var(--text-muted)';
+  }else{
+    if(panel){panel.style.display='none';}
+    if(stage){stage.style.display='flex';}
+    if(tplBar){tplBar.parentElement.style.display='flex';}
+    prevBtn.style.background='var(--accent-blue)';prevBtn.style.color='#000';
+    editBtn.style.background='transparent';editBtn.style.color='var(--text-muted)';
+    sgRenderPreview();
+  }
+}
+
+function initSgMobileTabs(){
+  const tabs=document.getElementById('sg-mobile-tabs');
+  if(tabs) tabs.style.display=window.innerWidth<=768?'block':'none';
+}
+
+// ── 편집기 열기/닫기
+function openSignageEditor(){
+  if(!sgData) sgData=Object.assign({},SG_DEFAULT);
+  // 기존 저장된 textConfig 복원
+  const editId=document.getElementById('content-edit-id').value;
+  if(editId){
+    const c=contents.find(x=>x.id===editId);
+    if(c&&c.textConfig&&c.textConfig.sgData){
+      sgData=Object.assign({},SG_DEFAULT,c.textConfig.sgData);
+      sgTplId=c.textConfig.tplId||'classic';
+    }
+  }
+  openModal('modal-signage-editor');
+  setTimeout(()=>{initSgMobileTabs();sgRefreshUI();sgRenderPreview();renderSgPresets();if(window.innerWidth<=768)sgMobileTab('edit');},80);
+}
+
+function saveSignageConfig(){
+  // textConfig에 저장
+  const thumbEl=document.getElementById('sg-preview-root');
+  const tpl=SG_TEMPLATES.find(t=>t.id===sgTplId)||SG_TEMPLATES[0];
+  // mini 썸네일 업데이트
+  const mini=document.getElementById('signage-thumb-mini');
+  if(mini&&thumbEl){
+    const scale=0.185; // 140px / 1920 * (1920/1080)
+    mini.innerHTML=`<div style="width:1080px;height:1920px;transform:scale(${scale});transform-origin:top left;pointer-events:none">${tpl.render(sgData)}</div>`;
+    mini.style.height=Math.round(1920*scale)+'px';
+    document.getElementById('signage-thumb-wrap').style.display='block';
+  }
+  closeModal('modal-signage-editor');
+  showToast('템플릿 저장됨 — 콘텐츠 등록 시 반영됩니다','success');
+}
+
+function getTextConfig(){
+  if(!sgData)return null;
+  return {tplId:sgTplId, sgData:Object.assign({},sgData)};
+}
+function loadTextConfig(tc){
+  if(tc&&tc.sgData){
+    sgData=Object.assign({},SG_DEFAULT,tc.sgData);
+    sgTplId=tc.tplId||'classic';
+  }
+}
+function updateTextPreview(){}
+
+// ══ 로고 업로드 + 배경 자동 제거 ══
+function onSgLogoUpload(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+
+  const statusEl = document.getElementById('sg-logo-status');
+  statusEl.textContent = '배경 제거 중...';
+  document.getElementById('sg-logo-preview').style.display = 'block';
+  document.getElementById('sg-logo-upload-label').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      // Canvas로 배경 제거
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // 코너 4점 평균색 = 배경색 추정
+      function getPixel(x, y){ const i=(y*canvas.width+x)*4; return [data[i],data[i+1],data[i+2],data[i+3]]; }
+      const corners = [
+        getPixel(0,0), getPixel(canvas.width-1,0),
+        getPixel(0,canvas.height-1), getPixel(canvas.width-1,canvas.height-1)
+      ];
+      const bgR = Math.round(corners.reduce((s,c)=>s+c[0],0)/4);
+      const bgG = Math.round(corners.reduce((s,c)=>s+c[1],0)/4);
+      const bgB = Math.round(corners.reduce((s,c)=>s+c[2],0)/4);
+
+      // 배경과 유사한 픽셀 투명처리 (허용 오차 40)
+      const tol = 40;
+      for(let i=0; i<data.length; i+=4){
+        const dr=Math.abs(data[i]-bgR), dg=Math.abs(data[i+1]-bgG), db=Math.abs(data[i+2]-bgB);
+        if(dr<tol && dg<tol && db<tol){
+          // 배경에 가까울수록 더 투명하게 (부드러운 엣지)
+          const dist = Math.sqrt(dr*dr+dg*dg+db*db);
+          const alpha = Math.min(1, (dist/tol)*1.5);
+          data[i+3] = Math.round(data[i+3]*alpha);
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      const result = canvas.toDataURL('image/png');
+      document.getElementById('sg-logo-img').src = result;
+      statusEl.textContent = '배경 제거 완료 ✓';
+      sgSet({logo: result});
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeSgLogo(){
+  document.getElementById('sg-logo-preview').style.display = 'none';
+  document.getElementById('sg-logo-upload-label').style.display = 'flex';
+  document.getElementById('sg-logo-input').value = '';
+  sgSet({logo: null});
+}
+
+
+
 var PL_RENDERERS={
   classic:plRenderClassic,banner:plRenderBanner,dark:plRenderDark,
   pop:plRenderPop,soft:plRenderSoft,editorial:plRenderEditorial,
@@ -738,44 +1154,7 @@ var PL_RENDERERS={
   notice:plRenderNotice
 };
 
-function playText(tc,duration){
-  var el=document.getElementById('text-player');
-  document.getElementById('standby').style.display='none';
-  el.style.display='flex';
-  el.style.alignItems='center';
-  el.style.justifyContent='center';
-  var html='';
-  if(tc&&tc.tplId&&tc.sgData){
-    var fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
-    html=fn(tc.sgData);
-  }else{
-    html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;margin:auto">'+((tc&&tc.body)||'')+'</div>';
-  }
-  var W=1080,H=1920;
-  var sw=el.clientWidth||window.innerWidth;
-  var sh=el.clientHeight||window.innerHeight;
-  var scale=Math.min(sw/W,sh/H);
-  var tx=Math.round((sw-W*scale)/2);
-  var ty=Math.round((sh-H*scale)/2);
-  el.innerHTML='<div style="width:'+W+'px;height:'+H+'px;transform:scale('+scale+');transform-origin:top left;position:absolute;top:'+ty+'px;left:'+tx+'px">'+html+'</div>';
-  playTimer=setTimeout(function(){playNext();},duration);
-}
-
-window.addEventListener('resize',function(){
-  var el=document.getElementById('text-player');
-  if(el&&el.style.display==='flex'){
-    var inner=el.querySelector('[style*="transform:scale"]');
-    if(!inner)return;
-    var W=1080,H=1920;
-    var sw=el.clientWidth||window.innerWidth;
-    var sh=el.clientHeight||window.innerHeight;
-    var scale=Math.min(sw/W,sh/H);
-    inner.style.transform='scale('+scale+')';
-    inner.style.top=Math.round((sh-H*scale)/2)+'px';
-    inner.style.left=Math.round((sw-W*scale)/2)+'px';
-  }
-});
-
 </script>
+
 </body>
 </html>
