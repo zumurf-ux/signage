@@ -37,9 +37,9 @@ body.rotate-180 #player{transform:rotate(180deg)}
 
 /* 미디어 플레이어 */
 #img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
-#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:#000}
 #video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:#000}
 
 /* 진행바 */
 #progress-bar{display:none}
@@ -64,8 +64,8 @@ body.rotate-180 #player{transform:rotate(180deg)}
     <div class="standby-info" id="standby-info">연결 중...</div>
   </div>
   <img    id="img-player"    src="" alt=""/>
-  <video  id="video-player"  autoplay muted playsinline></video>
   <div id="text-player"></div>
+  <video  id="video-player"  autoplay muted playsinline disablepictureinpicture x5-playsinline webkit-playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
 </div>
@@ -95,6 +95,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let SCREEN_ID = '';
+var baseStandbyInfo='';
 let contentList=[], currentIdx=0, playTimer=null, isPlaying=false, isStandbyForced=false;
 
 // ── 시계 ──
@@ -181,7 +182,8 @@ async function startPlayer(){
     const storeSnap=await db.collection('stores').doc(sc.storeId).get();
     const storeName=storeSnap.exists?storeSnap.data().name:'';
 
-    document.getElementById('standby-info').textContent='◈ '+storeName+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
+    baseStandbyInfo='◈ '+storeName;
+    document.getElementById('standby-info').textContent=baseStandbyInfo+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
     document.getElementById('hud-store').textContent='매장: '+storeName;
     document.getElementById('hud-screen').textContent='사이니지: '+sc.name;
     document.getElementById('hud-screen-id').textContent='ID: '+SCREEN_ID;
@@ -254,7 +256,7 @@ async function fetchCommand(){
         }
         // standby 화면에 운영시간 표시
         document.getElementById('standby-info').innerHTML=
-          (document.getElementById('standby-info').textContent.split('\n')[0]||'')+
+          baseStandbyInfo+
           '<br/><span style="color:var(--accent-yellow);font-size:13px">운영시간 외 · '+storeOpenTime+'~'+storeCloseTime+'</span>';
       }
       currentTimeSlot=slot;
@@ -308,7 +310,6 @@ function playNext(){
   fadeTransition(()=>playContent(c));
 }
 
-
 function playContent(c){
   hideAllPlayers();isPlaying=true;
   const duration=(c.duration||15)*1000;
@@ -329,6 +330,7 @@ function playImage(url,duration){
   el.src=url;el.style.display='block';
   document.getElementById('standby').style.display='none';
   playTimer=setTimeout(()=>playNext(),duration);
+  if(contentList.length){var _n=contentList[(currentIdx)%contentList.length];if(_n&&_n.type==='image'&&_n.url)new Image().src=_n.url;}
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
@@ -495,9 +497,9 @@ function showCmdToast(msg){
 
 startPlayer();
 
-startPlayer();
-
-// ══ 템플릿 렌더러 ══
+// ════════════════════════════════════
+// 템플릿 렌더러
+// ════════════════════════════════════
 var PL_FONT="'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
 var PL_MONO="'SFMono-Regular',ui-monospace,monospace";
 var PL_SHELL='width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:'+PL_FONT+';box-sizing:border-box';
@@ -548,6 +550,9 @@ function plTint(hex,alpha){
 }
 
 // 공통 스타일
+const PL_FONT = "'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
+const PL_MONO = "'SFMono-Regular',ui-monospace,monospace";
+const PL_SHELL = `width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:${PL_FONT};box-sizing:border-box`;
 
 function plInfoChip(rows,a,infoColor){
   if(!rows.length)return '';
