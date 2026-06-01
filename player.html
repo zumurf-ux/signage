@@ -435,30 +435,22 @@ function playImage(url,duration){
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;
-  el.style.display='block';
-  el.style.opacity='0';
   document.getElementById('standby').style.display='none';
 
-  // 안드로이드 오버레이 방지: ended 이벤트 발생 직전에 다음 콘텐츠로 전환
-  el.onloadedmetadata=function(){
-    el.style.opacity='1';
-    // 영상 실제 길이와 설정 duration 중 짧은 것 사용
-    // 영상 끝나기 0.5초 전에 전환 (안드로이드 재생버튼 오버레이 방지)
-    const videoDuration = el.duration ? Math.max((el.duration-0.5)*1000, 500) : duration;
-    const useDuration = Math.min(videoDuration, duration);
-    clearTimeout(playTimer);
-    playTimer=setTimeout(()=>playNext(), useDuration);
-  };
-  el.onended=function(){
-    // ended 이벤트 발생 시 즉시 다음으로 (오버레이 뜨기 전에)
-    clearTimeout(playTimer);
-    playNext();
-  };
+  // 안드로이드 재생버튼 오버레이 완전 차단:
+  // loop=true 로 끝나지 않게 하고, duration 후 타이머로 전환
+  el.loop=true;
+  el.src=url;
+  el.style.display='block';
   el.play().catch(()=>{});
 
-  // fallback: loadedmetadata 안 오면 duration으로 처리
-  playTimer=setTimeout(()=>playNext(), duration);
+  // duration(초) 후 loop 해제하고 다음 콘텐츠로
+  clearTimeout(playTimer);
+  playTimer=setTimeout(()=>{
+    el.loop=false;
+    el.pause();
+    playNext();
+  }, duration);
 }
 function playIframe(url,duration){
   const el=document.getElementById('iframe-player');
@@ -511,7 +503,7 @@ function hideAllPlayers(){
     const el=document.getElementById(id);
     el.style.display='none';
     el.style.opacity='1'; // opacity 초기화
-    if(id==='video-player'){el.pause();el.src='';}
+    if(id==='video-player'){el.loop=false;el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
   document.getElementById('iframe-overlay').style.display='none';
