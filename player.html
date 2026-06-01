@@ -33,10 +33,10 @@ body.rotate-180 #player{transform:rotate(180deg)}
 
 
 /* 미디어 플레이어 */
-#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.35s ease}
-#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.35s ease}
-#iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
-#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;align-items:center;justify-content:center;background:#000;transition:opacity 0.35s ease}
+#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.6s ease}
+#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000;transition:opacity 0.6s ease}
+#iframe-player{display:none;width:100%;height:100%;border:none;background:#000;transition:opacity 0.6s ease}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;align-items:center;justify-content:center;background:#000;transition:opacity 0.6s ease}
 
 /* 진행바 */
 #progress-bar{display:none}
@@ -502,7 +502,7 @@ function showStandby(){
 }
 
 // ── 페이드 ──
-const FADE_MS = 350;
+const FADE_MS = 600; // CSS transition과 동일
 
 function getVisiblePlayers(){
   return ['img-player','video-player','iframe-player','text-player']
@@ -514,30 +514,41 @@ function fadeTransition(cb){
   const visibles = getVisiblePlayers();
 
   if(!visibles.length){
-    // 현재 보이는 요소 없음 (첫 재생 등) → 그냥 실행
+    // 첫 재생: 새 콘텐츠 opacity:0으로 시작 후 fade in
     cb();
+    const newVisibles = getVisiblePlayers();
+    newVisibles.forEach(el=>{ el.style.opacity='0'; });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      newVisibles.forEach(el=>{ el.style.opacity='1'; });
+    }));
     return;
   }
 
-  // 1단계: 현재 보이는 요소들만 opacity:0 으로 fade out
+  // ── 크로스페이드 ──
+  // 1. 구 콘텐츠 fade out 시작
   visibles.forEach(el=>{ el.style.opacity='0'; });
 
+  // 2. 절반 시간 후 새 콘텐츠 준비 (구 콘텐츠가 반쯤 사라진 시점)
   setTimeout(()=>{
-    // 2단계: 이전 요소 숨기고 새 콘텐츠 준비
-    visibles.forEach(el=>{ el.style.opacity='1'; }); // transition 없이 reset
-    cb(); // hideAllPlayers() + 새 playXxx() 호출
+    // 구 콘텐츠 즉시 숨김 (opacity reset)
+    visibles.forEach(el=>{
+      el.style.transition='none';
+      el.style.opacity='1';
+      // transition 복구 (다음 프레임)
+      requestAnimationFrame(()=>{ el.style.transition=''; });
+    });
 
-    // 3단계: 새로 보여진 요소를 opacity:0에서 1로 fade in
+    // 새 콘텐츠 준비 (opacity:0 상태로)
+    cb();
     const newVisibles = getVisiblePlayers();
-    newVisibles.forEach(el=>{
-      el.style.opacity='0';
-    });
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        newVisibles.forEach(el=>{ el.style.opacity='1'; });
-      });
-    });
-  }, FADE_MS);
+    newVisibles.forEach(el=>{ el.style.opacity='0'; });
+
+    // 3. 새 콘텐츠 fade in
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      newVisibles.forEach(el=>{ el.style.opacity='1'; });
+    }));
+
+  }, FADE_MS / 2);
 }
 
 // ── 화면 회전 ──
