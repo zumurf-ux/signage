@@ -460,17 +460,15 @@ function playImage(url,duration){
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
   el.src=url;
-  // 영상이 실제로 재생 가능한 시점에 fade in
-  el.oncanplay=function(){
-    el.oncanplay=null;
-    document.getElementById('standby').style.opacity='0';
-    document.getElementById('standby').style.pointerEvents='none';
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      el.style.opacity='1';
-      el.style.pointerEvents='auto';
-    }));
-  };
+  el.style.opacity='0';
+  document.getElementById('standby').style.opacity='0';
+  document.getElementById('standby').style.pointerEvents='none';
   el.play().catch(()=>{});
+  // 단순 타이머로 fade in (300ms 후 - 버퍼링 대기)
+  setTimeout(()=>{
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+  }, 300);
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
