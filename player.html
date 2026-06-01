@@ -434,26 +434,43 @@ window.addEventListener('resize',()=>{
 });
 function playImage(url,duration){
   const el=document.getElementById('img-player');
+  el.style.display='block';
+  el.onload=function(){
+    el.onload=null;
+    document.getElementById('standby').style.opacity='0';
+    document.getElementById('standby').style.pointerEvents='none';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
+    }));
+  };
   el.src=url;
-  el.style.display='block'; // absolute 레이아웃용 유지
-  document.getElementById('standby').style.opacity='0';
-  document.getElementById('standby').style.pointerEvents='none';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    el.style.opacity='1';
-    el.style.pointerEvents='auto';
-  }));
+  // 캐시된 이미지는 onload 안 발생할 수 있으므로 이미 완료됐으면 즉시 처리
+  if(el.complete && el.naturalWidth>0){
+    el.onload=null;
+    document.getElementById('standby').style.opacity='0';
+    document.getElementById('standby').style.pointerEvents='none';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
+    }));
+  }
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
   el.src=url;
-  document.getElementById('standby').style.opacity='0';
-  document.getElementById('standby').style.pointerEvents='none';
+  // 영상이 실제로 재생 가능한 시점에 fade in
+  el.oncanplay=function(){
+    el.oncanplay=null;
+    document.getElementById('standby').style.opacity='0';
+    document.getElementById('standby').style.pointerEvents='none';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
+    }));
+  };
   el.play().catch(()=>{});
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    el.style.opacity='1';
-    el.style.pointerEvents='auto';
-  }));
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
