@@ -435,22 +435,9 @@ function playImage(url,duration){
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
+  el.src=url;el.style.display='block';el.play().catch(()=>{});
   document.getElementById('standby').style.display='none';
-
-  // 안드로이드 재생버튼 오버레이 완전 차단:
-  // loop=true 로 끝나지 않게 하고, duration 후 타이머로 전환
-  el.loop=true;
-  el.src=url;
-  el.style.display='block';
-  el.play().catch(()=>{});
-
-  // duration(초) 후 loop 해제하고 다음 콘텐츠로
-  clearTimeout(playTimer);
-  playTimer=setTimeout(()=>{
-    el.loop=false;
-    el.pause();
-    playNext();
-  }, duration);
+  playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
   const el=document.getElementById('iframe-player');
@@ -503,7 +490,7 @@ function hideAllPlayers(){
     const el=document.getElementById(id);
     el.style.display='none';
     el.style.opacity='1'; // opacity 초기화
-    if(id==='video-player'){el.loop=false;el.pause();el.src='';}
+    if(id==='video-player'){el.pause();el.src='';}
     if(id==='iframe-player') el.src='';
   });
   document.getElementById('iframe-overlay').style.display='none';
