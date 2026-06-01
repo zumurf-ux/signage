@@ -435,8 +435,21 @@ function playImage(url,duration){
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;el.style.display='block';el.play().catch(()=>{});
+  el.muted=true; // 안드로이드 autoplay 정책: muted 필수
+  el.src=url;
+  el.load(); // 명시적 로드 (안드로이드 일부 브라우저 필요)
+  el.style.display='block';
   document.getElementById('standby').style.display='none';
+  // play() 실패 시 1초 후 재시도
+  const tryPlay=()=>{
+    el.play().catch(e=>{
+      console.warn('play failed, retry...',e);
+      setTimeout(()=>el.play().catch(()=>{}),1000);
+    });
+  };
+  el.onloadeddata ? tryPlay() : (el.onloadeddata=()=>{tryPlay();el.onloadeddata=null;});
+  // fallback: 2초 후에도 안 나오면 강제 시도
+  setTimeout(()=>{if(el.paused)el.play().catch(()=>{});},2000);
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
