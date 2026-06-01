@@ -13,7 +13,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans KR',sans-serif;cursor:none}
-#player{width:100vw;height:100vh;position:relative;background:#000;overflow:hidden}
+#player{width:100vw;height:100vh;position:relative;background:#000}
 
 /* 화면 회전 */
 body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
@@ -21,7 +21,7 @@ body.rotate-270 #player{transform:rotate(270deg);transform-origin:center center;
 body.rotate-180 #player{transform:rotate(180deg)}
 
 /* 대기화면 */
-#standby{display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;overflow:hidden;transition:opacity 0.6s ease;z-index:1}
+#standby{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;position:relative;overflow:hidden}
 #standby::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px);pointer-events:none}
 .standby-logo{font-size:18px;color:rgba(0,170,255,.7);font-family:monospace;letter-spacing:10px;text-transform:uppercase;margin-bottom:8px}
 @keyframes pulse{0%,100%{opacity:1;text-shadow:0 0 20px rgba(0,170,255,.4)}50%{opacity:.7;text-shadow:0 0 40px rgba(0,170,255,.8)}}
@@ -33,10 +33,10 @@ body.rotate-180 #player{transform:rotate(180deg)}
 
 
 /* 미디어 플레이어 */
-#img-player{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#video-player{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#iframe-player{position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#text-player{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;align-items:center;justify-content:center;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
+#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;align-items:center;justify-content:center;background:#000}
 
 /* 진행바 */
 #progress-bar{display:none}
@@ -385,8 +385,7 @@ const PL_RENDERERS={classic:plRenderClassic,banner:plRenderBanner,dark:plRenderD
 
 function playText(tc,duration){
   const el=document.getElementById('text-player');
-  document.getElementById('standby').style.opacity='0';
-  document.getElementById('standby').style.pointerEvents='none';
+  document.getElementById('standby').style.display='none';
 
   el.style.display='flex';
   el.style.alignItems='center';
@@ -408,17 +407,13 @@ function playText(tc,duration){
   const ty=Math.round((sh-H*scale)/2);
 
   el.innerHTML=`<div style="width:${W}px;height:${H}px;transform:scale(${scale});transform-origin:top left;position:absolute;top:${ty}px;left:${tx}px">${html}</div>`;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    el.style.opacity='1';
-    el.style.pointerEvents='auto';
-  }));
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
 // 화면 크기 변경 시 재조정
 window.addEventListener('resize',()=>{
   const el=document.getElementById('text-player');
-  if(parseFloat(el.style.opacity||0)>0&&el.style.display!=='none'){
+  if(el.style.display==='flex'){
     const inner=el.querySelector('[style*="transform:scale"]');
     if(!inner)return;
     const W=1080,H=1920;
@@ -434,41 +429,14 @@ window.addEventListener('resize',()=>{
 });
 function playImage(url,duration){
   const el=document.getElementById('img-player');
-  el.style.display='block';
-  el.onload=function(){
-    el.onload=null;
-    document.getElementById('standby').style.opacity='0';
-    document.getElementById('standby').style.pointerEvents='none';
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      el.style.opacity='1';
-      el.style.pointerEvents='auto';
-    }));
-  };
-  el.src=url;
-  // 캐시된 이미지는 onload 안 발생할 수 있으므로 이미 완료됐으면 즉시 처리
-  if(el.complete && el.naturalWidth>0){
-    el.onload=null;
-    document.getElementById('standby').style.opacity='0';
-    document.getElementById('standby').style.pointerEvents='none';
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      el.style.opacity='1';
-      el.style.pointerEvents='auto';
-    }));
-  }
+  el.src=url;el.style.display='block';
+  document.getElementById('standby').style.display='none';
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;
-  el.style.opacity='0';
-  document.getElementById('standby').style.opacity='0';
-  document.getElementById('standby').style.pointerEvents='none';
-  el.play().catch(()=>{});
-  // 단순 타이머로 fade in (300ms 후 - 버퍼링 대기)
-  setTimeout(()=>{
-    el.style.opacity='1';
-    el.style.pointerEvents='auto';
-  }, 300);
+  el.src=url;el.style.display='block';el.play().catch(()=>{});
+  document.getElementById('standby').style.display='none';
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
@@ -477,14 +445,9 @@ function playIframe(url,duration){
   el.setAttribute('allowfullscreen','');
   el.src='';
   setTimeout(()=>{
-    el.src=url;
-    document.getElementById('standby').style.opacity='0';
-    document.getElementById('standby').style.pointerEvents='none';
+    el.src=url;el.style.display='block';
+    document.getElementById('standby').style.display='none';
     showIframeOverlay();
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      el.style.opacity='1';
-      el.style.pointerEvents='auto';
-    }));
   },100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
@@ -524,10 +487,10 @@ function convertYoutubeUrl(url){
 function hideAllPlayers(){
   ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
-    el.style.opacity='0';
-    el.style.pointerEvents='none';
-    if(id==='video-player'){setTimeout(()=>{el.pause();el.src='';},700);}
-    if(id==='iframe-player'){setTimeout(()=>{el.src='';},700);}
+    el.style.display='none';
+    el.style.opacity='1';
+    if(id==='video-player'){el.pause();el.src='';}
+    if(id==='iframe-player') el.src='';
   });
   document.getElementById('iframe-overlay').style.display='none';
 }
@@ -538,43 +501,26 @@ function showStandby(){
 }
 
 // ── 페이드 ──
-const FADE_MS = 600;
+const FADE_MS = 400;
 
 function getVisiblePlayers(){
   return ['img-player','video-player','iframe-player','text-player']
     .map(id=>document.getElementById(id))
-    .filter(el=>el&&el.style.opacity==='1'||el&&parseFloat(el.style.opacity)>0.5);
+    .filter(el=>el&&el.style.display!=='none');
 }
 
-// 진짜 크로스페이드:
-// 1. 구 콘텐츠 fade out 시작 (0.6s)
-// 2. 동시에 새 콘텐츠 준비
-// 3. 새 콘텐츠 fade in (0.6s)
-// → 두 콘텐츠가 겹치며 부드럽게 전환
 function fadeTransition(cb){
-  // 현재 opacity>0인 플레이어들 fade out
-  const allPlayers = ['img-player','video-player','iframe-player','text-player']
-    .map(id=>document.getElementById(id))
-    .filter(el=>el&&parseFloat(el.style.opacity||0)>0);
-
-  allPlayers.forEach(el=>{
-    el.style.opacity='0';
-    el.style.pointerEvents='none';
-  });
-
-  // 새 콘텐츠는 즉시 준비 (opacity:0 상태로)
-  // 각 playXxx 함수에서 rAF로 fade in 처리
-  cb();
-
-  // 일정 시간 후 구 콘텐츠 리소스 정리
+  const visibles=getVisiblePlayers();
+  if(!visibles.length){cb();return;}
+  visibles.forEach(el=>{el.style.opacity='0';});
   setTimeout(()=>{
-    allPlayers.forEach(el=>{
-      if(parseFloat(el.style.opacity||0)===0){
-        if(el.id==='video-player'){el.pause();el.src='';}
-        if(el.id==='iframe-player'){el.src='';}
-      }
+    visibles.forEach(el=>{
+      el.style.transition='none';
+      el.style.opacity='1';
+      requestAnimationFrame(()=>{el.style.transition='';});
     });
-  }, FADE_MS + 100);
+    cb();
+  },FADE_MS);
 }
 
 // ── 화면 회전 ──
