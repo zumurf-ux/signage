@@ -405,10 +405,6 @@ function plTint(hex,alpha){
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// 공통 스타일
-const PL_FONT = "'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
-const PL_MONO = "'SFMono-Regular',ui-monospace,monospace";
-const PL_SHELL = `width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:${PL_FONT};box-sizing:border-box`;
 
 function plInfoChip(rows,a,infoColor){
   if(!rows.length)return '';
