@@ -1113,14 +1113,9 @@ function applyRotation(orientation){
   if(orientation==='portrait-right') document.body.classList.add('rotate-270');
   if(orientation==='flip')           document.body.classList.add('rotate-180');
   localStorage.setItem('signage_orientation',orientation||'landscape');
-  document.body.style.visibility='visible'; // rotation 적용 후 표시
 }
 const savedOrientation=localStorage.getItem('signage_orientation');
-if(savedOrientation){
-  applyRotation(savedOrientation); // 저장된 방향 즉시 적용
-}else{
-  document.body.style.visibility='visible'; // 저장값 없으면 바로 표시
-}
+if(savedOrientation)applyRotation(savedOrientation);
 
 // ── 전체화면 ──
 function requestFullscreen(){
