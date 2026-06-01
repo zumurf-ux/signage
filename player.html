@@ -304,6 +304,7 @@ function playNext(){
   document.getElementById('hud-content').textContent='콘텐츠: '+c.name;
   document.getElementById('hud-status').textContent='스케줄: '+(getCurrentTimeSlot()||'상시');
   fadeTransition(()=>playContent(c));
+  preloadNextImage();
 }
 
 function playContent(c){
@@ -326,9 +327,38 @@ window.addEventListener('resize',()=>{
 
 function playImage(url,duration){
   const el=document.getElementById('img-player');
-  el.src=url;el.style.display='block';
-  document.getElementById('standby').style.display='none';
+  // 다음 이미지 미리 로드 후 표시 (뚝뚝 끊김 방지)
+  const img=new Image();
+  img.onload=function(){
+    el.src=url;
+    el.style.display='block';
+    document.getElementById('standby').style.display='none';
+  };
+  img.onerror=function(){
+    // 로드 실패해도 그냥 표시
+    el.src=url;
+    el.style.display='block';
+    document.getElementById('standby').style.display='none';
+  };
+  img.src=url;
+  // 이미 캐시된 이미지면 즉시 표시
+  if(img.complete){
+    el.src=url;
+    el.style.display='block';
+    document.getElementById('standby').style.display='none';
+  }
   playTimer=setTimeout(()=>playNext(),duration);
+}
+
+// 다음 이미지 미리 로드 (프리로드)
+function preloadNextImage(){
+  if(!contentList.length) return;
+  const nextIdx=(currentIdx+1)%contentList.length;
+  const next=contentList[nextIdx];
+  if(next&&next.type==='image'&&next.url){
+    const pre=new Image();
+    pre.src=next.url;
+  }
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
