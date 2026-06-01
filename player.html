@@ -16,9 +16,12 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'No
 #player{width:100vw;height:100vh;position:relative;background:#000;transition:opacity 0.5s}
 
 /* 화면 회전 */
-body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
-body.rotate-270 #player{transform:rotate(270deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
-body.rotate-180 #player{transform:rotate(180deg)}
+html.pre-rotate-90  body{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
+html.pre-rotate-270 body{transform:rotate(270deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
+html.pre-rotate-180 body{transform:rotate(180deg)}
+body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2);transition:none!important}
+body.rotate-270 #player{transform:rotate(270deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2);transition:none!important}
+body.rotate-180 #player{transform:rotate(180deg);transition:none!important}
 
 /* 대기화면 */
 #standby{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;position:relative;overflow:hidden}
@@ -53,16 +56,13 @@ body.rotate-180 #player{transform:rotate(180deg)}
 #cmd-toast{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,170,255,.9);color:#000;font-family:monospace;font-size:13px;font-weight:700;padding:10px 24px;border-radius:6px;z-index:300}
 </style>
 <script>
-// 렌더링 전 rotation 즉시 적용 (가로→세로 모션 방지)
+// CSS 파싱 직후 body 렌더링 전에 클래스 추가
 (function(){
   var o=localStorage.getItem('signage_orientation');
-  if(o&&o!=='landscape'){
-    var s=document.createElement('style');
-    if(o==='portrait-left')  s.textContent='body{transform:rotate(90deg);transform-origin:center center;width:100vh!important;height:100vw!important;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}';
-    if(o==='portrait-right') s.textContent='body{transform:rotate(270deg);transform-origin:center center;width:100vh!important;height:100vw!important;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}';
-    if(o==='flip')           s.textContent='body{transform:rotate(180deg)}';
-    document.head.appendChild(s);
-  }
+  if(!o||o==='landscape')return;
+  if(o==='portrait-left')  document.documentElement.className='pre-rotate-90';
+  if(o==='portrait-right') document.documentElement.className='pre-rotate-270';
+  if(o==='flip')           document.documentElement.className='pre-rotate-180';
 })();
 </script>
 </head>
