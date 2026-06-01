@@ -160,12 +160,8 @@ async function loadTimeslotConfig() {
 
 // ── 시작 ──
 async function startPlayer(){
-  var dbg=function(msg){document.getElementById('standby-info').textContent=msg;console.log('[SIGNAGE]',msg);};
-  dbg('시작 중...');
   await loadTimeslotConfig();
-  dbg('설정 로드 완료');
   SCREEN_ID=await resolveScreenId();
-  dbg('Screen ID: '+(SCREEN_ID||'없음'));
   if(!SCREEN_ID){
     document.getElementById('standby-info').innerHTML='⚠ 사이니지 미등록<br/>관리자에서 매장 → 사이니지 추가 후<br/>URL복사 버튼을 눌러 접속하세요';
     return;
@@ -173,17 +169,15 @@ async function startPlayer(){
 
   // 사이니지 + 매장 정보 로드
   try{
-    dbg('Firebase 연결 중...');
+    document.getElementById('standby-info').textContent='Firebase 연결 중...';
     const scSnap=await db.collection('screens').doc(SCREEN_ID).get();
     if(!scSnap.exists){
       document.getElementById('standby-info').innerHTML='<span style="color:#ffc840">⚠ 사이니지 정보 없음</span><br/><small style="font-size:11px">ID: '+SCREEN_ID+'</small>';
       return;
     }
-    dbg('사이니지 정보 로드 완료');
     const sc=scSnap.data();
     const storeSnap=await db.collection('stores').doc(sc.storeId).get();
     const storeName=storeSnap.exists?storeSnap.data().name:'';
-    dbg('매장: '+storeName);
 
     document.getElementById('standby-info').textContent='◈ '+storeName+' · '+sc.name+(sc.location?' ('+sc.location+')':'');
     document.getElementById('hud-store').textContent='매장: '+storeName;
@@ -208,7 +202,6 @@ async function startPlayer(){
   }
 
   // 폴링 시작
-  dbg('플레이리스트 로드 중...');
   fetchPlaylist();
   fetchCommand();
   setInterval(fetchCommand,5000);
@@ -1120,9 +1113,14 @@ function applyRotation(orientation){
   if(orientation==='portrait-right') document.body.classList.add('rotate-270');
   if(orientation==='flip')           document.body.classList.add('rotate-180');
   localStorage.setItem('signage_orientation',orientation||'landscape');
+  document.body.style.visibility='visible'; // rotation 적용 후 표시
 }
 const savedOrientation=localStorage.getItem('signage_orientation');
-if(savedOrientation)applyRotation(savedOrientation);
+if(savedOrientation){
+  applyRotation(savedOrientation); // 저장된 방향 즉시 적용
+}else{
+  document.body.style.visibility='visible'; // 저장값 없으면 바로 표시
+}
 
 // ── 전체화면 ──
 function requestFullscreen(){
