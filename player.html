@@ -325,6 +325,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
 
 /* 미디어 플레이어 */
 #img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:#000}
 #video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
 
@@ -352,6 +353,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
   </div>
   <img    id="img-player"    src="" alt=""/>
   <video  id="video-player"  autoplay muted playsinline></video>
+  <div id="text-player"></div>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
 </div>
@@ -669,7 +671,7 @@ function convertYoutubeUrl(url){
     +'&controls=0&rel=0&modestbranding=1';
 }
 function hideAllPlayers(){
-  ['img-player','video-player','iframe-player'].forEach(id=>{
+  ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
     if(id==='video-player'){el.pause();el.src='';}
