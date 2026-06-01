@@ -61,7 +61,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
     <div class="standby-info" id="standby-info">연결 중...</div>
   </div>
   <img    id="img-player"    src="" alt=""/>
-  <video  id="video-player"  autoplay muted playsinline></video>
+  <video  id="video-player"  autoplay muted playsinline disablepictureinpicture x5-playsinline webkit-playsinline></video>
   <iframe id="iframe-player" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div id="text-player"></div>
   <div id="iframe-overlay" onclick="overlayClick()" style="display:none;position:fixed;inset:0;z-index:999;background:transparent;cursor:pointer"></div>
@@ -435,9 +435,30 @@ function playImage(url,duration){
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;el.style.display='block';el.play().catch(()=>{});
+  el.src=url;
+  el.style.display='block';
+  el.style.opacity='0';
   document.getElementById('standby').style.display='none';
-  playTimer=setTimeout(()=>playNext(),duration);
+
+  // 안드로이드 오버레이 방지: ended 이벤트 발생 직전에 다음 콘텐츠로 전환
+  el.onloadedmetadata=function(){
+    el.style.opacity='1';
+    // 영상 실제 길이와 설정 duration 중 짧은 것 사용
+    // 영상 끝나기 0.5초 전에 전환 (안드로이드 재생버튼 오버레이 방지)
+    const videoDuration = el.duration ? Math.max((el.duration-0.5)*1000, 500) : duration;
+    const useDuration = Math.min(videoDuration, duration);
+    clearTimeout(playTimer);
+    playTimer=setTimeout(()=>playNext(), useDuration);
+  };
+  el.onended=function(){
+    // ended 이벤트 발생 시 즉시 다음으로 (오버레이 뜨기 전에)
+    clearTimeout(playTimer);
+    playNext();
+  };
+  el.play().catch(()=>{});
+
+  // fallback: loadedmetadata 안 오면 duration으로 처리
+  playTimer=setTimeout(()=>playNext(), duration);
 }
 function playIframe(url,duration){
   const el=document.getElementById('iframe-player');
