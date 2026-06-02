@@ -212,7 +212,6 @@ function playContent(c){
   hideAllPlayers();isPlaying=true;
   const duration=(c.duration||15)*1000;
   const type=c.type||'image';
-  console.log('[PLAY] type='+type+' name='+c.name+' textConfig='+(c.textConfig?JSON.stringify(Object.keys(c.textConfig)):'null'));
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
     const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
@@ -220,7 +219,7 @@ function playContent(c){
     else playVideo(c.url,duration);
   }
   else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
-  else{ console.warn('[SKIP] signage but no textConfig',c); playImage(c.url,duration); }
+  else playImage(c.url,duration);
   db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
 }
 
@@ -251,36 +250,39 @@ function playIframe(url,duration){
 
 var PL_FONT="'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
 var PL_MONO="'SFMono-Regular',ui-monospace,monospace";
+var PL_WD=['월','화','수','목','금','토','일'];
 var PL_SHELL='width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:'+PL_FONT+';box-sizing:border-box';
 
-// ── 로고 헬퍼
-function plLogoHtml(d, size, fallColor, dark){
-  if(d.logo){
-    return `<img src="${d.logo}" style="max-height:${size}px;max-width:${size*3.2}px;object-fit:contain;display:block" />`;
-  }
-  const op = dark ? 0.5 : 0.65;
-  return `<div style="height:${size}px;min-width:${size*2.2}px;padding:0 40px;border:3px dashed ${fallColor};border-radius:14px;display:flex;align-items:center;justify-content:center;color:${fallColor};font-size:34px;font-weight:600;letter-spacing:4px;opacity:${op}">LOGO</div>`;
-}
-// ── 템플릿 렌더러 (순수 JS, 1080×1920 div 생성)
 function plDot(s){ return (s||'').replaceAll('-','.'); }
+
+function plTint(hex,alpha){
+  const h=hex.replace('#','');
+  const n=h.length===3?h.split('').map(c=>c+c).join(''):h;
+  const r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function plFmtPeriod(d){
   if(!d.periodOn||(!d.start&&!d.end))return null;
   if(d.start&&d.end)return `${plDot(d.start)} ~ ${plDot(d.end)}`;
   return plDot(d.start)||plDot(d.end);
 }
+
 function plFmtHours(d){
   if(!d.hoursOn||(!d.open&&!d.close))return null;
   return `${d.open||''} ~ ${d.close||''}`.trim();
 }
+
 function plFmtDays(d){
   if(!d.daysOn)return null;
-  const sel=d.days.map((v,i)=>v?SG_WD[i]:null).filter(Boolean);
+  const sel=d.days.map((v,i)=>v?PL_WD[i]:null).filter(Boolean);
   if(!sel.length)return null;
   if(sel.length===7)return '매일';
   if(sel.length===5&&d.days.slice(0,5).every(Boolean))return '평일 (월–금)';
   if(sel.length===2&&d.days[5]&&d.days[6])return '주말 (토·일)';
   return sel.join('·');
 }
+
 function plInfoRows(d){
   const rows=[];
   const p=plFmtPeriod(d);if(p)rows.push({k:'기간',v:p});
@@ -289,15 +291,6 @@ function plInfoRows(d){
   if(d.phoneOn&&d.phone)rows.push({k:'문의',v:d.phone});
   return rows;
 }
-function plHasBadge(d){return d.badgeOn&&d.badge&&d.badge.trim();}
-function plKindEn(d){return d.kind==='이벤트'?'EVENT':'NOTICE';}
-function plTint(hex,alpha){
-  const h=hex.replace('#','');
-  const n=h.length===3?h.split('').map(c=>c+c).join(''):h;
-  const r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
 
 function plInfoChip(rows,a,infoColor){
   if(!rows.length)return '';
@@ -308,6 +301,7 @@ function plInfoChip(rows,a,infoColor){
       <span style="color:${vc};font-size:46px;font-weight:600">${r.v}</span>
     </div>`).join('');
 }
+
 function plInfoDot(rows,a,muted,strong,infoColor){
   if(!rows.length)return '';
   return rows.map(r=>`
@@ -317,6 +311,7 @@ function plInfoDot(rows,a,muted,strong,infoColor){
       <span style="color:${infoColor||strong};font-size:46px;font-weight:600">${r.v}</span>
     </div>`).join('');
 }
+
 function plInfoLine(rows,muted,strong,div,infoColor){
   if(!rows.length)return '';
   return rows.map((r,i)=>`
@@ -325,6 +320,7 @@ function plInfoLine(rows,muted,strong,div,infoColor){
       <span style="color:${infoColor||strong};font-size:46px;font-weight:600">${r.v}</span>
     </div>`).join('');
 }
+
 function plInfoSoft(rows,a,infoColor){
   if(!rows.length)return '';
   return rows.map(r=>`
@@ -334,7 +330,18 @@ function plInfoSoft(rows,a,infoColor){
     </div>`).join('');
 }
 
-// ── 6개 템플릿 렌더러
+function plHasBadge(d){return d.badgeOn&&d.badge&&d.badge.trim();}
+
+function plKindEn(d){return d.kind==='이벤트'?'EVENT':'NOTICE';}
+
+function plLogoHtml(d, size, fallColor, dark){
+  if(d.logo){
+    return `<img src="${d.logo}" style="max-height:${size}px;max-width:${size*3.2}px;object-fit:contain;display:block" />`;
+  }
+  const op = dark ? 0.5 : 0.65;
+  return `<div style="height:${size}px;min-width:${size*2.2}px;padding:0 40px;border:3px dashed ${fallColor};border-radius:14px;display:flex;align-items:center;justify-content:center;color:${fallColor};font-size:34px;font-weight:600;letter-spacing:4px;opacity:${op}">LOGO</div>`;
+}
+
 function plRenderClassic(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#ffffff;padding:120px 100px;display:flex;flex-direction:column;color:#111">
@@ -356,6 +363,7 @@ function plRenderClassic(d){
     </div>
   </div>`;
 }
+
 function plRenderBanner(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#ffffff;display:flex;flex-direction:column">
@@ -376,6 +384,7 @@ function plRenderBanner(d){
     </div>
   </div>`;
 }
+
 function plRenderDark(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#101216;padding:70px">
@@ -401,6 +410,7 @@ function plRenderDark(d){
     </div>
   </div>`;
 }
+
 function plRenderPop(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:${a};padding:90px 80px;display:flex;flex-direction:column">
@@ -419,6 +429,7 @@ function plRenderPop(d){
     </div>
   </div>`;
 }
+
 function plRenderSoft(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:${plTint(a,0.1)};padding:80px;display:flex">
@@ -443,6 +454,7 @@ function plRenderSoft(d){
     </div>
   </div>`;
 }
+
 function plRenderEditorial(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#f7f6f3;display:flex">
@@ -471,7 +483,6 @@ function plRenderEditorial(d){
   </div>`;
 }
 
-
 function plRenderNeon(d){
   const a=d.accent,rows=plInfoRows(d);
   const glow=`0 0 20px ${a},0 0 60px ${a},0 0 120px ${a}`;
@@ -488,7 +499,6 @@ function plRenderNeon(d){
   </div>`;
 }
 
-// 08. 그라디언트 — 세로 그라디언트 배경
 function plRenderGradient(d){
   const a=d.accent,rows=plInfoRows(d);
   const rgb=a.replace('#','');
@@ -506,7 +516,6 @@ function plRenderGradient(d){
   </div>`;
 }
 
-// 09. 스플릿 — 좌우 완전 분할
 function plRenderSplit(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};display:flex;flex-direction:column">
@@ -523,7 +532,6 @@ function plRenderSplit(d){
   </div>`;
 }
 
-// 10. 타임테이블 — 시간표/스케줄 특화
 function plRenderTimetable(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#0a0e1a;padding:80px;display:flex;flex-direction:column">
@@ -543,7 +551,6 @@ function plRenderTimetable(d){
   </div>`;
 }
 
-// 11. 미니멀 — 극도로 심플한 타이포그라피
 function plRenderMinimal(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#fafafa;padding:120px 100px;display:flex;flex-direction:column;justify-content:space-between">
@@ -563,7 +570,6 @@ function plRenderMinimal(d){
   </div>`;
 }
 
-// 12. 레트로 — 복고풍 디자인
 function plRenderRetro(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#fdf8ee;padding:80px;display:flex;flex-direction:column;align-items:center">
@@ -582,7 +588,6 @@ function plRenderRetro(d){
   </div>`;
 }
 
-// 13. 스포츠보드 — 스코어보드 스타일
 function plRenderSports(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#0d1117;display:flex;flex-direction:column">
@@ -600,7 +605,6 @@ function plRenderSports(d){
   </div>`;
 }
 
-// 14. 카페메뉴 — 따뜻한 카페 스타일
 function plRenderCafe(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#2c1810;padding:90px 80px;display:flex;flex-direction:column;align-items:center">
@@ -618,7 +622,6 @@ function plRenderCafe(d){
   </div>`;
 }
 
-// 15. 시네마틱 — 영화 포스터 스타일
 function plRenderCinematic(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#000;display:flex;flex-direction:column">
@@ -635,7 +638,6 @@ function plRenderCinematic(d){
   </div>`;
 }
 
-// 16. 모노크롬 — 흑백 고급 느낌
 function plRenderMono(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#fff;display:flex">
@@ -660,7 +662,6 @@ function plRenderMono(d){
   </div>`;
 }
 
-// 17. 야간영업 — 야간/심야 영업 알림
 function plRenderNight(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:linear-gradient(180deg,#0a0a1a 0%,#1a1a3a 50%,#0a0a1a 100%);padding:90px 80px;display:flex;flex-direction:column;align-items:center;justify-content:center">
@@ -675,7 +676,6 @@ function plRenderNight(d){
   </div>`;
 }
 
-// 18. 할인폭탄 — 강렬한 프로모션
 function plRenderSale(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:${a};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;text-align:center">
@@ -690,7 +690,6 @@ function plRenderSale(d){
   </div>`;
 }
 
-// 19. 웰컴 — 환영/인사 스타일
 function plRenderWelcome(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#fff;display:flex;flex-direction:column;align-items:center;padding:80px;text-align:center">
@@ -707,7 +706,6 @@ function plRenderWelcome(d){
   </div>`;
 }
 
-// 20. 모던스트라이프 — 대각선 스트라이프 포인트
 function plRenderStripe(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#f8f9fa;display:flex;flex-direction:column">
@@ -733,7 +731,6 @@ function plRenderStripe(d){
   </div>`;
 }
 
-// 21. 갤러리형 — 사진 전시 느낌 (텍스트 중심)
 function plRenderGallery(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#1a1a1a;display:flex;flex-direction:column;padding:60px">
@@ -752,7 +749,6 @@ function plRenderGallery(d){
   </div>`;
 }
 
-// 22. 공사중/임시안내 — 특별 상황 공지
 function plRenderNotice(d){
   const a=d.accent,rows=plInfoRows(d);
   return `<div style="${PL_SHELL};background:#fff8e1;display:flex;flex-direction:column">
@@ -775,276 +771,19 @@ function plRenderNotice(d){
   </div>`;
 }
 
-// ── 편집기 상태 관리
-function sgSet(patch){
-  sgData=Object.assign({},sgData,patch);
-  sgRefreshUI();
-  sgRenderPreview();
-}
-function sgToggle(key){
-  sgData[key]=!sgData[key];
-  sgRefreshUI();
-  sgRenderPreview();
-}
-function sgRefreshUI(){
-  const d=sgData;
-  // 기본 필드
-  ['storeName','title','content','start','end','open','close','phone','badge'].forEach(k=>{
-    const el=document.getElementById('sg-'+k);
-    if(el&&el.value!==d[k]) el.value=d[k]||'';
-  });
-  // kind 버튼
-  document.getElementById('sg-kind-notice')?.classList.toggle('sg-kind-active',d.kind==='공지사항');
-  document.getElementById('sg-kind-event')?.classList.toggle('sg-kind-active',d.kind==='이벤트');
-  // 로고 상태 동기화
-  const logoPreview=document.getElementById('sg-logo-preview');
-  const logoLabel=document.getElementById('sg-logo-upload-label');
-  const logoImg=document.getElementById('sg-logo-img');
-  if(logoPreview&&logoLabel&&logoImg){
-    if(d.logo){
-      logoImg.src=d.logo;
-      logoPreview.style.display='block';
-      logoLabel.style.display='none';
-      const st=document.getElementById('sg-logo-status');
-      if(st&&st.textContent==='처리 중...') st.textContent='로고 적용됨 ✓';
-    }else{
-      logoPreview.style.display='none';
-      logoLabel.style.display='flex';
-    }
-  }
-  // 토글들
-  ['periodOn','hoursOn','daysOn','phoneOn','badgeOn'].forEach(k=>{
-    const tog=document.getElementById('sg-tog-'+k);
-    const body=document.getElementById('sg-body-'+k);
-    const lbl=document.getElementById('sg-lbl-'+k);
-    if(tog){tog.className='sg-toggle '+(d[k]?'on':'off');}
-    if(body){body.style.display=d[k]?'block':'none';}
-    if(lbl){lbl.style.color=d[k]?'var(--text-primary)':'var(--text-muted)';}
-  });
-  // 요일 버튼
-  const dayWrap=document.getElementById('sg-days-btns');
-  if(dayWrap){
-    dayWrap.innerHTML=SG_WD.map((w,i)=>`<button class="sg-day-btn ${d.days[i]?'on':''}" onclick="sgToggleDay(${i})">${w}</button>`).join('');
-  }
-  // 컬러 스와치
-  const sw=document.getElementById('sg-color-swatches');
-  if(sw){
-    sw.innerHTML=SG_PRESET_COLORS.map(c=>`<div class="sg-swatch ${d.accent.toLowerCase()===c.toLowerCase()?'active':''}" style="background:${c}" onclick="sgSet({accent:'${c}'})"></div>`).join('')
-      +`<label style="width:30px;height:30px;border-radius:7px;cursor:pointer;position:relative;overflow:hidden;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px">+<input type="color" value="${d.accent}" oninput="sgSet({accent:this.value})" style="position:absolute;inset:0;opacity:0;cursor:pointer"/></label>`;
-  }
-  // 폰트 색상 스와치
-  function renderFontSwatches(containerId, prop){
-    const el=document.getElementById(containerId);
-    if(!el)return;
-    el.innerHTML=PL_FONT_COLORS.map(c=>`
-      <div onclick="sgSet({${prop}:'${c.v}'})" title="${c.label}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
-        <div style="width:28px;height:28px;border-radius:6px;background:${c.v||'transparent'};border:2px solid ${(d[prop]===c.v)?'#fff':'var(--border)'};${c.v===''?'background:repeating-conic-gradient(#444 0% 25%,#222 0% 50%) 50%/8px 8px':''}"></div>
-        <span style="font-size:9px;color:var(--text-muted)">${c.label}</span>
-      </div>`).join('');
-  }
-  renderFontSwatches('sg-title-color-swatches','titleColor');
-  renderFontSwatches('sg-content-color-swatches','contentColor');
-  renderFontSwatches('sg-info-color-swatches','infoColor');
-  // 템플릿 바
-  const bar=document.getElementById('sg-tpl-bar');
-  if(bar){
-    const W=72, scale=W/1080;
-    bar.innerHTML=SG_TEMPLATES.map(t=>`
-      <button class="sg-tpl-thumb ${t.id===sgTplId?'active':''}" style="width:${W+4}px;height:${W*(1920/1080)+4}px" onclick="sgSelectTpl('${t.id}')" title="${t.name}">
-        <div style="width:1080px;height:1920px;transform:scale(${scale});transform-origin:top left;pointer-events:none">
-          ${t.render(d)}
-        </div>
-        <span class="sg-tpl-label">${t.name}</span>
-      </button>`).join('');
-  }
-}
-function sgToggleDay(i){
-  const nd=[...sgData.days]; nd[i]=!nd[i]; sgSet({days:nd});
-}
-function sgSelectTpl(id){
-  sgTplId=id;
-  sgRefreshUI();
-  sgRenderPreview();
-}
-function sgRenderPreview(){
-  const root=document.getElementById('sg-preview-root');
-  if(!root)return;
-  const tpl=SG_TEMPLATES.find(t=>t.id===sgTplId)||SG_TEMPLATES[0];
-  root.innerHTML=tpl.render(sgData);
-  // 9:16 비율 스케일 피팅
-  const stage=document.getElementById('sg-stage');
-  if(stage){
-    const pad=40;
-    const sw=stage.clientWidth-pad, sh=stage.clientHeight-pad;
-    // 9:16 = 1080:1920 — 가로/세로 중 더 제약이 큰 쪽 기준
-    sgScale=Math.min(sw/1080, sh/1920);
-  }
-  const wrap=document.getElementById('sg-preview-wrap');
-  const inner=document.getElementById('sg-preview-inner');
-  if(wrap&&inner){
-    const w=Math.round(1080*sgScale), h=Math.round(1920*sgScale);
-    wrap.style.width=w+'px';
-    wrap.style.height=h+'px';
-    wrap.style.aspectRatio='9/16';
-    wrap.style.overflow='hidden';
-    inner.style.transform=`scale(${sgScale})`;
-  }
-}
-
-
-// ── 공지 편집기 모바일 탭 ──
-function sgMobileTab(tab){
-  const isMob=window.innerWidth<=768;
-  if(!isMob)return;
-  const panel=document.getElementById('sg-panel');
-  const stage=document.querySelector('#modal-signage-editor > div > div:last-child > div:last-child');
-  const tplBar=document.getElementById('sg-tpl-bar');
-  const editBtn=document.getElementById('sg-mtab-edit');
-  const prevBtn=document.getElementById('sg-mtab-preview');
-  if(tab==='edit'){
-    if(panel){panel.style.display='flex';}
-    if(stage){stage.style.display='none';}
-    if(tplBar){tplBar.parentElement.style.display='none';}
-    editBtn.style.background='var(--accent-blue)';editBtn.style.color='#000';
-    prevBtn.style.background='transparent';prevBtn.style.color='var(--text-muted)';
-  }else{
-    if(panel){panel.style.display='none';}
-    if(stage){stage.style.display='flex';}
-    if(tplBar){tplBar.parentElement.style.display='flex';}
-    prevBtn.style.background='var(--accent-blue)';prevBtn.style.color='#000';
-    editBtn.style.background='transparent';editBtn.style.color='var(--text-muted)';
-    sgRenderPreview();
-  }
-}
-
-function initSgMobileTabs(){
-  const tabs=document.getElementById('sg-mobile-tabs');
-  if(tabs) tabs.style.display=window.innerWidth<=768?'block':'none';
-}
-
-// ── 편집기 열기/닫기
-function openSignageEditor(){
-  if(!sgData) sgData=Object.assign({},SG_DEFAULT);
-  // 기존 저장된 textConfig 복원
-  const editId=document.getElementById('content-edit-id').value;
-  if(editId){
-    const c=contents.find(x=>x.id===editId);
-    if(c&&c.textConfig&&c.textConfig.sgData){
-      sgData=Object.assign({},SG_DEFAULT,c.textConfig.sgData);
-      sgTplId=c.textConfig.tplId||'classic';
-    }
-  }
-  openModal('modal-signage-editor');
-  setTimeout(()=>{initSgMobileTabs();sgRefreshUI();sgRenderPreview();renderSgPresets();if(window.innerWidth<=768)sgMobileTab('edit');},80);
-}
-
-function saveSignageConfig(){
-  // textConfig에 저장
-  const thumbEl=document.getElementById('sg-preview-root');
-  const tpl=SG_TEMPLATES.find(t=>t.id===sgTplId)||SG_TEMPLATES[0];
-  // mini 썸네일 업데이트
-  const mini=document.getElementById('signage-thumb-mini');
-  if(mini&&thumbEl){
-    const scale=0.185; // 140px / 1920 * (1920/1080)
-    mini.innerHTML=`<div style="width:1080px;height:1920px;transform:scale(${scale});transform-origin:top left;pointer-events:none">${tpl.render(sgData)}</div>`;
-    mini.style.height=Math.round(1920*scale)+'px';
-    document.getElementById('signage-thumb-wrap').style.display='block';
-  }
-  closeModal('modal-signage-editor');
-  showToast('템플릿 저장됨 — 콘텐츠 등록 시 반영됩니다','success');
-}
-
-function getTextConfig(){
-  if(!sgData)return null;
-  return {tplId:sgTplId, sgData:Object.assign({},sgData)};
-}
-function loadTextConfig(tc){
-  if(tc&&tc.sgData){
-    sgData=Object.assign({},SG_DEFAULT,tc.sgData);
-    sgTplId=tc.tplId||'classic';
-  }
-}
-function updateTextPreview(){}
-
-// ══ 로고 업로드 + 배경 자동 제거 ══
-function onSgLogoUpload(input){
-  const file = input.files && input.files[0];
-  if(!file) return;
-
-  const statusEl = document.getElementById('sg-logo-status');
-  statusEl.textContent = '배경 제거 중...';
-  document.getElementById('sg-logo-preview').style.display = 'block';
-  document.getElementById('sg-logo-upload-label').style.display = 'none';
-
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const img = new Image();
-    img.onload = function(){
-      // Canvas로 배경 제거
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // 코너 4점 평균색 = 배경색 추정
-      function getPixel(x, y){ const i=(y*canvas.width+x)*4; return [data[i],data[i+1],data[i+2],data[i+3]]; }
-      const corners = [
-        getPixel(0,0), getPixel(canvas.width-1,0),
-        getPixel(0,canvas.height-1), getPixel(canvas.width-1,canvas.height-1)
-      ];
-      const bgR = Math.round(corners.reduce((s,c)=>s+c[0],0)/4);
-      const bgG = Math.round(corners.reduce((s,c)=>s+c[1],0)/4);
-      const bgB = Math.round(corners.reduce((s,c)=>s+c[2],0)/4);
-
-      // 배경과 유사한 픽셀 투명처리 (허용 오차 40)
-      const tol = 40;
-      for(let i=0; i<data.length; i+=4){
-        const dr=Math.abs(data[i]-bgR), dg=Math.abs(data[i+1]-bgG), db=Math.abs(data[i+2]-bgB);
-        if(dr<tol && dg<tol && db<tol){
-          // 배경에 가까울수록 더 투명하게 (부드러운 엣지)
-          const dist = Math.sqrt(dr*dr+dg*dg+db*db);
-          const alpha = Math.min(1, (dist/tol)*1.5);
-          data[i+3] = Math.round(data[i+3]*alpha);
-        }
-      }
-      ctx.putImageData(imageData, 0, 0);
-
-      const result = canvas.toDataURL('image/png');
-      document.getElementById('sg-logo-img').src = result;
-      statusEl.textContent = '배경 제거 완료 ✓';
-      sgSet({logo: result});
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function removeSgLogo(){
-  document.getElementById('sg-logo-preview').style.display = 'none';
-  document.getElementById('sg-logo-upload-label').style.display = 'flex';
-  document.getElementById('sg-logo-input').value = '';
-  sgSet({logo: null});
-}
-
-
-
 var PL_RENDERERS={
-  classic:plRenderClassic,banner:plRenderBanner,dark:plRenderDark,
-  pop:plRenderPop,soft:plRenderSoft,editorial:plRenderEditorial,
-  neon:plRenderNeon,gradient:plRenderGradient,split:plRenderSplit,
-  timetable:plRenderTimetable,minimal:plRenderMinimal,retro:plRenderRetro,
-  sports:plRenderSports,cafe:plRenderCafe,cinematic:plRenderCinematic,
-  mono:plRenderMono,night:plRenderNight,sale:plRenderSale,
-  welcome:plRenderWelcome,stripe:plRenderStripe,gallery:plRenderGallery,
+  classic:plRenderClassic, banner:plRenderBanner, dark:plRenderDark,
+  pop:plRenderPop, soft:plRenderSoft, editorial:plRenderEditorial,
+  neon:plRenderNeon, gradient:plRenderGradient, split:plRenderSplit,
+  timetable:plRenderTimetable, minimal:plRenderMinimal, retro:plRenderRetro,
+  sports:plRenderSports, cafe:plRenderCafe, cinematic:plRenderCinematic,
+  mono:plRenderMono, night:plRenderNight, sale:plRenderSale,
+  welcome:plRenderWelcome, stripe:plRenderStripe, gallery:plRenderGallery,
   notice:plRenderNotice
 };
+
 function playText(tc,duration){
   const el=document.getElementById('text-player');
-  console.log('[playText] tplId='+tc.tplId+' hasSgData='+(!!tc.sgData)+' fn='+typeof PL_RENDERERS[tc.tplId]);
   document.getElementById('standby').style.display='none';
   el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';
   let html='';
