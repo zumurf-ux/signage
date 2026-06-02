@@ -212,6 +212,7 @@ function playContent(c){
   hideAllPlayers();isPlaying=true;
   const duration=(c.duration||15)*1000;
   const type=c.type||'image';
+  console.log('[PLAY] type='+type+' name='+c.name+' textConfig='+(c.textConfig?JSON.stringify(Object.keys(c.textConfig)):'null'));
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
     const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
@@ -219,7 +220,7 @@ function playContent(c){
     else playVideo(c.url,duration);
   }
   else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
-  else playImage(c.url,duration);
+  else{ console.warn('[SKIP] signage but no textConfig',c); playImage(c.url,duration); }
   db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
 }
 
@@ -1043,6 +1044,7 @@ var PL_RENDERERS={
 };
 function playText(tc,duration){
   const el=document.getElementById('text-player');
+  console.log('[playText] tplId='+tc.tplId+' hasSgData='+(!!tc.sgData)+' fn='+typeof PL_RENDERERS[tc.tplId]);
   document.getElementById('standby').style.display='none';
   el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';
   let html='';
