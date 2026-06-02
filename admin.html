@@ -1415,7 +1415,7 @@ function formatDate(str) {
 
 function nowStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function typeIcon(t){return{image:'🖼',video:'▼',youtube:'▼️',url:'🌐',signage:'📋'}[t]||'📄';}
+function typeIcon(t){return{image:'🖼',video:'🎬',youtube:'🎬',url:'🌐',signage:'📋'}[t]||'📄';}
 function scheduleLabel(t){return{all:'상시',morning:'오전',lunch:'점심',afternoon:'오후',dinner:'저녁'}[t]||t;}
 
 function calcStatus(lastSeen){
