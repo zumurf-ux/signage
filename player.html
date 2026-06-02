@@ -28,7 +28,7 @@ body.rotate-180 #player{transform:rotate(180deg)}
 #img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
 #iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
-#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:transparent}
 #hud{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.8);color:#00aaff;font-size:11px;font-family:monospace;padding:10px 14px;border-radius:6px;border:1px solid rgba(0,170,255,.3);z-index:200;line-height:2;opacity:0;transition:opacity .3s}
 #hud.visible{opacity:1}
 #offline-overlay{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,61,90,.9);color:#fff;font-family:monospace;font-size:13px;padding:8px 20px;border-radius:6px;z-index:300}
@@ -251,7 +251,7 @@ function playIframe(url,duration){
 var PL_FONT="'Noto Sans KR','Apple SD Gothic Neo',sans-serif";
 var PL_MONO="'SFMono-Regular',ui-monospace,monospace";
 var PL_WD=['월','화','수','목','금','토','일'];
-var PL_SHELL='width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:'+PL_FONT+';box-sizing:border-box';
+var PL_SHELL='width:1080px;height:1920px;position:relative;overflow:hidden;word-break:keep-all;font-family:'+PL_FONT+';box-sizing:border-box;isolation:isolate';
 
 function plDot(s){ return (s||'').replaceAll('-','.'); }
 
@@ -799,7 +799,7 @@ function playText(tc,duration){
   const scale=Math.min(sw/W,sh/H);
   const tx=Math.round((sw-W*scale)/2);
   const ty=Math.round((sh-H*scale)/2);
-  el.innerHTML='<div style="width:'+W+'px;height:'+H+'px;transform:scale('+scale+');transform-origin:top left;position:absolute;top:'+ty+'px;left:'+tx+'px">'+html+'</div>';
+  el.innerHTML='<div style="position:absolute;inset:0;background:#000"></div><div style="width:'+W+'px;height:'+H+'px;transform:scale('+scale+');transform-origin:top left;position:absolute;top:'+ty+'px;left:'+tx+'px;isolation:isolate">'+html+'</div>';
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
