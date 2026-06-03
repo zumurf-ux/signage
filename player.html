@@ -865,18 +865,65 @@ if(savedOrientation)applyRotation(savedOrientation);
 
 function requestFullscreen(){
   const el=document.documentElement;
-  if(el.requestFullscreen)el.requestFullscreen();
-  else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+  const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(req)req.call(el).catch(()=>{});
 }
-window.addEventListener('load',()=>setTimeout(requestFullscreen,1000));
-document.addEventListener('click',()=>{if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();});
-document.addEventListener('fullscreenchange',()=>{
-  if(!document.fullscreenElement){
-    setTimeout(requestFullscreen,2000);
-    if(document.getElementById('iframe-player').style.display==='block')setTimeout(showIframeOverlay,2500);
-  }else{document.getElementById('iframe-overlay').style.display='none';}
+
+function isFullscreen(){
+  return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+}
+
+// 전체화면 복구 (재시도 포함)
+let fsRetryTimer=null;
+function ensureFullscreen(){
+  clearTimeout(fsRetryTimer);
+  if(isFullscreen())return;
+  requestFullscreen();
+  // 1초 후에도 안 됐으면 재시도
+  fsRetryTimer=setTimeout(()=>{if(!isFullscreen())requestFullscreen();},1000);
+}
+
+// 첫 로드: 페이지 진입 후 첫 번째 사용자 인터랙션(클릭/터치/키)에서 전체화면
+let fsReady=false;
+function onFirstInteraction(){
+  if(fsReady)return;
+  fsReady=true;
+  requestFullscreen();
+  document.removeEventListener('click',onFirstInteraction);
+  document.removeEventListener('touchstart',onFirstInteraction);
+  document.removeEventListener('keydown',onFirstInteraction);
+}
+document.addEventListener('click',onFirstInteraction);
+document.addEventListener('touchstart',onFirstInteraction);
+document.addEventListener('keydown',onFirstInteraction);
+
+// 자동 시도: 일부 환경(Fully Kiosk 등)은 제스처 없이도 가능
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(!isFullscreen())requestFullscreen();
+  },500);
 });
-document.addEventListener('webkitfullscreenchange',()=>{if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);});
+
+// 전체화면 해제 감지 → 자동 복구
+function onFsChange(){
+  if(!isFullscreen()){
+    // iframe 오버레이 표시
+    if(document.getElementById('iframe-player').style.display==='block'){
+      setTimeout(showIframeOverlay,500);
+    }
+    // 2초 후 자동 복구
+    setTimeout(ensureFullscreen,2000);
+  }else{
+    document.getElementById('iframe-overlay').style.display='none';
+  }
+}
+document.addEventListener('fullscreenchange',onFsChange);
+document.addEventListener('webkitfullscreenchange',onFsChange);
+document.addEventListener('mozfullscreenchange',onFsChange);
+document.addEventListener('MSFullscreenChange',onFsChange);
+
+// 클릭으로도 전체화면 복구 (전체화면 아닐 때)
+document.addEventListener('click',()=>{if(!isFullscreen())requestFullscreen();});
 
 async function measurePing(){const start=Date.now();try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}catch(e){return-1;}}
 async function updateStatus(){
