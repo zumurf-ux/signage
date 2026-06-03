@@ -212,7 +212,8 @@ function playNext(){
 
 function playContent(c){
   hideAllPlayers();isPlaying=true;
-  const duration=(c.duration||15)*1000;
+  // fade out(400ms) + fade in(150ms) 시간 보상해서 실제 표시 시간 정확하게
+  const duration=(c.duration||15)*1000 + 550;
   const type=c.type||'image';
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
@@ -856,11 +857,12 @@ function fadeTransition(cb){
   player.style.opacity='0';
   setTimeout(()=>{
     cb();
-    // 안드로이드 WebView: rAF 대신 setTimeout으로 fade in (더 안정적)
+    // 콘텐츠 렌더링 충분히 대기 후 fade in (안드로이드 호환)
     setTimeout(()=>{
+      player.style.transition='opacity 0.6s ease';
       player.style.opacity='1';
-    }, 50);
-  },500);
+    }, 150);
+  }, 400);
 }
 function applyRotation(orientation){
   document.body.classList.remove('rotate-90','rotate-180','rotate-270');
