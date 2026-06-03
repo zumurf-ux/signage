@@ -228,22 +228,25 @@ function playContent(c){
 
 function playImage(url,duration){
   const el=document.getElementById('img-player');
-  const img=new Image();
+  const standby=document.getElementById('standby');
   function show(){
-    el.src=url;el.style.display='block';
-    document.getElementById('standby').style.display='none';
+    el.src=url;
+    standby.style.opacity='0';standby.style.pointerEvents='none';
+    setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},50);
   }
-  img.onload=show;
-  img.onerror=show; // 오류도 그냥 표시
+  const img=new Image();
+  img.onload=show;img.onerror=show;
   img.src=url;
-  if(img.complete&&img.naturalWidth>0) show(); // 캐시된 이미지 즉시
+  if(img.complete&&img.naturalWidth>0) show();
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  el.src=url;el.style.display='block';
-  document.getElementById('standby').style.display='none';
+  const standby=document.getElementById('standby');
+  el.src=url;
+  standby.style.opacity='0';standby.style.pointerEvents='none';
   el.play().catch(()=>{});
+  setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
@@ -252,9 +255,11 @@ function playIframe(url,duration){
   el.setAttribute('allowfullscreen','');
   el.src='';
   setTimeout(()=>{
-    el.src=url;el.style.display='block';
-    document.getElementById('standby').style.display='none';
+    el.src=url;
+    const standby=document.getElementById('standby');
+    standby.style.opacity='0';standby.style.pointerEvents='none';
     showIframeOverlay();
+    setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},100);
   },100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
@@ -797,11 +802,11 @@ function playText(tc,duration){
   const el=document.getElementById('text-player');
   document.getElementById('standby').style.display='none';
   // display:block 먼저 해서 clientWidth 확보
-  // display 대신 opacity로 제어
+  // clientWidth: text-player는 position:absolute라 항상 크기 있음
   // 크기 강제 확보 (PC에서 reflow 전 clientWidth=0 방지)
   const W=1080,H=1920;
-  const sw=el.clientWidth||window.innerWidth||1920;
-  const sh=el.clientHeight||window.innerHeight||1080;
+  const sw=window.innerWidth||1920;
+  const sh=window.innerHeight||1080;
   let html='';
   if(tc&&tc.tplId&&tc.sgData){
     const fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
@@ -910,7 +915,7 @@ if(!isFullyKiosk){
   // 전체화면 해제 감지 → 자동 복구
   function onFsChange(){
     if(!isFullscreen()){
-      if(document.getElementById('iframe-player').style.display==='block'){
+      if(parseFloat(document.getElementById('iframe-player').style.opacity||0)>0){
         setTimeout(showIframeOverlay, 500);
       }
       setTimeout(ensureFullscreen, 2000);
