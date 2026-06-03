@@ -214,10 +214,6 @@ function playContent(c){
   hideAllPlayers();isPlaying=true;
   const duration=(c.duration||15)*1000;
   const type=c.type||'image';
-  // 디버그: 화면에 현재 재생 정보 표시
-  var dbgEl=document.getElementById('standby-info');
-  if(dbgEl) dbgEl.textContent='[DBG] type='+type+' / textConfig='+(c.textConfig?'있음':'없음(null)'+' / tplId='+(c.textConfig&&c.textConfig.tplId));
-  console.log('[playContent]',{type,name:c.name,hasTextConfig:!!c.textConfig,tplId:c.textConfig&&c.textConfig.tplId,hasSgData:c.textConfig&&!!c.textConfig.sgData});
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
     const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
@@ -225,7 +221,7 @@ function playContent(c){
     else playVideo(c.url,duration);
   }
   else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
-  else{ console.warn('[SKIP signage] textConfig없음',c); playImage(c.url,duration); }
+  else playImage(c.url,duration);
   db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
 }
 
@@ -235,7 +231,6 @@ function playImage(url,duration){
   function show(){
     el.src=url;el.style.display='block';
     document.getElementById('standby').style.display='none';
-    fadeIn(); // 이미지 로드 완료 후 fade in
   }
   img.onload=show;
   img.onerror=show; // 오류도 그냥 표시
@@ -248,7 +243,6 @@ function playVideo(url,duration){
   el.src=url;el.style.display='block';
   document.getElementById('standby').style.display='none';
   el.play().catch(()=>{});
-  fadeIn(); // 영상은 즉시 fadeIn (버퍼링 중에도 표시)
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
@@ -260,7 +254,6 @@ function playIframe(url,duration){
     el.src=url;el.style.display='block';
     document.getElementById('standby').style.display='none';
     showIframeOverlay();
-    fadeIn();
   },100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
@@ -861,15 +854,13 @@ function fadeTransition(cb){
   const player=document.getElementById('player');
   player.style.transition='opacity 0.5s ease';
   player.style.opacity='0';
-  // fade out 완료 후 콘텐츠 교체 (fade in은 각 play함수에서 준비 완료 후 실행)
-  setTimeout(()=>{ cb(); },500);
-}
-function fadeIn(){
-  const player=document.getElementById('player');
-  player.style.transition='opacity 0.5s ease';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    player.style.opacity='1';
-  }));
+  setTimeout(()=>{
+    cb();
+    // 콘텐츠 교체 후 다음 프레임에 fade in
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      player.style.opacity='1';
+    }));
+  },500);
 }
 function applyRotation(orientation){
   document.body.classList.remove('rotate-90','rotate-180','rotate-270');
