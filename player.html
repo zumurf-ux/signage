@@ -214,6 +214,10 @@ function playContent(c){
   hideAllPlayers();isPlaying=true;
   const duration=(c.duration||15)*1000;
   const type=c.type||'image';
+  // 디버그: 화면에 현재 재생 정보 표시
+  var dbgEl=document.getElementById('standby-info');
+  if(dbgEl) dbgEl.textContent='[DBG] type='+type+' / textConfig='+(c.textConfig?'있음':'없음(null)'+' / tplId='+(c.textConfig&&c.textConfig.tplId));
+  console.log('[playContent]',{type,name:c.name,hasTextConfig:!!c.textConfig,tplId:c.textConfig&&c.textConfig.tplId,hasSgData:c.textConfig&&!!c.textConfig.sgData});
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
     const isYoutube=c.url&&(c.url.includes('youtube.com')||c.url.includes('youtu.be'));
@@ -221,7 +225,7 @@ function playContent(c){
     else playVideo(c.url,duration);
   }
   else if(type==='signage'&&c.textConfig) playText(c.textConfig,duration);
-  else playImage(c.url,duration);
+  else{ console.warn('[SKIP signage] textConfig없음',c); playImage(c.url,duration); }
   db.collection('screens').doc(SCREEN_ID).set({currentContent:c.name},{merge:true}).catch(()=>{});
 }
 
@@ -798,8 +802,13 @@ var PL_RENDERERS={
 function playText(tc,duration){
   const el=document.getElementById('text-player');
   document.getElementById('standby').style.display='none';
+  // display:block 먼저 해서 clientWidth 확보
   el.style.display='block';
   el.style.position='relative';
+  // 크기 강제 확보 (PC에서 reflow 전 clientWidth=0 방지)
+  const W=1080,H=1920;
+  const sw=el.clientWidth||window.innerWidth||1920;
+  const sh=el.clientHeight||window.innerHeight||1080;
   let html='';
   if(tc&&tc.tplId&&tc.sgData){
     const fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
@@ -807,9 +816,6 @@ function playText(tc,duration){
   }else{
     html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;padding:40px">'+((tc&&tc.body)||'')+'</div>';
   }
-  const W=1080,H=1920;
-  const sw=el.clientWidth||window.innerWidth;
-  const sh=el.clientHeight||window.innerHeight;
   const scale=Math.min(sw/W,sh/H);
   const tw=Math.round(W*scale);
   const th=Math.round(H*scale);
