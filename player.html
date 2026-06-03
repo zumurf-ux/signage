@@ -19,7 +19,7 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'No
 body.rotate-90  #player{transform:rotate(90deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
 body.rotate-270 #player{transform:rotate(270deg);transform-origin:center center;width:100vh;height:100vw;position:fixed;top:calc((100vh - 100vw)/2);left:calc((100vw - 100vh)/2)}
 body.rotate-180 #player{transform:rotate(180deg)}
-#standby{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;position:relative;overflow:hidden}
+#standby{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#070b12 70%);color:#fff;gap:16px;position:relative;overflow:hidden}
 #standby::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,170,255,.02) 60px,rgba(0,170,255,.02) 61px);pointer-events:none}
 .standby-logo{font-size:18px;color:rgba(0,170,255,.7);font-family:monospace;letter-spacing:10px;text-transform:uppercase;margin-bottom:8px}
 @keyframes pulse{0%,100%{opacity:1;text-shadow:0 0 20px rgba(0,170,255,.4)}50%{opacity:.7;text-shadow:0 0 40px rgba(0,170,255,.8)}}
@@ -27,10 +27,10 @@ body.rotate-180 #player{transform:rotate(180deg)}
 .standby-date{font-size:20px;color:#7a9bbf;font-weight:300;letter-spacing:2px}
 .standby-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,170,255,.4),transparent);margin:4px 0}
 .standby-info{font-size:15px;color:#5a7a9a;margin-top:4px;font-family:monospace;text-align:center;line-height:2;letter-spacing:1px}
-#img-player{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#video-player{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#iframe-player{position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
-#text-player{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:transparent;opacity:0;transition:opacity 0.6s ease;pointer-events:none}
+#img-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#video-player{display:none;width:100%;height:100%;object-fit:cover;background:#000}
+#iframe-player{display:none;width:100%;height:100%;border:none;background:#000}
+#text-player{display:none;width:100%;height:100%;overflow:hidden;position:relative;background:transparent}
 #hud{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.8);color:#00aaff;font-size:11px;font-family:monospace;padding:10px 14px;border-radius:6px;border:1px solid rgba(0,170,255,.3);z-index:200;line-height:2;opacity:0;transition:opacity .3s}
 #hud.visible{opacity:1}
 #offline-overlay{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,61,90,.9);color:#fff;font-family:monospace;font-size:13px;padding:8px 20px;border-radius:6px;z-index:300}
@@ -212,8 +212,7 @@ function playNext(){
 
 function playContent(c){
   hideAllPlayers();isPlaying=true;
-  // fade out(400ms) + fade in(150ms) 시간 보상해서 실제 표시 시간 정확하게
-  const duration=(c.duration||15)*1000 + 550;
+  const duration=(c.duration||15)*1000;
   const type=c.type||'image';
   if(type==='image') playImage(c.url,duration);
   else if(type==='video'){
@@ -228,25 +227,18 @@ function playContent(c){
 
 function playImage(url,duration){
   const el=document.getElementById('img-player');
-  const standby=document.getElementById('standby');
-  function show(){
-    el.src=url;
-    standby.style.opacity='0';standby.style.pointerEvents='none';
-    setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},50);
-  }
   const img=new Image();
-  img.onload=show;img.onerror=show;
+  img.onload=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
+  img.onerror=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
   img.src=url;
-  if(img.complete&&img.naturalWidth>0) show();
+  if(img.complete&&img.naturalWidth>0){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';}
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
-  const standby=document.getElementById('standby');
-  el.src=url;
-  standby.style.opacity='0';standby.style.pointerEvents='none';
+  el.src=url;el.style.display='block';
   el.play().catch(()=>{});
-  setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},100);
+  document.getElementById('standby').style.display='none';
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
@@ -254,13 +246,7 @@ function playIframe(url,duration){
   el.allow='autoplay; fullscreen; encrypted-media; picture-in-picture';
   el.setAttribute('allowfullscreen','');
   el.src='';
-  setTimeout(()=>{
-    el.src=url;
-    const standby=document.getElementById('standby');
-    standby.style.opacity='0';standby.style.pointerEvents='none';
-    showIframeOverlay();
-    setTimeout(()=>{el.style.opacity='1';el.style.pointerEvents='auto';},100);
-  },100);
+  setTimeout(()=>{el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';showIframeOverlay();},100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
@@ -801,12 +787,8 @@ var PL_RENDERERS={
 function playText(tc,duration){
   const el=document.getElementById('text-player');
   document.getElementById('standby').style.display='none';
-  // display:block 먼저 해서 clientWidth 확보
-  // clientWidth: text-player는 position:absolute라 항상 크기 있음
-  // 크기 강제 확보 (PC에서 reflow 전 clientWidth=0 방지)
-  const W=1080,H=1920;
-  const sw=window.innerWidth||1920;
-  const sh=window.innerHeight||1080;
+  el.style.display='block';
+  el.style.position='relative';
   let html='';
   if(tc&&tc.tplId&&tc.sgData){
     const fn=PL_RENDERERS[tc.tplId]||plRenderClassic;
@@ -814,6 +796,9 @@ function playText(tc,duration){
   }else{
     html='<div style="color:#fff;font-size:72px;font-weight:700;text-align:center;padding:40px">'+((tc&&tc.body)||'')+'</div>';
   }
+  const W=1080,H=1920;
+  const sw=el.clientWidth||window.innerWidth;
+  const sh=el.clientHeight||window.innerHeight;
   const scale=Math.min(sw/W,sh/H);
   const tw=Math.round(W*scale);
   const th=Math.round(H*scale);
@@ -827,16 +812,15 @@ function playText(tc,duration){
 function hideAllPlayers(){
   ['img-player','video-player','iframe-player','text-player'].forEach(id=>{
     const el=document.getElementById(id);
-    el.style.opacity='0';
-    el.style.pointerEvents='none';
-    if(id==='video-player') setTimeout(()=>{el.pause();el.src='';},700);
-    if(id==='iframe-player') setTimeout(()=>{el.src='';},700);
+    el.style.display='none';
+    if(id==='video-player'){el.pause();el.src='';}
+    if(id==='iframe-player')el.src='';
   });
   document.getElementById('iframe-overlay').style.display='none';
 }
 function showStandby(){
   isPlaying=false;hideAllPlayers();
-  const sb=document.getElementById('standby');sb.style.pointerEvents='auto';sb.style.opacity='1';
+  document.getElementById('standby').style.display='flex';
   document.getElementById('hud-status').textContent='상태: 대기중';
 }
 function showIframeOverlay(){
@@ -857,15 +841,9 @@ function convertYoutubeUrl(url){
   return'https://www.youtube.com/embed/'+vid+'?autoplay=1&mute=1&loop=1&playlist='+vid+'&controls=0&rel=0&modestbranding=1';
 }
 function fadeTransition(cb){
-  // 현재 콘텐츠 fade out (각 요소의 CSS transition으로 처리)
-  const ids=['img-player','video-player','iframe-player','text-player'];
-  ids.forEach(id=>{
-    const el=document.getElementById(id);
-    el.style.opacity='0';
-    el.style.pointerEvents='none';
-  });
-  // fade out 완료 후 새 콘텐츠 준비
-  setTimeout(()=>{ cb(); }, 650);
+  const player=document.getElementById('player');
+  player.style.opacity='0';
+  setTimeout(()=>{cb();player.style.opacity='1';},400);
 }
 function applyRotation(orientation){
   document.body.classList.remove('rotate-90','rotate-180','rotate-270');
@@ -877,58 +855,20 @@ function applyRotation(orientation){
 const savedOrientation=localStorage.getItem('signage_orientation');
 if(savedOrientation)applyRotation(savedOrientation);
 
-// ── 전체화면 (PC 전용, Fully Kiosk는 자체 관리) ──
-const isFullyKiosk = navigator.userAgent.includes('Fully') || window.fullykiosk !== undefined;
-
 function requestFullscreen(){
-  if(isFullyKiosk) return; // Fully Kiosk는 스킵
   const el=document.documentElement;
-  const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
-  if(req) req.call(el).catch(()=>{});
+  if(el.requestFullscreen)el.requestFullscreen();
+  else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
 }
-
-function isFullscreen(){
-  return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
-}
-
-function ensureFullscreen(){
-  if(isFullyKiosk) return;
-  if(!isFullscreen()) requestFullscreen();
-  setTimeout(()=>{ if(!isFullscreen()) requestFullscreen(); }, 1000);
-}
-
-if(!isFullyKiosk){
-  // 첫 클릭/터치 시 전체화면
-  let fsReady=false;
-  function onFirstInteraction(){
-    if(fsReady) return;
-    fsReady=true;
-    requestFullscreen();
-    document.removeEventListener('click', onFirstInteraction);
-    document.removeEventListener('touchstart', onFirstInteraction);
-    document.removeEventListener('keydown', onFirstInteraction);
-  }
-  document.addEventListener('click', onFirstInteraction);
-  document.addEventListener('touchstart', onFirstInteraction);
-  document.addEventListener('keydown', onFirstInteraction);
-
-  // 전체화면 해제 감지 → 자동 복구
-  function onFsChange(){
-    if(!isFullscreen()){
-      if(parseFloat(document.getElementById('iframe-player').style.opacity||0)>0){
-        setTimeout(showIframeOverlay, 500);
-      }
-      setTimeout(ensureFullscreen, 2000);
-    }else{
-      document.getElementById('iframe-overlay').style.display='none';
-    }
-  }
-  document.addEventListener('fullscreenchange', onFsChange);
-  document.addEventListener('webkitfullscreenchange', onFsChange);
-
-  // 클릭으로 전체화면 복구
-  document.addEventListener('click', ()=>{ if(!isFullscreen()) requestFullscreen(); });
-}
+window.addEventListener('load',()=>setTimeout(requestFullscreen,1000));
+document.addEventListener('click',()=>{if(!document.fullscreenElement&&!document.webkitFullscreenElement)requestFullscreen();});
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement){
+    setTimeout(requestFullscreen,2000);
+    if(document.getElementById('iframe-player').style.display==='block')setTimeout(showIframeOverlay,2500);
+  }else{document.getElementById('iframe-overlay').style.display='none';}
+});
+document.addEventListener('webkitfullscreenchange',()=>{if(!document.webkitFullscreenElement)setTimeout(requestFullscreen,2000);});
 
 async function measurePing(){const start=Date.now();try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}catch(e){return-1;}}
 async function updateStatus(){
