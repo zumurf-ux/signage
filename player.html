@@ -856,10 +856,10 @@ function fadeTransition(cb){
   player.style.opacity='0';
   setTimeout(()=>{
     cb();
-    // 콘텐츠 교체 후 다음 프레임에 fade in
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    // 안드로이드 WebView: rAF 대신 setTimeout으로 fade in (더 안정적)
+    setTimeout(()=>{
       player.style.opacity='1';
-    }));
+    }, 50);
   },500);
 }
 function applyRotation(orientation){
