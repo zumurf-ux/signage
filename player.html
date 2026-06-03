@@ -228,17 +228,23 @@ function playContent(c){
 function playImage(url,duration){
   const el=document.getElementById('img-player');
   const img=new Image();
-  img.onload=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
-  img.onerror=function(){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';};
+  function show(){
+    el.src=url;el.style.display='block';
+    document.getElementById('standby').style.display='none';
+    fadeIn(); // 이미지 로드 완료 후 fade in
+  }
+  img.onload=show;
+  img.onerror=show; // 오류도 그냥 표시
   img.src=url;
-  if(img.complete&&img.naturalWidth>0){el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';}
+  if(img.complete&&img.naturalWidth>0) show(); // 캐시된 이미지 즉시
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playVideo(url,duration){
   const el=document.getElementById('video-player');
   el.src=url;el.style.display='block';
-  el.play().catch(()=>{});
   document.getElementById('standby').style.display='none';
+  el.play().catch(()=>{});
+  fadeIn(); // 영상은 즉시 fadeIn (버퍼링 중에도 표시)
   playTimer=setTimeout(()=>playNext(),duration);
 }
 function playIframe(url,duration){
@@ -246,7 +252,12 @@ function playIframe(url,duration){
   el.allow='autoplay; fullscreen; encrypted-media; picture-in-picture';
   el.setAttribute('allowfullscreen','');
   el.src='';
-  setTimeout(()=>{el.src=url;el.style.display='block';document.getElementById('standby').style.display='none';showIframeOverlay();},100);
+  setTimeout(()=>{
+    el.src=url;el.style.display='block';
+    document.getElementById('standby').style.display='none';
+    showIframeOverlay();
+    fadeIn();
+  },100);
   playTimer=setTimeout(()=>playNext(),duration);
 }
 
@@ -844,14 +855,15 @@ function fadeTransition(cb){
   const player=document.getElementById('player');
   player.style.transition='opacity 0.5s ease';
   player.style.opacity='0';
-  setTimeout(()=>{
-    cb();
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        player.style.opacity='1';
-      });
-    });
-  },500);
+  // fade out 완료 후 콘텐츠 교체 (fade in은 각 play함수에서 준비 완료 후 실행)
+  setTimeout(()=>{ cb(); },500);
+}
+function fadeIn(){
+  const player=document.getElementById('player');
+  player.style.transition='opacity 0.5s ease';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    player.style.opacity='1';
+  }));
 }
 function applyRotation(orientation){
   document.body.classList.remove('rotate-90','rotate-180','rotate-270');
@@ -863,67 +875,58 @@ function applyRotation(orientation){
 const savedOrientation=localStorage.getItem('signage_orientation');
 if(savedOrientation)applyRotation(savedOrientation);
 
+// ── 전체화면 (PC 전용, Fully Kiosk는 자체 관리) ──
+const isFullyKiosk = navigator.userAgent.includes('Fully') || window.fullykiosk !== undefined;
+
 function requestFullscreen(){
+  if(isFullyKiosk) return; // Fully Kiosk는 스킵
   const el=document.documentElement;
   const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
-  if(req)req.call(el).catch(()=>{});
+  if(req) req.call(el).catch(()=>{});
 }
 
 function isFullscreen(){
   return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
 }
 
-// 전체화면 복구 (재시도 포함)
-let fsRetryTimer=null;
 function ensureFullscreen(){
-  clearTimeout(fsRetryTimer);
-  if(isFullscreen())return;
-  requestFullscreen();
-  // 1초 후에도 안 됐으면 재시도
-  fsRetryTimer=setTimeout(()=>{if(!isFullscreen())requestFullscreen();},1000);
+  if(isFullyKiosk) return;
+  if(!isFullscreen()) requestFullscreen();
+  setTimeout(()=>{ if(!isFullscreen()) requestFullscreen(); }, 1000);
 }
 
-// 첫 로드: 페이지 진입 후 첫 번째 사용자 인터랙션(클릭/터치/키)에서 전체화면
-let fsReady=false;
-function onFirstInteraction(){
-  if(fsReady)return;
-  fsReady=true;
-  requestFullscreen();
-  document.removeEventListener('click',onFirstInteraction);
-  document.removeEventListener('touchstart',onFirstInteraction);
-  document.removeEventListener('keydown',onFirstInteraction);
-}
-document.addEventListener('click',onFirstInteraction);
-document.addEventListener('touchstart',onFirstInteraction);
-document.addEventListener('keydown',onFirstInteraction);
-
-// 자동 시도: 일부 환경(Fully Kiosk 등)은 제스처 없이도 가능
-window.addEventListener('load',()=>{
-  setTimeout(()=>{
-    if(!isFullscreen())requestFullscreen();
-  },500);
-});
-
-// 전체화면 해제 감지 → 자동 복구
-function onFsChange(){
-  if(!isFullscreen()){
-    // iframe 오버레이 표시
-    if(document.getElementById('iframe-player').style.display==='block'){
-      setTimeout(showIframeOverlay,500);
-    }
-    // 2초 후 자동 복구
-    setTimeout(ensureFullscreen,2000);
-  }else{
-    document.getElementById('iframe-overlay').style.display='none';
+if(!isFullyKiosk){
+  // 첫 클릭/터치 시 전체화면
+  let fsReady=false;
+  function onFirstInteraction(){
+    if(fsReady) return;
+    fsReady=true;
+    requestFullscreen();
+    document.removeEventListener('click', onFirstInteraction);
+    document.removeEventListener('touchstart', onFirstInteraction);
+    document.removeEventListener('keydown', onFirstInteraction);
   }
-}
-document.addEventListener('fullscreenchange',onFsChange);
-document.addEventListener('webkitfullscreenchange',onFsChange);
-document.addEventListener('mozfullscreenchange',onFsChange);
-document.addEventListener('MSFullscreenChange',onFsChange);
+  document.addEventListener('click', onFirstInteraction);
+  document.addEventListener('touchstart', onFirstInteraction);
+  document.addEventListener('keydown', onFirstInteraction);
 
-// 클릭으로도 전체화면 복구 (전체화면 아닐 때)
-document.addEventListener('click',()=>{if(!isFullscreen())requestFullscreen();});
+  // 전체화면 해제 감지 → 자동 복구
+  function onFsChange(){
+    if(!isFullscreen()){
+      if(document.getElementById('iframe-player').style.display==='block'){
+        setTimeout(showIframeOverlay, 500);
+      }
+      setTimeout(ensureFullscreen, 2000);
+    }else{
+      document.getElementById('iframe-overlay').style.display='none';
+    }
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+
+  // 클릭으로 전체화면 복구
+  document.addEventListener('click', ()=>{ if(!isFullscreen()) requestFullscreen(); });
+}
 
 async function measurePing(){const start=Date.now();try{await db.collection('screens').doc(SCREEN_ID).get();return Date.now()-start;}catch(e){return-1;}}
 async function updateStatus(){
