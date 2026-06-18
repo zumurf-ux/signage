@@ -3337,7 +3337,8 @@ function renderMonitor(){
           <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${store.name}</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:3px">${store.region} &nbsp;·&nbsp; 사이니지 ${storeScreens.length}대 &nbsp;·&nbsp; 담당자: ${store.manager||'-'}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end"
+     onclick="toggleMonitorStore('${store.id}',this.closest('.monitor-store-section'))">
           <div style="text-align:right;flex-shrink:0">
             <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:${headerColor}">${onlineCount}<span style="font-size:13px;color:var(--text-secondary)">/${storeScreens.length}</span></div>
             <div style="font-size:11px;color:var(--text-secondary)">온라인</div>
