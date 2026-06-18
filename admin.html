@@ -1529,7 +1529,7 @@ function renderDashboard(){
       const warnCount=storeScreens.filter(sc=>calcStatus(sc.lastSeen)==='warning').length;
       const worstStatus=storeScreens.some(sc=>calcStatus(sc.lastSeen)==='offline')?'offline':storeScreens.some(sc=>calcStatus(sc.lastSeen)==='warning')?'warning':'online';
       const statusColor=worstStatus==='online'?'var(--accent-green)':worstStatus==='warning'?'var(--accent-yellow)':'var(--text-muted)';
-      return`<div class="dash-store-card ${worstStatus}" onclick="openStore('${s.id}')">
+      return`<div class="dash-store-card ${worstStatus}">
         <div class="dash-store-card-name">${s.name}</div>
         <div class="dash-store-card-meta">${s.region} · 사이니지 ${storeScreens.length}대</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
