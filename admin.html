@@ -3330,8 +3330,8 @@ function renderMonitor(){
       ? ''
       : `<div style="padding:20px;text-align:center;color:var(--text-secondary);font-size:13px">${storeScreens.length?'태그 필터 결과 없음':'등록된 사이니지 없음'}</div>`;
 
-    return`<div class="monitor-store-section">
-      <div class="monitor-store-header" onclick="toggleMonitorStore('${store.id}',this)">
+    return`<div class="monitor-store-section" onclick="toggleMonitorStore('${store.id}',this)">
+      <div class="monitor-store-header">
         <div style="width:38px;height:38px;background:rgba(0,212,232,.1);border:1px solid rgba(0,212,232,.25);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--accent-cyan)">◉</div>
         <div style="flex:1">
           <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${store.name}</div>
