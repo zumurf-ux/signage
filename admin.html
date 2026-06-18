@@ -1693,11 +1693,13 @@ async function deleteScreen(id,name){
 }
 
 function copyScreenUrl(screenId,screenName){
-  const base=window.location.href.replace('admin.html','');
-  const url=base+'player.html?screen='+screenId;
+  const url=window.location.origin+'?screen='+screenId;
+
   navigator.clipboard.writeText(url).then(()=>{
     showToast(`[${screenName}] URL 복사됨!`,'success');
-  }).catch(()=>{prompt(`[${screenName}] 플레이어 URL:`,url);});
+  }).catch(()=>{
+    prompt(`[${screenName}] 플레이어 URL:`,url);
+  });
 }
 
 function openStoreModal(id=null){
